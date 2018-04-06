@@ -1,0 +1,33 @@
+{
+  "name": "lemon-engine",
+  "version": "0.1.0",
+  "description": "lemon core engine module",
+  "main": "index.js",
+  "scripts": {
+    "prepublish": "gulp",
+    "publish": "cd dist && npm publish",
+    "test": "test --timeout 10000"
+  },
+  "author": "steve (steve@lemoncloud.io)",
+  "license": "ISC",
+  "dependencies": {
+    "js-yaml": "^3.11.0",
+    "request": "^2.81.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "chai": "^4.1.2",
+    "chai-http": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.0",
+    "gulp-change": "^1.0.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-empty": "^0.1.2",
+    "gulp-uglify": "^3.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:lemon-project/lemon-engine.git"
+  }
+}
