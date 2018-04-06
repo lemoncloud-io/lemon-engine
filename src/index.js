@@ -161,20 +161,21 @@ function initialize($export, options) {
 	require('./lib/elastic-proxy')(_$, 'ES'); 				// load service, and register as 'ES'
 	
 	//! load core services......
-	const engine = require('./core/lemon-engine-model');
-	const create = function(name, option){
-		return engine(_$, name, option);
+	const buildEngine = require('./core/lemon-engine-model');
+	const createModel = function(name, option){
+		return buildEngine(_$, name, option);
 	}
+	_$('LEM', buildEngine);      // register: lemon-engine-model.
 
 	//! load basic core services......
 	require('./service/messages-service')(_$, 'MMS');	// Loading & Register as 'MMS'
 	
 	//! load api functions......
-	const _meta = require('./api/_meta-api');
+	// const _meta = require('./api/_meta-api');
 	const group = require('./api/group-api');
 	const user  = require('./api/user-api');
 	const chat  = require('./api/chat-api');
 	
 	//! export.
-	return Object.assign($export, {create, _meta, chat, group, user});
+	return Object.assign($export, {createModel, user, group, chat});
 }

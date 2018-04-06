@@ -20,12 +20,12 @@
 //! load services (_$ defined in global)
 const $_ = _$._;                                // re-use global instance (lodash).
 const $U = _$.U;                                // re-use global instance (utils).
-const $R = _$.R;                                // re-use global instance (rdb).
-const $MS = _$.MS;                              // re-use global instance (mysql-service).
-const $DS = _$.DS;                              // re-use global instance (dynamo-service).
-const $RS = _$.RS;                              // re-use global instance (redis-service).
-const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
-const $SS = _$.SS;                              // re-use global instance (sqs-service).
+// const $R = _$.R;                                // re-use global instance (rdb).
+// const $MS = _$.MS;                              // re-use global instance (mysql-service).
+// const $DS = _$.DS;                              // re-use global instance (dynamo-service).
+// const $RS = _$.RS;                              // re-use global instance (redis-service).
+// const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
+// const $SS = _$.SS;                              // re-use global instance (sqs-service).
 
 //! Name Space.
 const NS = $U.NS('META', "yellow");				// NAMESPACE TO BE PRINTED.
@@ -461,7 +461,7 @@ function do_list_meta(ID, $param, $body, $ctx){
 
 	const that = Object.assign({}, $body||$param);
 	if (!that.type) return Promise.reject(new Error('type is required!'));
-	_log(NS, '> that = ', that);
+	// _log(NS, '> that = ', that);
 	return $MMS.do_search(ID, that);
 }
 

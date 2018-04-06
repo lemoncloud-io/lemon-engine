@@ -1,0 +1,30 @@
+{
+  "name": "lemoncloud-engine-js",
+  "version": "0.0.0",
+  "description": "lemoncloud.io - core engine module with user/group/chat service.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/lemoncloud-io/lemoncloud-engine-js.git"
+  },
+  "keywords": [
+    "lemoncloud",
+    "engine"
+  ],
+  "author": "Steve (steve@lemoncloud.io)",
+  "license": "MIT",
+  "dependencies": {
+    "dynamodb-value": "^1.0.5",
+    "express": "^4.16.2",
+    "js-yaml": "^3.11.0",
+    "query-string": "^6.0.0",
+    "request": "^2.81.0"
+  },
+  "bugs": {
+    "url": "https://github.com/lemoncloud-io/lemoncloud-engine-js/issues"
+  },
+  "homepage": "https://github.com/lemoncloud-io/lemoncloud-engine-js#readme"
+}

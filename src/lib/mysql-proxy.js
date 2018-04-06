@@ -14,10 +14,10 @@ module.exports = (function (_$, name) {
 	name = name || 'MS';
 
 	const $U = _$.U;                                // re-use global instance (utils).
-	const $R = _$.R;                                // re-use global instance (rdb).
+	// const $R = _$.R;                                // re-use global instance (rdb).
 
 	if (!$U) throw new Error('$U is required!');
-	if (!$R) throw new Error('$R is required!');
+	// if (!$R) throw new Error('$R is required!');
 
 	const NS = $U.NS(name,  "blue");				// NAMESPACE TO BE PRINTED.
 

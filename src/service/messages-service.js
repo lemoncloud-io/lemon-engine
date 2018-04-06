@@ -48,9 +48,17 @@ module.exports = (function (_$, name, options) {
 	}, []);
 	// _log('ES_FIELDS = ', ES_FIELDS);
 
+	// core module
+	const $U = _$.U; 
+	const LEM = _$.LEM;
+	if (!$U) throw new Error('$U is required!');
+	if (!LEM) throw new Error('LEM is required!');
 
-	const $U = _$.U;                                // re-use global instance (utils).
-	const $LEM = require('../core/lemon-engine-model')(_$, '_'+name, {
+	// NAMESPACE TO BE PRINTED.
+	const NS = $U.NS(name);
+
+	// load core-service with parameters.
+	const $LEM = LEM(_$, '_'+name, {
 		ID_TYPE     : 'LemonMessagesSeq',			// WARN! '#' means no auto-generated id.
 		ID_NEXT     : 1000, 
 		FIELDS      : FIELDS,
@@ -63,13 +71,8 @@ module.exports = (function (_$, name, options) {
 		ES_MASTER	: 1,							// MASTER NODE.
 		CLONEABLE   : true,                         // 복제 가능하며, parent/cloned 필드를 지원함. (Core 에만 세팅!)
 		PARENT_IMUT : false,						// parent-id 변경 가능함(2018.03.15)
-	});    // load core-service with parameters.
-
-	const NS = $U.NS(name);					        // NAMESPACE TO BE PRINTED.
-
-	if (!$U) throw new Error(NS+'$U is required!');
+	});
 	if (!$LEM) throw new Error(NS+'$LEM is required!');
-
 
 	/** ****************************************************************************************************************
 	 *  Public Common Interface Exported.
@@ -336,7 +339,7 @@ module.exports = (function (_$, name, options) {
 
 	thiz.do_search = (_id, $params) => {
 		const id = (_id && typeof _id === 'object' ? _id._id : _id);
-		_log(NS, 'do_search()... id=', id);
+		_log(NS, 'do_search()... id=', typeof _id, id);
 		return prepare_chain(_id, $params, 'search')
 			.then($LEM.do_search)
 			.then(finish_chain)

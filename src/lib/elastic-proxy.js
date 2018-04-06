@@ -69,7 +69,7 @@ module.exports = (function (_$, name) {
 		// if (!type) return Promise.reject(new Error(NS + 'type is required'));
 
 		const $param = Object.assign({}, options||{});
-		// $param.type = type;		// must be ''
+		// $param.$type = type;		// must be ''
 		return PROXY.do_get(index, '0', 'create-index', $param)
 			.then(_ => _.result);
 	}
@@ -86,7 +86,7 @@ module.exports = (function (_$, name) {
 		// if (!type) return Promise.reject(new Error(NS + 'type is required'));
 
 		const $param = Object.assign({}, options||{});
-		// $param.type = type;		// must be ''
+		// $param.$type = type;		// must be ''
 		return PROXY.do_get(index, '0', 'delete-index', $param)
 			.then(_ => _.result);
 	}
@@ -101,7 +101,7 @@ module.exports = (function (_$, name) {
 
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
-		$param.type = type;
+		$param.$type = type;
 		return PROXY.do_post(index, id, undefined, $param, data)
 			.then(_ => _.result);
 	}
@@ -114,7 +114,7 @@ module.exports = (function (_$, name) {
 
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
-		$param.type = type;
+		$param.$type = type;
 		id = id === '' ? '0' : '';
 
 		return PROXY.do_post(index, id, 'push', $param, data)
@@ -131,7 +131,7 @@ module.exports = (function (_$, name) {
 
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
-		$param.type = type;
+		$param.$type = type;
 		
 		return PROXY.do_put(index, id, undefined, $param, data)
 			.then(_ => _.result);
@@ -147,7 +147,7 @@ module.exports = (function (_$, name) {
 
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
-		$param.type = type;
+		$param.$type = type;
 		
 		return PROXY.do_get(index, id, undefined, $param, data)
 			.then(_ => _.result);
@@ -162,7 +162,7 @@ module.exports = (function (_$, name) {
 
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
-		$param.type = type;
+		$param.$type = type;
 		
 		return PROXY.do_delete(index, id, undefined, $param)
 			.then(_ => _.result);
@@ -209,7 +209,7 @@ module.exports = (function (_$, name) {
 		if (!param) return Promise.reject(new Error(NS + 'parameter:param is required'));
 
 		const $param = Object.assign({}, param||{});
-		$param.type = type;
+		$param.$type = type;				//TODO:WARN! conflict with 'type' field.
 		return PROXY.do_get(index, '', undefined, $param)
 			.then(_ => _.result);
 	}

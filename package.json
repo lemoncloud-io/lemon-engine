@@ -8,10 +8,13 @@
     "publish": "cd dist && npm publish",
     "test": "test --timeout 10000"
   },
-  "author": "steve (steve@lemoncloud.io)",
+  "author": "Steve (steve@lemoncloud.io)",
   "license": "ISC",
   "dependencies": {
+    "dynamodb-value": "^1.0.5",
+    "express": "^4.16.2",
     "js-yaml": "^3.11.0",
+    "query-string": "^6.0.0",
     "request": "^2.81.0"
   },
   "devDependencies": {

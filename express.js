@@ -84,10 +84,9 @@ const middle = (req, res, next) => {
 };
 
 //! handle request to handler.
-const handle_dynamo = (req, res) =>     handler.dynamo(req.$event, req.$context, req.$callback);
-const handle_elastic = (req, res) =>    handler.elastic(req.$event, req.$context, req.$callback);
-const handle_mysql = (req, res) =>      handler.mysql(req.$event, req.$context, req.$callback);
-const handle_redis = (req, res) =>      handler.redis(req.$event, req.$context, req.$callback);
+const handle_user = (req, res) =>      handler.user(req.$event, req.$context, req.$callback);
+const handle_group = (req, res) =>     handler.group(req.$event, req.$context, req.$callback);
+const handle_chat = (req, res) =>      handler.chat(req.$event, req.$context, req.$callback);
 
 
 /** ********************************************************************************************************************
@@ -98,44 +97,32 @@ app.get('', (req, res)=>{
     res.status(200).send(package.name||'LEMON API');
 });
 
-//! WARN - MUST sync with 'serverless.yml'
-//! dynamo
-app.get('/dynamo',                  middle, handle_dynamo);
-app.get('/dynamo/:type',            middle, handle_dynamo);
-app.get('/dynamo/:type/:id',        middle, handle_dynamo);
-app.get('/dynamo/:type/:id/:cmd',   middle, handle_dynamo);
-app.put('/dynamo/:type/:id',        middle, handle_dynamo);
-app.put('/dynamo/:type/:id/:cmd',   middle, handle_dynamo);
-app.post('/dynamo/:type/:id',       middle, handle_dynamo);
-app.delete('/dynamo/:type',         middle, handle_dynamo);
+//! user
+app.get('/user',            middle, handle_user);
+app.get('/user/:id',        middle, handle_user);
+app.get('/user/:id/:cmd',   middle, handle_user);
+app.put('/user/:id',        middle, handle_user);
+app.put('/user/:cmd',       middle, handle_user);
+app.post('/user/:id',       middle, handle_user);
+app.delete('/user/:id',     middle, handle_user);
 
-//! elastic
-app.get('/elastic',                 middle, handle_elastic);
-app.get('/elastic/:type',           middle, handle_elastic);
-app.get('/elastic/:type/:id',       middle, handle_elastic);
-app.get('/elastic/:type/:id/:cmd',  middle, handle_elastic);
-app.put('/elastic/:type/:id',       middle, handle_elastic);
-app.post('/elastic/:type/:id',      middle, handle_elastic);
-app.post('/elastic/:type/:id/:cmd', middle, handle_elastic);
-app.delete('/elastic/:type',        middle, handle_elastic);
+//! group
+app.get('/group',            middle, handle_group);
+app.get('/group/:id',        middle, handle_group);
+app.get('/group/:id/:cmd',   middle, handle_group);
+app.put('/group/:id',        middle, handle_group);
+app.put('/group/:cmd',       middle, handle_group);
+app.post('/group/:id',       middle, handle_group);
+app.delete('/group/:id',     middle, handle_group);
 
-//! mysql
-app.get('/mysql',                   middle, handle_mysql);
-app.get('/mysql/:type',             middle, handle_mysql);
-app.get('/mysql/:type/:id',         middle, handle_mysql);
-app.get('/mysql/:type/:id/:cmd',    middle, handle_mysql);
-app.put('/mysql/:type/:id',         middle, handle_mysql);
-app.post('/mysql/:type/:id',        middle, handle_mysql);
-app.delete('/mysql/:type',          middle, handle_mysql);
-
-//! redis
-app.get('/redis',                   middle, handle_redis);
-app.get('/redis/:type',             middle, handle_redis);
-app.get('/redis/:type/:id',         middle, handle_redis);
-app.get('/redis/:type/:id/:cmd',    middle, handle_redis);
-app.put('/redis/:type/:id',         middle, handle_redis);
-app.post('/redis/:type/:id',        middle, handle_redis);
-app.delete('/redis/:type',          middle, handle_redis);
+//! chat
+app.get('/chat',            middle, handle_chat);
+app.get('/chat/:id',        middle, handle_chat);
+app.get('/chat/:id/:cmd',   middle, handle_chat);
+app.put('/chat/:id',        middle, handle_chat);
+app.put('/chat/:cmd',       middle, handle_chat);
+app.post('/chat/:id',       middle, handle_chat);
+app.delete('/chat/:id',     middle, handle_chat);
 
 
 /** ********************************************************************************************************************

@@ -1484,6 +1484,7 @@ module.exports = (function (_$, name, options) {
 		// if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
 		// const id = that._id;
 		_log(NS, `- my_search_node ()....`);
+		// _log(NS, '> that =', that);
 		return Promise.resolve(that)
 			.then($elasticsearch.my_search_node)            // STEP 3. Search Node from ES.
 			.then(that => {
