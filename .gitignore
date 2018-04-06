@@ -1,0 +1,16 @@
+# package directories
+node_modules
+jspm_packages
+npm-debug.log
+
+# Serverless directories
+.serverless
+
+# svn diretories
+.svn
+.idea
+.gradle
+.vscode
+
+# distribution package
+dist
