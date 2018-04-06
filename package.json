@@ -29,6 +29,7 @@
     "gulp-empty": "^0.1.2",
     "gulp-uglify": "^3.0.0"
   },
+  "private" : true,
   "repository": {
     "type": "git",
     "url": "git@bitbucket.org:lemon-project/lemon-engine.git"
