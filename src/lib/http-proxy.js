@@ -65,7 +65,7 @@ module.exports = (function (_$, name, endpoint) {
 			body: $body,
 			json: true
 		}
-		_log(NS, 'url :=', url);
+		_log(NS, ' url :=', options.method, url);
 
 		//! returns promise
 		return new Promise((resolve, reject) => {
