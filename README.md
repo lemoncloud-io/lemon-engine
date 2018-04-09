@@ -23,4 +23,18 @@
 1. [lemoncloud-engine-js](https://www.npmjs.com/package/lemoncloud-engine-js) 으로 배포됨.
 
 
+# LOCAL 실행
+
+* Proxy 서버의 개발/디버깅 목적으로 이 엔진을 로컬에서 실행 가능함
+
+```bash
+# run backend api 
+$ cd ../lemon-backend-api && npm run server-local
+
+# run lemon-engine with proxy service
+$ nodemon express --port 8082
+
+# test api
+$ http localhost:8082/user/
+```
 
