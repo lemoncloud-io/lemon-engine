@@ -11,22 +11,24 @@
 /** ********************************************************************************************************************
  *  Common Headers
  ** ********************************************************************************************************************/
+//! module.exports
+exports = module.exports = (function (_$, name) {
+	if (!_$) throw new Error('_$(global instance pool) is required!');
+
 //! load services (_$ defined in global)
 const $_ = _$._;                                // re-use global instance (lodash).
 const $U = _$.U;                                // re-use global instance (utils).
-// const $R = _$.R;                                // re-use global instance (rdb).
-// const $MS = _$.MS;                              // re-use global instance (mysql-service).
-// const $DS = _$.DS;                              // re-use global instance (dynamo-service).
-// const $RS = _$.RS;                              // re-use global instance (redis-service).
-// const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
-// const $SS = _$.SS;                              // re-use global instance (sqs-service).
+
+//! load common(log) functions
+const _log = _$.log;
+const _inf = _$.inf;
+const _err = _$.err;
 
 //! Name Space.
 const NS = $U.NS('USER', "yellow");				// NAMESPACE TO BE PRINTED.
 
 //! Re-use core services.
 const $MMS = _$.MMS;							// Re-use the meta-service.
-
 
 /** ********************************************************************************************************************
  *  COMMON Functions.
@@ -176,8 +178,6 @@ main.do_put_user = do_put_user;
 main.do_post_user = do_post_user;
 main.do_delete_user = do_delete_user;
 
-module.exports = main;
-
 
 /** ********************************************************************************************************************
  *  Local Functions.
@@ -197,8 +197,8 @@ const PROPERTIES = {
 	'created_at' 	: 'Created Time',
 	'updated_at' 	: 'Updated Time',
 }
-const $meta = require('./_meta-api');
-const $group = require('./group-api');
+const $meta = require('./_meta-api')(_$);
+const $group = require('./group-api')(_$);
 
 //! Filtering Saved Node instance with field set. (for user filter)
 const my_chain_filter_node = (node) => {
@@ -414,7 +414,8 @@ function do_put_user(ID, $param, $body, $ctx){
  * - refid 를 조사해서, 같은 항목을 업데이트 한다.
  * 
  * example:
- * $ echo '{"name":"test user"}' | http POST 'localhost:8086/user/0'
+ * $ echo '{"name":"test user"}' | http POST 'localhost:8082/user/0'
+ * $ echo '{"name":"admin@example.com"}' | http POST 'localhost:8082/user/0'
  * 
  * 
  * @param {*} ID 
@@ -466,3 +467,10 @@ function do_delete_user(ID, $param, $body, $ctx){
 		.then(that => $meta.do_delete_meta(ID, that))
 }
 
+
+//! returns main function.
+return main;
+
+//////////////////////////
+//- end of module.exports
+});

@@ -12,15 +12,18 @@
 /** ********************************************************************************************************************
  *  Common Headers
  ** ********************************************************************************************************************/
+//! module.exports
+exports = module.exports = (function (_$, name) {
+	if (!_$) throw new Error('_$(global instance pool) is required!');
+
 //! load services (_$ defined in global)
 const $_ = _$._;                                // re-use global instance (lodash).
 const $U = _$.U;                                // re-use global instance (utils).
-// const $R = _$.R;                                // re-use global instance (rdb).
-// const $MS = _$.MS;                              // re-use global instance (mysql-service).
-// const $DS = _$.DS;                              // re-use global instance (dynamo-service).
-// const $RS = _$.RS;                              // re-use global instance (redis-service).
-// const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
-// const $SS = _$.SS;                              // re-use global instance (sqs-service).
+
+//! load common(log) functions
+const _log = _$.log;
+const _inf = _$.inf;
+const _err = _$.err;
 
 //! Name Space.
 const NS = $U.NS('GRUP', "yellow");				// NAMESPACE TO BE PRINTED.
@@ -180,8 +183,6 @@ main.do_put_group = do_put_group;
 main.do_post_group = do_post_group;
 main.do_delete_group = do_delete_group;
 
-module.exports = main;
-
 
 /** ********************************************************************************************************************
  *  Local Functions.
@@ -201,7 +202,7 @@ const PROPERTIES = {
 	'created_at' 	: 'Created Time',
 	'updated_at' 	: 'Updated Time',
 }
-const $meta = require('./_meta-api');
+const $meta = require('./_meta-api')(_$);
 
 //! Filtering Saved Node instance with field set. (for user filter)
 const my_chain_filter_node = (node) => {
@@ -417,3 +418,11 @@ function do_delete_group(ID, $param, $body, $ctx){
 		.then(my_chain_override_type)					// override type.
 		.then(that => $meta.do_delete_meta(ID, that))
 }
+
+
+//! returns main function.
+return main;
+
+//////////////////////////
+//- end of module.exports
+});

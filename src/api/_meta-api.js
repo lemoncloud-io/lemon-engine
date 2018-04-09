@@ -16,16 +16,19 @@
  */
 /** ********************************************************************************************************************
  *  Common Headers
- ** ********************************************************************************************************************/
+ ** ************************************************************`********************************************************/
+//! module.exports
+exports = module.exports = (function (_$, name) {
+	if (!_$) throw new Error('_$(global instance pool) is required!');
+
 //! load services (_$ defined in global)
 const $_ = _$._;                                // re-use global instance (lodash).
 const $U = _$.U;                                // re-use global instance (utils).
-// const $R = _$.R;                                // re-use global instance (rdb).
-// const $MS = _$.MS;                              // re-use global instance (mysql-service).
-// const $DS = _$.DS;                              // re-use global instance (dynamo-service).
-// const $RS = _$.RS;                              // re-use global instance (redis-service).
-// const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
-// const $SS = _$.SS;                              // re-use global instance (sqs-service).
+
+//! load common(log) functions
+const _log = _$.log;
+const _inf = _$.inf;
+const _err = _$.err;
 
 //! Name Space.
 const NS = $U.NS('META', "yellow");				// NAMESPACE TO BE PRINTED.
@@ -184,7 +187,6 @@ main.do_post_meta = do_post_meta;
 main.do_delete_meta = do_delete_meta;
 main.do_self_test_meta = do_self_test_meta;
 
-module.exports = main;
 
 
 /** ********************************************************************************************************************
@@ -335,7 +337,7 @@ const my_chain_on_update_groups = (node) => {
  * @param {*} node 
  */
 const my_chain_on_detail_groups = (node) => {	
-	const $group = require('./group-api');
+	const $group = require('./group-api')(_$);
 	//! if groups set!
 	if (node.groups !== undefined){
 		const groups = node.groups||[];
@@ -588,4 +590,10 @@ function do_delete_meta(ID, $param, $body, $ctx){
 		})
 }
 
+//! returns main function.
+return main;
 
+
+//////////////////////////
+//- end of module.exports
+});

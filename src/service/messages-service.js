@@ -54,6 +54,11 @@ module.exports = (function (_$, name, options) {
 	if (!$U) throw new Error('$U is required!');
 	if (!LEM) throw new Error('LEM is required!');
 
+	//! load common(log) functions
+	const _log = _$.log;
+	const _inf = _$.inf;
+	const _err = _$.err;
+	
 	// NAMESPACE TO BE PRINTED.
 	const NS = $U.NS(name);
 

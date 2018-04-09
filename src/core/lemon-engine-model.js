@@ -195,6 +195,12 @@ module.exports = (function (_$, name, options) {
 	if (!$RS) throw new Error('$RS is required!');
 	if (!$ES) throw new Error('$ES is required!');
 
+	//! load common(log) functions
+	const _log = _$.log;
+	const _inf = _$.inf;
+	const _err = _$.err;
+
+	//! NAMESPACE
 	const NS = $U.NS(NS_NAME, "green");				 // NAMESPACE TO BE PRINTED.
 
 	/** ****************************************************************************************************************
@@ -266,7 +272,7 @@ module.exports = (function (_$, name, options) {
 
 	/////////////////////////
 	//! Notification Service.
-	const $NOT = require('../lib/notify-service')(_$, '!'+CONF_NS_NAME, {NS_NAME:CONF_NS_NAME});
+	const $NOT = require('./notify-service')(_$, '!'+CONF_NS_NAME, {NS_NAME:CONF_NS_NAME});
 	//! notify functions.
 	thiz.do_notify          = $NOT.do_notify;                       // delegate to notify-service
 	thiz.do_subscribe       = $NOT.do_subscribe;                    // delegate to notify-service

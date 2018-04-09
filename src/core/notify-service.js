@@ -36,6 +36,11 @@ module.exports = (function (_$, name, options) {
 	if (!$U) throw new Error('$U is required!');
 	if (!$_) throw new Error('$_ is required!');
 
+	//! load common(log) functions
+	const _log = _$.log;
+	const _inf = _$.inf;
+	const _err = _$.err;
+	
 	const NS = $U.NS(name, "magenta");		        // NAMESPACE TO BE PRINTED.
 
 	/** ****************************************************************************************************************

@@ -171,11 +171,11 @@ function initialize($export, options) {
 	require('./service/messages-service')(_$, 'MMS');	// Loading & Register as 'MMS'
 	
 	//! load api functions......
-	// const _meta = require('./api/_meta-api');
-	const group = require('./api/group-api');
-	const user  = require('./api/user-api');
-	const chat  = require('./api/chat-api');
+	const _meta = require('./api/_meta-api')(_$);
+	const group = require('./api/group-api')(_$);
+	const user  = require('./api/user-api')(_$);
+	const chat  = require('./api/chat-api')(_$);
 	
 	//! export.
-	return Object.assign($export, {createModel, user, group, chat});
+	return Object.assign($export, {createModel, _meta, user, group, chat});
 }

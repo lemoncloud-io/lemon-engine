@@ -14,15 +14,18 @@
 /** ********************************************************************************************************************
  *  Common Headers
  ** ********************************************************************************************************************/
+//! module.exports
+exports = module.exports = (function (_$, name) {
+	if (!_$) throw new Error('_$(global instance pool) is required!');
+
 //! load services (_$ defined in global)
 const $_ = _$._;                                // re-use global instance (lodash).
 const $U = _$.U;                                // re-use global instance (utils).
-// const $R = _$.R;                                // re-use global instance (rdb).
-// const $MS = _$.MS;                              // re-use global instance (mysql-service).
-// const $DS = _$.DS;                              // re-use global instance (dynamo-service).
-// const $RS = _$.RS;                              // re-use global instance (redis-service).
-// const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
-// const $SS = _$.SS;                              // re-use global instance (sqs-service).
+
+//! load common(log) functions
+const _log = _$.log;
+const _inf = _$.inf;
+const _err = _$.err;
 
 //! Name Space.
 const NS = $U.NS('CHAT', "yellow");				// NAMESPACE TO BE PRINTED.
@@ -179,7 +182,6 @@ main.do_put_chat = do_put_chat;
 main.do_post_chat = do_post_chat;
 main.do_delete_chat = do_delete_chat;
 
-module.exports = main;
 
 
 /** ********************************************************************************************************************
@@ -201,8 +203,8 @@ const PROPERTIES = {
 	'created_at' 	: 'Created Time',
 	'updated_at' 	: 'Updated Time',
 }
-const $meta = require('./_meta-api');
-const $user = require('./user-api');
+const $meta = require('./_meta-api')(_$);
+const $user = require('./user-api')(_$);
 
 //! Filtering Saved Node instance with field set. (for chat filter)
 const my_chain_filter_node = (node) => {
@@ -448,3 +450,11 @@ function do_delete_chat(ID, $param, $body, $ctx){
 		.then(that => $meta.do_delete_meta(ID, that))
 }
 
+
+//! returns main function.
+return main;
+
+
+//////////////////////////
+//- end of module.exports
+});

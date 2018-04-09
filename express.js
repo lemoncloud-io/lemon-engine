@@ -46,7 +46,16 @@ const SRC = IS_OP ? './dist/' : './src/';
 })(env, 'env.yml');
 
 //! load configuration.
-const handler = require(SRC+'index')(global);
+const $scope = 0 ? global : {
+	name : 'LEMON-MESSAGES'
+	,env : process.env								// environment setting.
+}
+const handler = require(SRC+'index')($scope);
+
+const _log = $scope._log;
+const _inf = $scope._inf;
+const _err = $scope._err;
+
 
 //! middle ware
 const middle = (req, res, next) => {
@@ -134,7 +143,7 @@ app.delete('/chat/:id',     middle, handle_chat);
 if (server)
 {
     //! fetch server post.
-    const port = _get_run_param('-port', 3000);
+    const port = _get_run_param('-port', 8082);
 
     //! list port.
     server.listen(port, function listening() {
