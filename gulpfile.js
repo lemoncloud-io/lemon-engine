@@ -55,7 +55,7 @@ gulp.task('scripts', [], function() {
 	}
 
 	//! returns target js files.
-	return [scripts(''), scripts('/api'), scripts('/lib'), scripts('/service')];
+	return [scripts(''), scripts('/api'), scripts('/core'), scripts('/lib'), scripts('/service')];
 	// return [scripts(''), scripts('/core')];
 })
 
