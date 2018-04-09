@@ -1230,6 +1230,9 @@ module.exports = (function (_$, name, options) {
 			if (that.A) param.$A = that.A;				// Aggregation (simply to count terms)
 			if (that.O) param.$O = that.O;				// OrderBy (default asc by name)
 
+			//! add default-sort if no search query.
+			param.$O = param.$O || (CONF_ID_TYPE.startsWith('#') ? 'id.keyword' : 'id');
+			
 			//build query parameters.
 			if (CONF_ES_FIELDS){
 				CONF_ES_FIELDS.forEach(field => {

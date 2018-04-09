@@ -115,6 +115,7 @@ module.exports = (function (_$, name) {
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
 		$param.$type = type;
+		id = id||'';									// make sure valid text.
 		id = id === '' ? '0' : '';
 
 		return PROXY.do_post(index, id, 'push', $param, data)
