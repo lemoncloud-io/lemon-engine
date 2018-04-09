@@ -73,6 +73,7 @@ const main = function (event, context, callback){
 	// _log(NS,'$path=', $path);
 
 	//! determine running mode.
+	const TYPE = decodeURIComponent($path.type || '');                               // type in path (0st parameter).
 	const ID = decodeURIComponent($path.id || '');                                   // id in path (1st parameter).
 	const METHOD = !ID&&event.httpMethod==='GET'&&'LIST'||event.httpMethod||'';      // determine method.
 	const CMD = decodeURIComponent($path.cmd || '');                                 // cmd in path (2nd parameter).
