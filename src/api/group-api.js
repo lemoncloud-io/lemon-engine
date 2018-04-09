@@ -73,30 +73,21 @@ const main = function (event, context, callback){
 	//! determine running mode.
 	const ID = decodeURIComponent($path.id || '');                                   // id in path (1st parameter).
 	const METHOD = !ID&&event.httpMethod==='GET'&&'LIST'||event.httpMethod||'';      // determine method.
-	const METHOD_MODE_MAP = {'LIST':'SEARCH', 'GET':'GET', 'PUT':'PUT', 'POST':'POST', 'DELETE':'DELETE'};
 	const CMD = decodeURIComponent($path.cmd || '');                                 // cmd in path (2nd parameter).
 
 	//! decoding mode.
-	let MODE = METHOD_MODE_MAP[METHOD];
-	let $body = event.body && JSON.parse(event.body) || null;
-	let action = $param.action;                                               		// action parameter (for test).
-	if (action !== undefined) delete $param.action;									// clear action param
+	const METHOD_MODE_MAP = {'LIST':'LIST', 'GET':'GET', 'PUT':'PUT', 'POST':'POST', 'DELETE':'DELETE'};
+	const MODE = !METHOD && event.Records ? 'EVENT' : METHOD_MODE_MAP[METHOD];
+	//! safe decode body if it has json format. (TODO - support url-encoded post body)
+	const $body = event.body 
+			&& (typeof event.body === 'string' && (event.body.startsWith('{') || event.body.startsWith('[')) ? JSON.parse(event.body) : event.body) 
+			|| event.Records && {records: event.Records}
+			|| null;
+	//! debug print body.
+	!$body && _log(NS, `#${MODE}:${CMD} (${METHOD}, ${TYPE}/${ID})....`);
+	$body && _log(NS, `#${MODE}:${CMD} (${METHOD}, ${TYPE}/${ID}).... body.len=`, $body ? $U.json($body).length : -1);
 
-	//! debug print.
-	!$body && _log(NS, `#${MODE}:${CMD} (${METHOD}, ${ID}, ${action})....`);
-	// $body && _log(NS+`#${mode} (${METHOD}, ${ID}, ${action}).... body=`, $U.json($body).length);
-	$body && _log(NS, `#${MODE}:${CMD} (${METHOD}, ${ID}, ${action}).... body.len=`, $body ? $U.json($body).length : -1);
-	// _log(NS, '> body =', $body);
-
-	//! check stream mode.
-	if (!MODE && event.Records) {
-		$body = $body||{};
-		MODE = 'EVENT';
-		action = 'records';
-		$body.records = event.Records;
-	}
-
-	//! decode mode.
+	//! prepare chain object.
 	const that = {_id:ID, _param:$param, _body:$body, _ctx:context};
 	let chain = Promise.resolve(that);
 
@@ -153,7 +144,7 @@ function _decode_next_handler(MODE, ID, CMD)
 	let next = null;
 	switch(MODE)
 	{
-		case 'SEARCH':
+		case 'LIST':
 			next = do_list_group;
 			break;
 		case 'GET':
