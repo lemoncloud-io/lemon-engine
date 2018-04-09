@@ -2,6 +2,7 @@
 
 레몬 코어 엔진으로, 백엔드 서버에 `lemon-backend-api` 가 있어야 함.
 
+* npm 패키지로 `lemoncloud-engine-js`를 배포시킴.
 
 ## REQUIREMENT
 
@@ -11,4 +12,15 @@
 1. 자체 Unit Test가 작동하여야 함.
 1. public 소스는 `npm publish`를 통해서 배포되며, 배포 모듈은 `lemon-engine-js` 임.
 1. 버전은 package.json에 업데이트 시켜줌.
+
+
+# NPM 모듈 배포
+
+배포하기 순서
+
+1. package.json 의 version 정보를 변경
+1. `$ npm run publish` 실행
+1. [lemoncloud-engine-js](https://www.npmjs.com/package/lemoncloud-engine-js) 으로 배포됨.
+
+
 
