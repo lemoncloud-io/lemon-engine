@@ -172,6 +172,7 @@ function _decode_next_handler(MODE, ID, CMD)
 		case 'DELETE':
 			break;
 		case 'EVENT':
+			next = do_event_records;
 			break;
 		default:
 			break;
@@ -588,6 +589,25 @@ function do_delete_meta(ID, $param, $body, $ctx){
 					return _;					// returns deleted object in detail.
 				});
 		})
+}
+
+
+/**
+ * Stream 를 통한 이벤트 발생시 호출됨.
+ * 
+ * @param {*} ID 
+ * @param {*}  
+ * @param {*}  
+ * @param {*}  
+ */
+function do_event_records(ID, $param, $body, $ctx){
+	_log(NS, `do_event_records(${ID})....`);
+	// const $MMS = _$.MMS;								// Re-use the item-pools-service.
+	// if (!ID) return Promise.reject('ID is required!');
+	// const Records = $body.records;
+	// _log(NS, '> Records=', Records);
+	// _log(NS, '> $body=', $body);
+	return $MMS.on_records($body);
 }
 
 //! returns main function.
