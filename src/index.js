@@ -160,6 +160,7 @@ function initialize($export, options) {
 	require('./lib/redis-proxy')(_$, 'RS');           		// load service, and register as 'RS'
 	require('./lib/elastic-proxy')(_$, 'ES'); 				// load service, and register as 'ES'
 	require('./lib/sqs-proxy')(_$, 'SS'); 					// load service, and register as 'SS'
+	require('./lib/web-proxy')(_$, 'WS'); 					// load service, and register as 'WS'
 	
 	//! load core services......
 	const buildEngine = require('./core/lemon-engine-model');
@@ -176,7 +177,6 @@ function initialize($export, options) {
 	const group = require('./api/group-api')(_$);
 	const user  = require('./api/user-api')(_$);
 	const chat  = require('./api/chat-api')(_$);
-	// const sqs 	= require('./api/sqs-api')(_$);
 	
 	//! export.
 	return Object.assign($export, {createModel, _meta, user, group, chat});
