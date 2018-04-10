@@ -14,11 +14,9 @@ module.exports = (function (_$, name) {
 	name = name || 'RS';
 
 	const $U = _$.U;                                // re-use global instance (utils).
-	// const $aws = _$.aws;                            // re-use global instance (aws).
 	const $_ = _$._;                             	// re-use global instance (_ lodash).
 
 	if (!$U) throw new Error('$U is required!');
-	// if (!$aws) throw new Error('$aws is required!');
 	if (!$_) throw new Error('$_ is required!');
 
 	const NS = $U.NS(name, 'yellow');				// NAMESPACE TO BE PRINTED.
@@ -45,7 +43,12 @@ module.exports = (function (_$, name) {
 	/** ****************************************************************************************************************
 	 *  Internal Proxy Function
 	 ** ****************************************************************************************************************/
-	const PROXY = require('./http-proxy')(_$, 'X'+name, $U.env('SS_ENDPOINT'));
+	const ENDPOINT = $U.env('SS_ENDPOINT');
+	const httpProxy = require('./http-proxy');
+	const $proxy = function(){
+		if (!ENDPOINT) throw new Error('env:SS_ENDPOINT is required!');
+		return httpProxy(_$, 'X'+name, ENDPOINT);
+	}
 
 		
 	/** ****************************************************************************************************************
@@ -60,7 +63,7 @@ module.exports = (function (_$, name) {
 		const $param = Object.assign({}, options||{});
 		$param.size = size;
 
-		return PROXY.do_get(TYPE, '0', undefined, $param)
+		return $proxy().do_get(TYPE, '0', undefined, $param)
 			.then(_ => _.result);
 	}
 
@@ -71,7 +74,7 @@ module.exports = (function (_$, name) {
 
 		const $param = Object.assign({}, $attr||{});
 
-		return PROXY.do_put(TYPE, '0', undefined, $param, $data)
+		return $proxy().do_put(TYPE, '0', undefined, $param, $data)
 			.then(_ => _.result);
 	}
 
@@ -82,7 +85,7 @@ module.exports = (function (_$, name) {
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
 
-		return PROXY.do_delete(TYPE, handle, undefined)
+		return $proxy().do_delete(TYPE, handle, undefined)
 			.then(_ => _.result);
 	}
 	
@@ -92,7 +95,7 @@ module.exports = (function (_$, name) {
 
 		const $param = Object.assign({}, options||{});
 		
-		return PROXY.do_get('#', '0', 'test-self', $param)
+		return $proxy().do_get('#', '0', 'test-self', $param)
 			.then(_ => _.result);
 	}
 

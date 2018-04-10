@@ -44,7 +44,12 @@ module.exports = (function (_$, name) {
 	/** ****************************************************************************************************************
 	 *  Internal Proxy Function
 	 ** ****************************************************************************************************************/
-	const PROXY = require('./http-proxy')(_$, 'X'+name, $U.env('RS_ENDPOINT'));
+	const ENDPOINT = $U.env('RS_ENDPOINT');
+	const httpProxy = require('./http-proxy');
+	const $proxy = function(){
+		if (!ENDPOINT) throw new Error('env:RS_ENDPOINT is required!');
+		return httpProxy(_$, 'X'+name, ENDPOINT);
+	}
 
 		
 	/** ****************************************************************************************************************
@@ -62,7 +67,7 @@ module.exports = (function (_$, name) {
 		const $param = Object.assign({}, options||{});
 		$param.timeout = timeout;
 
-		return PROXY.do_post(PKEY, id, undefined, $param, item)
+		return $proxy().do_post(PKEY, id, undefined, $param, item)
 			.then(_ => _.result);
 	}
 
@@ -76,7 +81,7 @@ module.exports = (function (_$, name) {
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
 
-		return PROXY.do_get(PKEY, id)
+		return $proxy().do_get(PKEY, id)
 			.then(_ => _.result);
 	}
 
@@ -91,7 +96,7 @@ module.exports = (function (_$, name) {
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
 
-		return PROXY.do_put(PKEY, id, undefined, $param, item)
+		return $proxy().do_put(PKEY, id, undefined, $param, item)
 			.then(_ => _.result);
 	}
 
@@ -105,7 +110,7 @@ module.exports = (function (_$, name) {
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
 
-		return PROXY.do_delete(PKEY, id, undefined, $param)
+		return $proxy().do_delete(PKEY, id, undefined, $param)
 			.then(_ => _.result);
 	}
 	
@@ -115,7 +120,7 @@ module.exports = (function (_$, name) {
 
 		const $param = Object.assign({}, options||{});
 		
-		return PROXY.do_get('#', '0', 'test-self', $param)
+		return $proxy().do_get('#', '0', 'test-self', $param)
 			.then(_ => _.result);
 	}
 

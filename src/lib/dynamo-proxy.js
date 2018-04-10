@@ -55,7 +55,12 @@ module.exports = (function (_$, name) {
 	/** ****************************************************************************************************************
 	 *  Internal Proxy Function
 	 ** ****************************************************************************************************************/
-	const PROXY = require('./http-proxy')(_$, 'X'+name, $U.env('DS_ENDPOINT'));
+	const ENDPOINT = $U.env('DS_ENDPOINT');
+	const httpProxy = require('./http-proxy');
+	const $proxy = function(){
+		if (!ENDPOINT) throw new Error('env:DS_ENDPOINT is required!');
+		return httpProxy(_$, 'X'+name, ENDPOINT);
+	}
 
 
 	/** ****************************************************************************************************************
@@ -73,7 +78,7 @@ module.exports = (function (_$, name) {
 	function do_create_table (table, id_name, id_type){
 		if (!table) return Promise.reject(new Error(NS + 'parameter:table is required'));
 		const $param = {idName:id_name,idType:id_type};
-		return PROXY.do_get(table, '0', 'create-table', $param)
+		return $proxy().do_get(table, '0', 'create-table', $param)
 			.then(_ => _.result);
 	}
 
@@ -86,7 +91,7 @@ module.exports = (function (_$, name) {
 	function do_delete_table (table){
 		if (!table) return Promise.reject(new Error(NS + 'parameter:table is required'));
 		const $param = undefined;
-		return PROXY.do_get(table, '0', 'delete-table', $param)
+		return $proxy().do_get(table, '0', 'delete-table', $param)
 			.then(_ => _.result);
 	}
 
@@ -101,7 +106,7 @@ module.exports = (function (_$, name) {
 		// if (!table) return Promise.reject(new Error(NS + 'parameter:table is required'));
 		table = table||'#';						// prevent ''.
 		const $param = {limit};
-		return PROXY.do_get(table, '0', 'list-table', $param)
+		return $proxy().do_get(table, '0', 'list-table', $param)
 			.then(_ => _.result);
 	}
 
@@ -114,7 +119,7 @@ module.exports = (function (_$, name) {
 		const $param = param||{};
 		const table = $param.table;
 		delete $param.table;
-		return PROXY.do_get(table, '0', 'stream', $param)
+		return $proxy().do_get(table, '0', 'stream', $param)
 			// .then(_ => _.result);					//WARN! pass the original body.
 	}
 	
@@ -149,7 +154,7 @@ module.exports = (function (_$, name) {
 			$param.idName = idName;
 		}
 
-		return PROXY.do_post(table, id, undefined, $param, data)
+		return $proxy().do_post(table, id, undefined, $param, data)
 			.then(_ => _.result);
 	}
 
@@ -178,7 +183,7 @@ module.exports = (function (_$, name) {
 			$param.idName = idName;
 		}
 
-		return PROXY.do_get(table, id, undefined, $param)
+		return $proxy().do_get(table, id, undefined, $param)
 			.then(_ => _.result);
 	}
 
@@ -207,7 +212,7 @@ module.exports = (function (_$, name) {
 			$param.idName = idName;
 		}
 
-		return PROXY.do_delete(table, id, undefined, $param)
+		return $proxy().do_delete(table, id, undefined, $param)
 			.then(_ => _.result);
 	}
 
@@ -243,7 +248,7 @@ module.exports = (function (_$, name) {
 		const $body = data||{};
 		if(incset) $body.$I = incset;
 
-		return PROXY.do_put(table, id, undefined, $param, $body)
+		return $proxy().do_put(table, id, undefined, $param, $body)
 			.then(_ => _.result);
 	}
 
@@ -280,7 +285,7 @@ module.exports = (function (_$, name) {
 		const $body = data||{};
 		if(incset) $body.$I = incset;
 
-		return PROXY.do_put(table, id, 'increment', $param, $body)
+		return $proxy().do_put(table, id, 'increment', $param, $body)
 			.then(_ => _.result);
 	}
 
@@ -291,7 +296,7 @@ module.exports = (function (_$, name) {
 	 */
 	function do_test_self (param){
 		const $param = param||{};
-		return PROXY.do_get('#', '0', 'test-self', $param)
+		return $proxy().do_get('#', '0', 'test-self', $param)
 			.then(_ => _.result);
 	}
 

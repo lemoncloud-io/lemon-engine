@@ -14,10 +14,8 @@ module.exports = (function (_$, name) {
 	name = name || 'MS';
 
 	const $U = _$.U;                                // re-use global instance (utils).
-	// const $R = _$.R;                                // re-use global instance (rdb).
 
 	if (!$U) throw new Error('$U is required!');
-	// if (!$R) throw new Error('$R is required!');
 
 	const NS = $U.NS(name,  "blue");				// NAMESPACE TO BE PRINTED.
 
@@ -46,7 +44,12 @@ module.exports = (function (_$, name) {
 	/** ****************************************************************************************************************
 	 *  Internal Proxy Function
 	 ** ****************************************************************************************************************/
-	const PROXY = require('./http-proxy')(_$, 'X'+name, $U.env('MS_ENDPOINT'));
+	const ENDPOINT = $U.env('MS_ENDPOINT');
+	const httpProxy = require('./http-proxy');
+	const $proxy = function(){
+		if (!ENDPOINT) throw new Error('env:MS_ENDPOINT is required!');
+		return httpProxy(_$, 'X'+name, ENDPOINT);
+	}
 
 
 	/** ****************************************************************************************************************
@@ -62,7 +65,7 @@ module.exports = (function (_$, name) {
 	 * @returns {Promise.<*>}
 	 */
 	function do_get_last_id(type) {
-		return PROXY.do_get(type, '0', 'last-id')
+		return $proxy().do_get(type, '0', 'last-id')
 			.then(_ => _.result);
 	}
 
@@ -73,7 +76,7 @@ module.exports = (function (_$, name) {
 	 * @returns {Promise.<*>}
 	 */
 	function do_get_next_id(type) {
-		return PROXY.do_get(type, '0', 'next-id')
+		return $proxy().do_get(type, '0', 'next-id')
 			.then(_ => _.result);
 	}
 
@@ -86,7 +89,7 @@ module.exports = (function (_$, name) {
 	 */
 	function do_create_id_seq(type, nextval) {
 		const $param = nextval ? {next:nextval} : null;
-		return PROXY.do_get(type, '0', 'create-id', $param)
+		return $proxy().do_get(type, '0', 'create-id', $param)
 			.then(_ => _.result);
 	}
 
@@ -97,7 +100,7 @@ module.exports = (function (_$, name) {
 	 * @returns {Promise.<*>}
 	 */
 	function do_delete_id_seq(type) {
-		return PROXY.do_get(type, '0', 'delete-id')
+		return $proxy().do_get(type, '0', 'delete-id')
 			.then(_ => _.result);
 	}
 
@@ -115,7 +118,7 @@ module.exports = (function (_$, name) {
 		//! prepare params
 		const $param = {query, values};
 
-		return PROXY.do_get('#', '0', 'query', $param)
+		return $proxy().do_get('#', '0', 'query', $param)
 			.then(_ => _.result);
 	}
 

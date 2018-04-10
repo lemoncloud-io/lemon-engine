@@ -24,7 +24,7 @@ module.exports = (function ($root, options) {
 	//! load configuration.
 	const ROOT_NAME = options.name || 'lemon';
 	const STAGE = _get_env('STAGE', '');
-	const LC = (STAGE === 'local'||STAGE === 'express');
+	const LC = (STAGE === 'local'||STAGE === 'express'||_get_env('LC', '')==='1');
 
 	//! common function for logging.
 	var $console = {thiz: console, log: console.log, error: console.error, auto_ts: LC, auto_color: LC};
