@@ -71,4 +71,11 @@ if (!$LEM) throw new Error(NS+'$LEM is required!');
   ES_ENDPOINT:  'http://localhost:8081/elastic'
   # Redis backbone api
   RS_ENDPOINT:  'http://localhost:8081/redis'
+  # SQS backbone api
+  SS_ENDPOINT:  'http://localhost:8081/sqs'
+  # Web backbone api
+  WS_ENDPOINT:  'http://localhost:8081/web'
 ```
+
+----------------
+# WARN APPEND BELOW WITH PARENT'S README.md #

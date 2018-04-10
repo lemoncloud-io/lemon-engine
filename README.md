@@ -38,3 +38,14 @@ $ nodemon express --port 8082
 $ http localhost:8082/user/
 ```
 
+
+----------------
+# VERSION INFO #
+
+| Version   | Description
+|--         |--
+| 0.2.5     | web-proxy as 'WS'
+| 0.2.4     | record revent
+| 0.2.3     | sqs-proxy as 'SS'
+| 0.2.0     | support scope during initialize
+

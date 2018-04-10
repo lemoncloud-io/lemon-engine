@@ -15,6 +15,7 @@ let babel = require('gulp-babel');          // for ES6
 var uglify = require('gulp-uglify');
 var empty = require("gulp-empty");
 var change = require("gulp-change");
+var fs = require("fs");
 //var plug = require('gulp-load-plugins')();
 
 // main configuration..
@@ -72,6 +73,9 @@ gulp.task('copy-all', function() {
 gulp.task('package', function() {
 	const ver = require('./package.json').version||'0.0.1';
 	console.log('#version =', ver);
+	const readme = fs.readFileSync("README.md", "utf8");
+	// console.log('#readme =', readme);
+
 	const myChange = (body)=>{
 		body = body.trim();
 		// console.log('> body=', typeof body, body);
@@ -83,6 +87,13 @@ gulp.task('package', function() {
 				$body.version = ver;
 			//TODO - sync dependencies version.
 			body = JSON.stringify($body);
+		}
+		else if(body.startsWith('# ')){			// it must be md file.
+			const a = body.lastIndexOf('----------------');
+			const b = a > 0 ? readme.lastIndexOf('----------------') : 0;
+			if (a > 0 && b > 0){
+				body = body.substring(0, a) + readme.substring(b);
+			}
 		}
 		return body;
 	}
