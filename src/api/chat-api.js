@@ -295,6 +295,7 @@ function do_list_chat(ID, $param, $body, $ctx){
  * 
  * example:
  * $ http 'localhost:8086/chat/1000'
+ * $ http 'localhost:8086/chat/1000?size=1'		=> ERR! (size필드가 없으므로 데이터 안 읽어옴)
  * 
  * @param {*} ID 
  * @param {*}  

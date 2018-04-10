@@ -478,6 +478,8 @@ function do_get_meta(ID, $param, $body, $ctx){
 	const TYPE = that.type;
 	delete that.type;
 
+	// _log(NS, `do_get_meta(${TYPE}:${ID})... that=`, that);
+	
 	//! target search.
 	return $MMS.do_read(ID, that)
 		.then(that => {
@@ -486,7 +488,8 @@ function do_get_meta(ID, $param, $body, $ctx){
 			if (deleted_at){
 				return Promise.reject(new Error('404 NOT FOUND'+': Node deleted_at='+deleted_at));
 			}
-			if (node.type != TYPE){
+			// _log(NS,'> node=', node);
+			if (node.type && node.type != TYPE){
 				return Promise.reject(new Error('404 NOT FOUND'+': Invalid Type='+node.type));
 			}
 			return that;
@@ -519,7 +522,7 @@ function do_put_meta(ID, $param, $body, $ctx){
 			if (deleted_at){
 				return Promise.reject(new Error('404 NOT FOUND'+': Node deleted_at='+deleted_at));
 			}
-			if (node.type != TYPE){
+			if (node.type && node.type != TYPE){
 				return Promise.reject(new Error('404 NOT FOUND'+': Invalid Type='+node.type));
 			}
 			_log(NS,'> update =', that);
@@ -577,7 +580,7 @@ function do_delete_meta(ID, $param, $body, $ctx){
 				// return Promise.reject(new Error('404 NOT FOUND'+': Node deleted_at='+deleted_at));
 				return _;						// returns deleted object in detail.
 			}
-			if (node.type != TYPE){
+			if (node.type && node.type != TYPE){
 				return Promise.reject(new Error('404 NOT FOUND'+': Invalid Type='+node.type));
 			}
 			return $MMS.do_delete(ID, that)
