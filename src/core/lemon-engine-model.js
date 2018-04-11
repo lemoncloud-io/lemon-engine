@@ -965,7 +965,7 @@ module.exports = (function (_$, name, options) {
 			}).catch(err => {
 				//! 읽은 node가 없을 경우에도 발생할 수 있으므로, Error인 경우에만 처리한다.
 				if (err instanceof Error) {
-					_err(NS, `! redis:get-item(${CONF_REDIS_PKEY}, ${id}) err =`, err);
+					_err(NS, `! redis:get-item(${CONF_REDIS_PKEY}, ${id}) err =`, err.message||err);
 					that._error = err;
 				}
 				throw that;
@@ -2366,11 +2366,11 @@ module.exports = (function (_$, name, options) {
 		prepare_chain(id, $node, 'create')
 			.then(my_prepare_node_created)
 			.catch(e => {
-				_log(NS, 'ERR! prepare_node_created =', typeof e, e.message||e);
+				_err(NS, 'ERR! prepare_node_created =', e instanceof Error, e.message||e);
 				//! WARN! IF NOT FOUND. THEN TRY TO CREATE
 				const message = e && e.message || '';
 				if (e instanceof Error && message.indexOf('404 NOT FOUND') >= 0){
-					_log(NS, 'WARN! AUTO TRY TO PREPARE NODE');
+					_inf(NS, 'WARN! AUTO TRY TO PREPARE NODE. ID='+id);
 					return prepare_chain(id, $node, 'create')
 							.then(that => {
 								const current_time = that._current_time;
