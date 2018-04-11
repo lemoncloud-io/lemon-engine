@@ -2366,9 +2366,10 @@ module.exports = (function (_$, name, options) {
 		prepare_chain(id, $node, 'create')
 			.then(my_prepare_node_created)
 			.catch(e => {
-				_log(NS, 'ERR! prepare_node_created =', e.message||e);
+				_log(NS, 'ERR! prepare_node_created =', typeof e, e.message||e);
 				//! WARN! IF NOT FOUND. THEN TRY TO CREATE
-				if (e instanceof Error && e.message && e.message.indexOf('404 NOT FOUND.') > 0){
+				const message = e && e.message || '';
+				if (e instanceof Error && message.indexOf('404 NOT FOUND') >= 0){
 					_log(NS, 'WARN! AUTO TRY TO PREPARE NODE');
 					return prepare_chain(id, $node, 'create')
 							.then(that => {
