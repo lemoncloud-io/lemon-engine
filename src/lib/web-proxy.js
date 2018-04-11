@@ -45,7 +45,8 @@ module.exports = (function (_$, name) {
 	const httpProxy = require('./http-proxy');
 	const $proxy = function(){
 		if (!ENDPOINT) throw new Error('env:WS_ENDPOINT is required!');
-		return httpProxy(_$, 'X'+name, ENDPOINT);
+		const SVC = 'X'+name;
+		return _$[SVC] || httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
 	}
 
 		
