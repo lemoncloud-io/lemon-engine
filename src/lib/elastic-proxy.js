@@ -73,9 +73,10 @@ module.exports = (function (_$, name) {
 		if (!index) return Promise.reject(new Error(NS + 'index is required'));
 		// if (!type) return Promise.reject(new Error(NS + 'type is required'));
 
-		const $param = Object.assign({}, options||{});
+		const param = null;
+		const $param = Object.assign({}, param||{});
 		// $param.$type = type;		// must be ''
-		return $proxy().do_get(index, '0', 'create-index', $param)
+		return $proxy().do_post(index, '0', 'create-index', $param, options)
 			.then(_ => _.result);
 	}
 
@@ -90,9 +91,10 @@ module.exports = (function (_$, name) {
 		if (!index) return Promise.reject(new Error(NS + 'index is required'));
 		// if (!type) return Promise.reject(new Error(NS + 'type is required'));
 
-		const $param = Object.assign({}, options||{});
+		const param = null;
+		const $param = Object.assign({}, param||{});
 		// $param.$type = type;		// must be ''
-		return $proxy().do_get(index, '0', 'delete-index', $param)
+		return $proxy().do_post(index, '0', 'delete-index', $param, options)
 			.then(_ => _.result);
 	}
 
