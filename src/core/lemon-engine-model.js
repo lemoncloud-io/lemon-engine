@@ -1,6 +1,7 @@
 /**
  * Lemon Engine Model Of Node (LEMON)
  * - Lemon Engine Model Implementation as common core module.
+ * - 노드의 라이프싸이클을 관리하기 위한 핵심 모델 구현.
  *
  * ---------------------------
  * ## Environment
