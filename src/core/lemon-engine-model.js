@@ -759,7 +759,8 @@ module.exports = (function (_$, name, options) {
 			if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));         // new Error() for stack-trace.
 			const id = that._id;
 			_log(NS, `- dynamo:my_read_node (${id})....`);
-			return $DS.do_get_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]:id}).then(node => {
+			const idType = CONF_ID_TYPE.startsWith('#') ? 'String' :'';
+			return $DS.do_get_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]:id, idType}).then(node => {
 				_log(NS, `> dynamo:get-item-node(${id}) res=`, $U.json(node));
 				that._node = node;
 				return that;
