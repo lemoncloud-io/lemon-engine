@@ -1,4 +1,7 @@
 /**
+ * # messages-service
+ *  - id/type/name 를 기본으로 작동하는 노드 처리 엔진.
+ * 
  * Messages
  * - 메세지 메타 정보 저장.
  *
