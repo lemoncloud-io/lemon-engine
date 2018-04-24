@@ -1441,7 +1441,17 @@ module.exports = (function (_$, name, options) {
 			.then(that => {
 				_log(NS, '>> updated-node res=', $U.json(that._updated_node));
 				return that;
-			});
+            })
+            .catch(e => {
+                const message = e && e.message || '';
+                _err(NS, '>> updated-node err=', message);
+                //Dynamo : 503 ERROR - The provided expression refers to an attribute that does not exist in the item
+                if (message.indexOf('an attribute that does not exist in the item') > 0){
+                    return my_save_node(that);
+                }
+                throw e;
+            })
+            ;
 	};
 
 	//! Increment Node - Update ONLY the updated field.
