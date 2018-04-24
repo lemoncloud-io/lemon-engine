@@ -19,7 +19,7 @@ module.exports = (function (_$, name, endpoint) {
 	if (!$U) throw new Error('$U is required!');
 	if (!$_) throw new Error('$_ is required!');
 
-	const NS = $U.NS(name, 'red');					// NAMESPACE TO BE PRINTED.
+	const NS = $U.NS(name, 'magenta');					// NAMESPACE TO BE PRINTED.
 	const ENDPOINT = endpoint;
 	const REQUEST = require('request');
 	const queryString = require('query-string');
@@ -65,7 +65,8 @@ module.exports = (function (_$, name, endpoint) {
 			body: $body,
 			json: true
 		}
-		_log(NS, ' url :=', options.method, url);
+		// _log(NS, ' url :=', options.method, url);
+		_log(NS, '*', options.method, url);
 
 		//! returns promise
 		return new Promise((resolve, reject) => {

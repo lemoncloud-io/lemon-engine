@@ -59,7 +59,8 @@ module.exports = (function (_$, name) {
 	const httpProxy = require('./http-proxy');
 	const $proxy = function(){
 		if (!ENDPOINT) throw new Error('env:DS_ENDPOINT is required!');
-		return httpProxy(_$, 'X'+name, ENDPOINT);
+		const SVC = 'X'+name;
+		return _$[SVC] || httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
 	}
 
 
@@ -145,13 +146,15 @@ module.exports = (function (_$, name) {
 
 		//! decode idName, idType.
 		if (id && typeof id === 'object'){
-			const ID = id;
-			const keys = Object.keys(ID);
+			const $id = id;
+			const idType = $id.idType; delete $id.idType;
+			const keys = Object.keys($id);
 			if (keys.length !== 1) return Promise.reject(new Error(NS + ':id is un-expected keys.'));
 			const idName = keys.pop()||'';
-			id = ID[idName];
+			id = $id[idName];
 			// _log(NS,'> idName =', idName,' id = ', id);
 			$param.idName = idName;
+			$param.idType = (idType || (typeof id === 'number' ? 'Number' : 'String'));
 		}
 
 		return $proxy().do_post(table, id, undefined, $param, data)
@@ -174,13 +177,15 @@ module.exports = (function (_$, name) {
 
 		//! decode idName, idType.
 		if (id && typeof id === 'object'){
-			const ID = id;
-			const keys = Object.keys(ID);
+			const $id = id;
+			const idType = $id.idType; delete $id.idType;
+			const keys = Object.keys($id);
 			if (keys.length !== 1) return Promise.reject(new Error(NS + ':id is un-expected keys.'));
 			const idName = keys.pop()||'';
-			id = ID[idName];
+			id = $id[idName];
 			// _log(NS,'> idName =', idName,' id = ', id);
 			$param.idName = idName;
+			$param.idType = (idType || (typeof id === 'number' ? 'Number' : 'String'));
 		}
 
 		return $proxy().do_get(table, id, undefined, $param)
@@ -203,13 +208,15 @@ module.exports = (function (_$, name) {
 
 		//! decode idName, idType.
 		if (id && typeof id === 'object'){
-			const ID = id;
-			const keys = Object.keys(ID);
+			const $id = id;
+			const idType = $id.idType; delete $id.idType;
+			const keys = Object.keys($id);
 			if (keys.length !== 1) return Promise.reject(new Error(NS + ':id is un-expected keys.'));
 			const idName = keys.pop()||'';
-			id = ID[idName];
+			id = $id[idName];
 			// _log(NS,'> idName =', idName,' id = ', id);
 			$param.idName = idName;
+			$param.idType = (idType || (typeof id === 'number' ? 'Number' : 'String'));
 		}
 
 		return $proxy().do_delete(table, id, undefined, $param)
@@ -236,13 +243,15 @@ module.exports = (function (_$, name) {
 
 		//! decode idName, idType.
 		if (id && typeof id === 'object'){
-			const ID = id;
-			const keys = Object.keys(ID);
+			const $id = id;
+			const idType = $id.idType; delete $id.idType;
+			const keys = Object.keys($id);
 			if (keys.length !== 1) return Promise.reject(new Error(NS + ':id is un-expected keys.'));
 			const idName = keys.pop()||'';
-			id = ID[idName];
+			id = $id[idName];
 			// _log(NS,'> idName =', idName,' id = ', id);
 			$param.idName = idName;
+			$param.idType = (idType || (typeof id === 'number' ? 'Number' : 'String'));
 		}
 
 		const $body = data||{};
@@ -273,13 +282,15 @@ module.exports = (function (_$, name) {
 
 		//! decode idName, idType.
 		if (id && typeof id === 'object'){
-			const ID = id;
-			const keys = Object.keys(ID);
+			const $id = id;
+			const idType = $id.idType; delete $id.idType;
+			const keys = Object.keys($id);
 			if (keys.length !== 1) return Promise.reject(new Error(NS + ':id is un-expected keys.'));
 			const idName = keys.pop()||'';
-			id = ID[idName];
+			id = $id[idName];
 			// _log(NS,'> idName =', idName,' id = ', id);
 			$param.idName = idName;
+			$param.idType = (idType || (typeof id === 'number' ? 'Number' : 'String'));
 		}
 
 		const $body = data||{};

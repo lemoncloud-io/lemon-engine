@@ -86,7 +86,7 @@ gulp.task('package', function() {
 			if($body.version) 
 				$body.version = ver;
 			//TODO - sync dependencies version.
-			body = JSON.stringify($body);
+			body = JSON.stringify($body, undefined, '  ');
 		}
 		else if(body.startsWith('# ')){			// it must be md file.
 			const a = body.lastIndexOf('----------------');
