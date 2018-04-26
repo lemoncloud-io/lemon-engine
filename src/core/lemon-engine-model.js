@@ -1197,7 +1197,7 @@ module.exports = (function (_$, name, options) {
 
 			const id = that._id;
 
-			if (CONF_ES_FIELDS) {
+			if (CONF_ES_FIELDS && !CONF_ES_MASTER) {
 				_log(NS, `! elasticsearch:WARN! ignore delete (${id})....`);
 				return that;
 			}
