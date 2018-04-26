@@ -49,7 +49,8 @@ module.exports = (function (_$, name) {
 	const $proxy = function(){
 		if (!ENDPOINT) throw new Error('env:MS_ENDPOINT is required!');
 		const SVC = 'X'+name;
-		return _$[SVC] || httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
+        const $SVC = _$(SVC);
+		return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
 	}
 
 

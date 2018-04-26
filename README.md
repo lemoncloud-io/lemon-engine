@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.2.13    | cognito-proxy as 'CS'
 | 0.2.12    | try to create node in dynamo if error of "an attribute that does not exist in the item"
 | 0.2.5     | web-proxy as 'WS'
 | 0.2.4     | record event handler

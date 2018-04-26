@@ -48,8 +48,9 @@ module.exports = (function (_$, name) {
 	const httpProxy = require('./http-proxy');
 	const $proxy = function(){
 		if (!ENDPOINT) throw new Error('env:RS_ENDPOINT is required!');
-		const SVC = 'X'+name;
-		return _$[SVC] || httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
+        const SVC = 'X'+name;
+        const $SVC = _$(SVC);
+		return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
 	}
 
 		
