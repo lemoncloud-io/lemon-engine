@@ -172,14 +172,14 @@ function initialize($export, options) {
 
     //WARN:TODO - move below messges-service to seperated module.
 	//! load basic core services......
-	require('./service/messages-service')(_$, 'MMS');		// Loading & Register as 'MMS'
+	// require('./service/messages-service')(_$, 'MMS');		// Loading & Register as 'MMS'
 	
-	//! load api functions......
-	const _meta = require('./api/_meta-api')(_$);
-	const group = require('./api/group-api')(_$);
-	const user  = require('./api/user-api')(_$);
-	const chat  = require('./api/chat-api')(_$);
+	// //! load api functions......
+	// const _meta = require('./api/_meta-api')(_$);
+	// const group = require('./api/group-api')(_$);
+	// const user  = require('./api/user-api')(_$);
+	// const chat  = require('./api/chat-api')(_$);
 	
 	//! export.
-	return Object.assign($export, {createModel, _meta, user, group, chat});
+	return Object.assign($export, {createModel});
 }

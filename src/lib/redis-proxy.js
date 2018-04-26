@@ -69,6 +69,7 @@ module.exports = (function (_$, name) {
 		const $param = Object.assign({}, options||{});
 		$param.timeout = timeout;
 
+        // _log(NS, `- redis-proxy:do_create_item(${PKEY}, ${id})... item=`, item);
 		return $proxy().do_post(PKEY, id, undefined, $param, item)
 			.then(_ => _.result);
 	}

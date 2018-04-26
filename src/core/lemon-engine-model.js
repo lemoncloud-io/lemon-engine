@@ -984,6 +984,7 @@ module.exports = (function (_$, name, options) {
 			const node = that._node;
 
 			// _log(NS, `- redis:my_save_node(${id})....`);
+			_log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, node);
 			let chain = $redis.my_set_node_footprint(id, node);
 			chain = chain.then(() => $RS.do_create_item(CONF_REDIS_PKEY, id, node)).then(rs => {
 				_log(NS, `> redis:save-item-node(${id}) res=`, $U.json(rs));
@@ -1313,7 +1314,8 @@ module.exports = (function (_$, name, options) {
 		if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
 		
 		const ID = that._id;
-		// _log(NS, `- my_save_node (${ID})....`);
+        // _log(NS, `- my_save_node (${ID})....`);
+        // _log(NS, '>> that =', that);
 		return Promise.resolve(that)
 			.then($dynamo.my_save_node)
 			.then($redis.my_save_node)

@@ -149,7 +149,7 @@ module.exports = (function (_$, name, options) {
 				});
 		}
 
-		_log(NS, '! WARN - ignored due to no subscription. id='+id);
+		// _log(NS, '! WARN - ignored due to no subscription. id='+id);
 		return that;
 	};
 
