@@ -170,6 +170,7 @@ function initialize($export, options) {
 	}
 	_$('LEM', buildEngine);      // register: lemon-engine-model.
 
+    //WARN:TODO - move below messges-service to seperated module.
 	//! load basic core services......
 	require('./service/messages-service')(_$, 'MMS');		// Loading & Register as 'MMS'
 	
