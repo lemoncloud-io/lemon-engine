@@ -159,7 +159,7 @@ function initialize($export, options) {
 	const createHttpProxy = function(name, endpoint){
 		return httpProxy(_$, name, endpoint);
 	}
-	_$('httpProxy', httpProxy);                             // register as httpProxy (as factory function).
+	// _$('httpProxy', httpProxy);                             // register as httpProxy (as factory function).
     
 	//! load common services....
 	require('./lib/mysql-proxy')(_$, 'MS');           		// load service, and register as 'MS'

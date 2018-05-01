@@ -44,8 +44,9 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
-| 0.3.2     | add httpProxy service. (or use `_$.createHttpProxy(name, endpoint)`)
-| 0.3.1     | remove MMS,user,group service.
+| 0.3.3     | add httpProxy service. (use `_$.createHttpProxy(name, endpoint)`)
+| 0.3.2     | cognito service - manager user/group.
+| 0.3.1     | remove MMS,user,group service. and add cognito service.
 | 0.2.13    | cognito-proxy as 'CS'
 | 0.2.12    | try to create node in dynamo if error of "an attribute that does not exist in the item"
 | 0.2.5     | web-proxy as 'WS'
