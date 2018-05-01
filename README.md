@@ -44,6 +44,8 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.5     | support as `_$.httpProxy(_$, name, uri)`.
+| 0.3.4     | fix require error.
 | 0.3.3     | add httpProxy service. (use `_$.createHttpProxy(name, endpoint)`)
 | 0.3.2     | cognito service - manager user/group.
 | 0.3.1     | remove MMS,user,group service. and add cognito service.

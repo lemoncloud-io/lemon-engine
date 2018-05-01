@@ -156,10 +156,10 @@ function initialize($export, options) {
 
     //! load common libraries...
     const httpProxy = require('./lib/http-proxy');
-	const createHttpProxy = function(name, endpoint){
+	const createHttpProxy = function(_$, name, endpoint){
 		return httpProxy(_$, name, endpoint);
 	}
-	// _$('httpProxy', httpProxy);                             // register as httpProxy (as factory function).
+	_$('httpProxy', httpProxy);                             // register as httpProxy (as factory function).
     
 	//! load common services....
 	require('./lib/mysql-proxy')(_$, 'MS');           		// load service, and register as 'MS'
@@ -172,7 +172,7 @@ function initialize($export, options) {
 	
 	//! load core services......
 	const buildEngine = require('./core/lemon-engine-model');
-	const createModel = function(name, option){
+	const createModel = function(_$, name, option){
 		return buildEngine(_$, name, option);
 	}
 	_$('LEM', buildEngine);                                 // register: lemon-engine-model (as factory function).
