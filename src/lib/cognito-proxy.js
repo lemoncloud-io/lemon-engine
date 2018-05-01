@@ -30,7 +30,16 @@ module.exports = (function (_$, name) {
 	const thiz = {};
 
 	//! item functions.
-	thiz.do_getUser = do_getUser;
+	thiz.do_get_user = do_get_user;
+	thiz.do_get_enable_user = do_get_enable_user;
+	thiz.do_get_disable_user = do_get_disable_user;
+	thiz.do_list_user = do_list_user;
+    thiz.do_update_user = do_update_user;
+    
+	thiz.do_list_group = do_list_group;
+	thiz.do_get_group = do_get_group;
+	thiz.do_add_user_to_group = do_add_user_to_group;
+	thiz.do_create_group = do_create_group;
 
 	//! register service.
 	_$(name, thiz);
@@ -45,15 +54,15 @@ module.exports = (function (_$, name) {
 		const SVC = 'X'+name;
         const $SVC = _$(SVC);
 		return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT);		// re-use proxy by name
-	}
-
-		
+    }
+    
+    
 	/** ****************************************************************************************************************
 	 *  Main Implementation.
 	 ** ****************************************************************************************************************/
-	function do_getUser(userPoolId, userSub){
-		if (!userPoolId) return Promise.reject('userPoolId is required!');
-		if (!userSub) return Promise.reject('userSub is required!');
+	function do_get_user(userPoolId, userSub){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!userSub) return Promise.reject(new Error('userSub is required!'));
 
 		const options = null;	// optional values.
 		const $param = Object.assign({}, options||{});
@@ -63,6 +72,97 @@ module.exports = (function (_$, name) {
 			.then(_ => _.result);
 	}
 
+	function do_get_enable_user(userPoolId, userSub){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!userSub) return Promise.reject(new Error('userSub is required!'));
+
+		return $proxy().do_get(userPoolId, userSub, 'enable')
+			.then(_ => _.result);
+	}
+
+	function do_get_disable_user(userPoolId, userSub){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!userSub) return Promise.reject(new Error('userSub is required!'));
+
+		return $proxy().do_get(userPoolId, userSub, 'disable')
+			.then(_ => _.result);
+	}
+
+	function do_list_user(userPoolId, filterName, filterValue, limit){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		// if (!userSub) return Promise.reject('userSub is required!');
+
+		const options = null;	// optional values.
+		const $param = Object.assign({}, options||{});
+        if(limit) $param.limit = limit;
+        if(filterName) $param[filterName] = filterValue;
+        
+		return $proxy().do_get(userPoolId, undefined, undefined, $param)
+			.then(_ => _.result);
+    }
+    
+	function do_update_user(userPoolId, userSub, $attr){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!userSub) return Promise.reject(new Error('userSub is required!'));
+		if (!$attr) return Promise.reject(new Error('$attr is required!'));
+
+		const options = null;	// optional values.
+		const $param = Object.assign({}, options||{});
+		const $body = Object.assign({}, $attr||{});
+        
+		return $proxy().do_put(userPoolId, userSub, undefined, $param, $body)
+			.then(_ => _.result);
+	}
+
+	function do_list_group(userPoolId, limit){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+
+		const options = null;	// optional values.
+		const $param = Object.assign({}, options||{});
+        if(limit) $param.limit = limit;
+        
+		return $proxy().do_get(userPoolId, '!', undefined, $param)
+			.then(_ => _.result);
+    }
+
+	function do_get_group(userPoolId, groupId){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!groupId) return Promise.reject('groupId is required!');
+
+		const options = null;	// optional values.
+		const $param = Object.assign({}, options||{});
+        
+		return $proxy().do_get(userPoolId, '!'+groupId, undefined, $param)
+			.then(_ => _.result);
+    }
+
+	function do_add_user_to_group(userPoolId, groupId, userId){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!groupId) return Promise.reject('groupId is required!');
+		if (!userId) return Promise.reject('userId is required!');
+
+		const options = null;	// optional values.
+        const $param = Object.assign({}, options||{});
+        const $body = {user: userId};
+        
+		return $proxy().do_post(userPoolId, '!'+groupId, 'user', $param, $body)
+			.then(_ => _.result);
+    }
+    
+	function do_create_group(userPoolId, groupName, description){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!groupName) return Promise.reject('groupName is required!');
+
+		const options = null;	// optional values.
+        const $param = Object.assign({}, options||{});
+        
+        const $body = {description};
+        
+		return $proxy().do_post(userPoolId, '!'+groupName, undefined, $param, $body)
+			.then(_ => _.result);
+    }
+    
+    
 	//! returns.
 	return thiz;
 });
