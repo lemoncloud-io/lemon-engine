@@ -155,7 +155,7 @@ function initialize($export, options) {
 	_$('U', $U);            // register: Utilities.
 
     //! load common libraries...
-    const httpProxy = require('./http-proxy');
+    const httpProxy = require('./lib/http-proxy');
 	const createHttpProxy = function(name, endpoint){
 		return httpProxy(_$, name, endpoint);
 	}
