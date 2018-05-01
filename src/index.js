@@ -154,6 +154,13 @@ function initialize($export, options) {
 	//! register to global instance manager.
 	_$('U', $U);            // register: Utilities.
 
+    //! load common libraries...
+    const httpProxy = require('./http-proxy');
+	const createHttpProxy = function(name, endpoint){
+		return httpProxy(_$, name, endpoint);
+	}
+	_$('httpProxy', httpProxy);                             // register as httpProxy (as factory function).
+    
 	//! load common services....
 	require('./lib/mysql-proxy')(_$, 'MS');           		// load service, and register as 'MS'
 	require('./lib/dynamo-proxy')(_$, 'DS');          		// load service, and register as 'DS'
@@ -168,7 +175,7 @@ function initialize($export, options) {
 	const createModel = function(name, option){
 		return buildEngine(_$, name, option);
 	}
-	_$('LEM', buildEngine);      // register: lemon-engine-model.
+	_$('LEM', buildEngine);                                 // register: lemon-engine-model (as factory function).
 
     //WARN:TODO - move below messges-service to seperated module.
 	//! load basic core services......
@@ -181,5 +188,5 @@ function initialize($export, options) {
 	// const chat  = require('./api/chat-api')(_$);
 	
 	//! export.
-	return Object.assign($export, {createModel});
+	return Object.assign($export, {createModel, createHttpProxy});
 }
