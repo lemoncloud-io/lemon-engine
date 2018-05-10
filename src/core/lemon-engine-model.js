@@ -1892,11 +1892,12 @@ module.exports = (function (_$, name, options) {
 		if (CONF_ES_INDEX && CONF_ES_TYPE && CONF_ES_FIELDS) {
 
 			//TODO - Use Dynamic Field Template!!!..
-			//! see:https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html
+            //! see:https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html
+            //TODO - WARN! changed since ES 6.0
 			const ES_SETTINGS = {
 				"mappings" : {
 					"_default_": {
-						"_all": {"enabled": true},
+						// "_all": {"enabled": true},
 						"dynamic_templates": [{
 							"string_fields": {
 								"match": "*_multi",
@@ -1913,7 +1914,7 @@ module.exports = (function (_$, name, options) {
 							}
 						}],
 						"properties": {
-							"@version": {"type": "string", "index": "not_analyzed"},
+							// "@version": {"type": "string", "index": "not_analyzed"},
 							// "geoip": {
 							// 	"type": "object",
 							// 	"dynamic": true,
