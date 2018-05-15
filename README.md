@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.7     | mysql id-generator configuration (see `$LEM.do_next_id()`).
 | 0.3.6     | fix ElasticSearch create index error due to 'string'.
 | 0.3.5     | support as `_$.httpProxy(_$, name, uri)`.
 | 0.3.4     | fix require error.

@@ -234,6 +234,9 @@ module.exports = (function (_$, name, options) {
 	thiz.do_notify      = ERR_NOT_IMPLEMENTED;           // trigger notify event.
 	thiz.do_subscribe   = ERR_NOT_IMPLEMENTED;           // subscribe notify event.
 
+    //! additional helper functions.
+	thiz.do_next_id     = ERR_NOT_IMPLEMENTED;          // get the next generated-id if applicable.
+    
 	//! register as service.
 	if (!name.startsWith('_')) _$(name, thiz);
 
@@ -476,7 +479,16 @@ module.exports = (function (_$, name, options) {
 		const id = that._id;
 		_log(NS, `- my_prepare_id(${CONF_ID_TYPE}, ${id})....`);
 		if(CONF_ID_TYPE.startsWith('#')){
-			// NOP			
+            //! 이름이 '#'으로 시작하고, CONF_ID_NEXT 가 있을 경우, 내부적 ID 생성 목적으로 시퀀스를 생성해 둔다.
+            if (CONF_ID_TYPE && CONF_ID_TYPE.startsWith('#') && CONF_ID_TYPE.length > 1 && CONF_ID_NEXT > 0) {
+                const ID_NAME = CONF_ID_TYPE.substring(1);
+                return $MS.do_get_next_id(ID_NAME).then(id => {
+                    _log(NS, '> created next-id['+ID_NAME+']=', id);
+                    that._id = id;
+                    return that;
+                })
+            }
+            // NOP
 		} else if(CONF_ID_TYPE && !id){
 			// _log(NS, '> creating next-id by type:'+CONF_ID_TYPE);
 			return $MS.do_get_next_id(CONF_ID_TYPE).then(id => {
@@ -1883,6 +1895,22 @@ module.exports = (function (_$, name, options) {
 				if (e.code === 'ER_TABLE_EXISTS_ERROR') return false;            //IGNORE! duplicated sequence-table.
 				//if (e.code == 'NetworkingError') return false;
 				throw e;
+            }));
+        //! 이름이 '#'으로 시작하고, CONF_ID_NEXT 가 있을 경우, 내부적 ID 생성 목적으로 시퀀스를 생성해 둔다.
+        } else if (CONF_ID_TYPE && CONF_ID_TYPE.startsWith('#') && CONF_ID_TYPE.length > 1 && CONF_ID_NEXT > 0) {
+			actions.push(Promise.resolve('MySQL')
+				.then(_ => {
+                    _log(NS, '# initialize MySQL (Sequence) ');
+                    const ID_NAME = CONF_ID_TYPE.substring(1);
+					return $MS.do_create_id_seq(ID_NAME, CONF_ID_NEXT).then(_ => {
+						_log(NS, '> create-id-seq['+ID_NAME+'] res=', _);
+						return true;
+					})
+			}).catch(e => {
+				// _err(NS, '> create-id-seq error=', e);
+				if (e.code === 'ER_TABLE_EXISTS_ERROR') return false;            //IGNORE! duplicated sequence-table.
+				//if (e.code == 'NetworkingError') return false;
+				throw e;
 			}));
 		} else {
 			_log(NS, 'MS: WARN! ignored configuration. ID_TYPE=', CONF_ID_TYPE);
@@ -1925,8 +1953,17 @@ module.exports = (function (_$, name, options) {
 							// },
 							"title":    { "type": "text"  },
 							"name":     { "type": "text"  },
-							// "stock":    { "type": "integer" },
+                            // "stock":    { "type": "integer" },
+                            //! default timestamp fields along with lemon-engine.
 							"created_at":  {
+								"type":   "date",
+								"format": "strict_date_optional_time||epoch_millis"
+							},
+							"updated_at":  {
+								"type":   "date",
+								"format": "strict_date_optional_time||epoch_millis"
+							},
+							"deleted_at":  {
 								"type":   "date",
 								"format": "strict_date_optional_time||epoch_millis"
 							},
@@ -2022,6 +2059,20 @@ module.exports = (function (_$, name, options) {
 				//if (e.code == 'NetworkingError') return false;
 				throw e;
 			}));
+        //! 이름이 '#'으로 시작하고, CONF_ID_NEXT 가 있을 경우, 내부적 ID 생성 목적으로 시퀀스를 생성해 둔다.
+        } else if (CONF_ID_TYPE && CONF_ID_TYPE.startsWith('#') && CONF_ID_TYPE.length > 1 && CONF_ID_NEXT > 0) {
+			_log(NS, '# terminate MySQL (Sequence) ');
+            const ID_NAME = CONF_ID_TYPE.substring(1);
+			actions.push($MS.do_delete_id_seq(ID_NAME).then(_ => {
+				_log(NS, '> delete-id-seq['+ID_NAME+'] res=', _);
+				return true;
+			}).catch(e => {
+				// _err(NS, '> create-id-seq error=', e);
+				if (e.code === 'ER_BAD_TABLE_ERROR') return true;                //IGNORE! no-table.
+				//if (e.code == 'NetworkingError') return false;
+				throw e;
+
+            }));
 		} else {
 			_log(NS, '# ignored MySQL (Sequence) ');
 		}
@@ -2484,6 +2535,9 @@ module.exports = (function (_$, name, options) {
 			.then(my_test_self)
 			.then(finish_chain);
 
+    thiz.do_next_id = () =>
+        my_prepare_id({_id:0})
+        .then(that => that._id)
 
 	//! returns.
 	return thiz;
