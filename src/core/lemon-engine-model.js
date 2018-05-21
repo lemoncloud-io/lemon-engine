@@ -996,7 +996,8 @@ module.exports = (function (_$, name, options) {
 			const node = that._node;
 
 			// _log(NS, `- redis:my_save_node(${id})....`);
-			_log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, node);
+			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, node);
+			_log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, $U.json(node));
 			let chain = $redis.my_set_node_footprint(id, node);
 			chain = chain.then(() => $RS.do_create_item(CONF_REDIS_PKEY, id, node)).then(rs => {
 				_log(NS, `> redis:save-item-node(${id}) res=`, $U.json(rs));
