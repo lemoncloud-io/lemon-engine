@@ -2028,7 +2028,8 @@ module.exports = (function (_$, name, options) {
 			_log(NS, 'MS: WARN! ignored configuration. ES_TYPE=', CONF_ES_TYPE);
 		}
 
-		//! execute all
+        //! execute all
+        //TODO - catch error per each action. and report.
 		return Promise.all(actions).then(_ => {
 			_log(NS, '>> results=', _);
 			that._result = _;
