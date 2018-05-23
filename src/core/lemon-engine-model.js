@@ -1927,11 +1927,11 @@ module.exports = (function (_$, name, options) {
 
 			//TODO - Use Dynamic Field Template!!!..
             //! see:https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html
-            //TODO - WARN! changed since ES 6.0
+            //!INFO! optimized for ES6.0 @180520
 			const ES_SETTINGS = {
 				"mappings" : {
 					"_default_": {
-						// "_all": {"enabled": true},
+						// "_all": {"enabled": true},   only for ES5 (see below)
 						"dynamic_templates": [{
 							"string_fields": {
 								"match": "*_multi",
@@ -1940,15 +1940,15 @@ module.exports = (function (_$, name, options) {
 									"type": "multi_field",
 									"fields": {
 										"{name}": {
-											"type": "string",  "index": "analyzed", "omit_norms": true, "index_options": "docs"
+											"type": CONF_ES_VERSION >= 6 ? "text" : "string",  "index": "analyzed", "omit_norms": true, "index_options": "docs"
 										},
-										"{name}.raw": {"type": "string", "index": "not_analyzed", "ignore_above": 256}
+										"{name}.raw": {"type": CONF_ES_VERSION >= 6 ? "text" : "string", "index": "not_analyzed", "ignore_above": 256}
 									}
 								}
 							}
 						}],
 						"properties": {
-							// "@version": {"type": "string", "index": "not_analyzed"},
+							"@version": {"type": CONF_ES_VERSION >= 6 ? "text" : "string", "index": CONF_ES_VERSION >= 6 ? false : "not_analyzed"},
 							// "geoip": {
 							// 	"type": "object",
 							// 	"dynamic": true,
@@ -1957,10 +1957,9 @@ module.exports = (function (_$, name, options) {
 							// 		"location": {"type": "geo_point"}
 							// 	}
 							// },
-							"title":    { "type": "text"  },
-							"name":     { "type": "text"  },
-                            // "stock":    { "type": "integer" },
-                            //! default timestamp fields along with lemon-engine.
+							"title":    { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  },
+							"name":     { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  },
+							// "stock":    { "type": "integer" },
 							"created_at":  {
 								"type":   "date",
 								"format": "strict_date_optional_time||epoch_millis"
@@ -2002,7 +2001,11 @@ module.exports = (function (_$, name, options) {
 				// 		}
 				// 	}
 				// }
-			}
+            }
+            
+            if (!(CONF_ES_VERSION >= 6)){
+                ES_SETTINGS.mappings._default_["all"] = {"enabled": true};
+            }
 
 			//! add actions
 			actions.push(Promise.resolve('ElasticSearch')
