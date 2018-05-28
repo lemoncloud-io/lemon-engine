@@ -44,7 +44,8 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
-| 0.3.9     | sns-proxy as 'SN'
+| 0.3.10    | sns-proxy as 'SN'
+| 0.3.9     | support ES6 with `ES_VERSION = 6`.
 | 0.3.8     | minor fix for log of redis:my_save_node
 | 0.3.7     | mysql id-generator configuration (see `$LEM.do_next_id()`).
 | 0.3.6     | fix ElasticSearch create index error due to 'string'.

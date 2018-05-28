@@ -187,14 +187,16 @@ module.exports = (function (_$, name, options) {
 	const $MS = _$.MS;                              // re-use global instance (mysql-service).
 	const $DS = _$.DS;                              // re-use global instance (dynamo-service).
 	const $RS = _$.RS;                              // re-use global instance (redis-service).
-	const $ES = _$.ES;                              // re-use global instance (elasticsearch-service).
+	const $ES5 = _$.ES;                             // re-use global instance (elasticsearch-service).
+	const $ES6 = _$.ES6;                            // re-use global instance (elastic6-service).
 
 	if (!$U) throw new Error('$U is required!');
 	if (!$_) throw new Error('$U is required!');
 	if (!$MS) throw new Error('$MS is required!');
 	if (!$DS) throw new Error('$DS is required!');
 	if (!$RS) throw new Error('$RS is required!');
-	if (!$ES) throw new Error('$ES is required!');
+	// if (!$ES5) throw new Error('$ES is required!');
+	// if (!$ES6) throw new Error('$ES6 is required!');
 
 	//! load common(log) functions
 	const _log = _$.log;
@@ -266,7 +268,10 @@ module.exports = (function (_$, name, options) {
 	const CONF_ES_INDEX     = CONF_GET_VAL('ES_INDEX', 'test-v1');  // ElasticSearch Index Name. (optional)
 	const CONF_ES_TYPE      = CONF_GET_VAL('ES_TYPE', 'test');      // ElasticSearch Type Name of this Table. (optional)
 	const CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);   // ElasticSearch Fields definition. (null 이면 master-record)
-	const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', 0);			// ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
+    const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', 0);			// ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
+    const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);        // ES Version Number. (5 means backward compartible)
+    const $ES               = CONF_ES_VERSION > 5 ? $ES6 : $ES5;    // ES Target Service
+	if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
 
 	//! Notify Service
 	const CONF_NS_NAME      = CONF_GET_VAL('NS_NAME', '');          // '' means no notification services.
@@ -1922,11 +1927,11 @@ module.exports = (function (_$, name, options) {
 
 			//TODO - Use Dynamic Field Template!!!..
             //! see:https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html
-            //TODO - WARN! changed since ES 6.0
+            //!INFO! optimized for ES6.0 @180520
 			const ES_SETTINGS = {
 				"mappings" : {
 					"_default_": {
-						// "_all": {"enabled": true},
+						// "_all": {"enabled": true},   only for ES5 (see below)
 						"dynamic_templates": [{
 							"string_fields": {
 								"match": "*_multi",
@@ -1935,15 +1940,15 @@ module.exports = (function (_$, name, options) {
 									"type": "multi_field",
 									"fields": {
 										"{name}": {
-											"type": "string",  "index": "analyzed", "omit_norms": true, "index_options": "docs"
+											"type": CONF_ES_VERSION >= 6 ? "text" : "string",  "index": "analyzed", "omit_norms": true, "index_options": "docs"
 										},
-										"{name}.raw": {"type": "string", "index": "not_analyzed", "ignore_above": 256}
+										"{name}.raw": {"type": CONF_ES_VERSION >= 6 ? "text" : "string", "index": "not_analyzed", "ignore_above": 256}
 									}
 								}
 							}
 						}],
 						"properties": {
-							// "@version": {"type": "string", "index": "not_analyzed"},
+							"@version": {"type": CONF_ES_VERSION >= 6 ? "text" : "string", "index": CONF_ES_VERSION >= 6 ? false : "not_analyzed"},
 							// "geoip": {
 							// 	"type": "object",
 							// 	"dynamic": true,
@@ -1952,10 +1957,9 @@ module.exports = (function (_$, name, options) {
 							// 		"location": {"type": "geo_point"}
 							// 	}
 							// },
-							"title":    { "type": "text"  },
-							"name":     { "type": "text"  },
-                            // "stock":    { "type": "integer" },
-                            //! default timestamp fields along with lemon-engine.
+							"title":    { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  },
+							"name":     { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  },
+							// "stock":    { "type": "integer" },
 							"created_at":  {
 								"type":   "date",
 								"format": "strict_date_optional_time||epoch_millis"
@@ -1997,7 +2001,11 @@ module.exports = (function (_$, name, options) {
 				// 		}
 				// 	}
 				// }
-			}
+            }
+            
+            if (!(CONF_ES_VERSION >= 6)){
+                ES_SETTINGS.mappings._default_["all"] = {"enabled": true};
+            }
 
 			//! add actions
 			actions.push(Promise.resolve('ElasticSearch')
@@ -2020,7 +2028,8 @@ module.exports = (function (_$, name, options) {
 			_log(NS, 'MS: WARN! ignored configuration. ES_TYPE=', CONF_ES_TYPE);
 		}
 
-		//! execute all
+        //! execute all
+        //TODO - catch error per each action. and report.
 		return Promise.all(actions).then(_ => {
 			_log(NS, '>> results=', _);
 			that._result = _;
