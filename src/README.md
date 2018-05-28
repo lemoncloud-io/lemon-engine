@@ -73,6 +73,8 @@ if (!$LEM) throw new Error(NS+'$LEM is required!');
   RS_ENDPOINT:  'http://localhost:8081/redis'
   # SQS backbone api
   SS_ENDPOINT:  'http://localhost:8081/sqs'
+  # SNS backbone api
+  SN_ENDPOINT:  'http://localhost:8081/sns'
   # Web backbone api
   WS_ENDPOINT:  'http://localhost:8081/web'
 ```
