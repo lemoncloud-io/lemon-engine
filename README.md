@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.11    | allow ipp to be set 0. 
 | 0.3.10    | sns-proxy as 'SN'
 | 0.3.9     | support ES6 with `ES_VERSION = 6`.
 | 0.3.8     | minor fix for log of redis:my_save_node
