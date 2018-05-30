@@ -1241,7 +1241,7 @@ module.exports = (function (_$, name, options) {
 			//! Rewrite Query...
 			const param = {$page:0, $limit:0};			// page start from '0'
 			param.$page = $U.N(that.page||0);
-			param.$limit = $U.N(that.ipp === 0 ? 0 : that.ipp || 10); //Distinguish ipp is '' or 0.
+			param.$limit = $U.N(that.ipp === 0 ? 0 : that.ipp || 10); //allow ipp to be set 0.
 			// param.$exist = '!deleted_at';			// NOT INCLUDE DELETED.
 			param.deleted_at = '0';
 			if (that.$source) param.$source = that.$source;		// copy source.
