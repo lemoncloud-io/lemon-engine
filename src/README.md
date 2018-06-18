@@ -52,6 +52,7 @@ const $LEM = _$.LEM(_$, '_'+name, {
     ES_FIELDS   : ES_FIELDS,
     NS_NAME     : name,                         // Notify Service Name. (null means no notifications)
     ES_MASTER	: 1,							// MASTER NODE.
+    ES_VERSION  : 6,                            // Use ES Version 6.
     CLONEABLE   : true,                         // 복제 가능하며, parent/cloned 필드를 지원함.
     PARENT_IMUT : false,						// parent-id 변경 가능함(2018.03.15)
 });    // load core-service with parameters.
