@@ -77,6 +77,11 @@ module.exports = (function (_$, name, endpoint) {
 				const statusCode = response.statusCode;
 				const statusMessage = response.statusMessage;
 				if (statusCode !== 200){
+                    //! handle for not-found.
+					if (statusCode === 400 || statusCode === 404){
+                        const msg = ''+body;
+                        return reject(new Error(msg.indexOf('404 NOT FOUND') >= 0 ? msg : '404 NOT FOUND'));
+                    }
 					_log(NS,'> code='+statusCode+', msg='+statusMessage+', body=', body);
 					// if (statusCode === 400 || statusCode === 404)
 					// 	return reject(new Error(body||statusMessage));
