@@ -640,7 +640,14 @@ module.exports = (function (_$, name, options) {
 		//! read previous(old) node from dynamo.
 		return my_read_node(that)
 			.catch(e => {
-				_err(NS, 'not found. err=', e);
+				// _err(NS, 'not found. err=', e);
+                const msg = e && e.message || '';
+                if (msg.indexOf('404 NOT FOUND') >= 0){
+                    //! ignore it.
+				    _err(NS, 'not found. err=', msg);
+                } else {
+                    throw e;
+                }
 				return that;
 			})
 			.then(that => {
