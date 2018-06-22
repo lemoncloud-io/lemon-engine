@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.13    | lambda-proxy as 'LS'. set `LS_ENDPOINT`.
 | 0.3.12    | optimize 404 error message.
 | 0.3.11    | allow ipp to be set 0. 
 | 0.3.10    | sns-proxy as 'SN'
