@@ -30,9 +30,10 @@ module.exports = (function (_$, name) {
 	const thiz = {};
 
 	//! item functions.
-	thiz.do_sendMessage = do_sendMessage;
-	thiz.do_receiveMessage = do_receiveMessage;
-	thiz.do_deleteMessage = do_deleteMessage;
+	thiz.do_sendMessage     = do_sendMessage;
+	thiz.do_receiveMessage  = do_receiveMessage;
+	thiz.do_deleteMessage   = do_deleteMessage;
+	thiz.do_statistics      = do_statistics;
 
 	//! test function.
 	thiz.do_test_self   = do_test_self;
@@ -88,6 +89,16 @@ module.exports = (function (_$, name) {
 		const $param = Object.assign({}, options||{});
 
 		return $proxy().do_delete(TYPE, handle, undefined)
+			.then(_ => _.result);
+    }
+    
+	function do_statistics (TYPE, handle) {
+		if (!TYPE) return Promise.reject('TYPE is required!');
+
+		const options = null;	// optional values.
+		const $param = Object.assign({}, options||{});
+
+		return $proxy().do_get(TYPE, '0', 'stat')
 			.then(_ => _.result);
 	}
 	
