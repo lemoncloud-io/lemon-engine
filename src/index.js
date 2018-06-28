@@ -169,6 +169,7 @@ function initialize($export, options) {
 	require('./lib/elastic6-proxy')(_$, 'ES6'); 		    // load service, and register as 'ES6'
 	require('./lib/sqs-proxy')(_$, 'SS'); 					// load service, and register as 'SS'
 	require('./lib/sns-proxy')(_$, 'SN'); 					// load service, and register as 'SN'
+	require('./lib/ses-proxy')(_$, 'SE'); 					// load service, and register as 'SE'
 	require('./lib/web-proxy')(_$, 'WS'); 					// load service, and register as 'WS'
 	require('./lib/cognito-proxy')(_$, 'CS'); 				// load service, and register as 'CS'
 	require('./lib/lambda-proxy')(_$, 'LS'); 				// load service, and register as 'LS'
