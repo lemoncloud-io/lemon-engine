@@ -682,7 +682,8 @@ module.exports = (function (_$, name, options) {
 		const id = that._id;
 		const node = that._node;
 		const current_time = that._current_time;
-		_log(NS, '> prepared-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
+		_log(NS, '> prepared-id =', id, ', current-time =', current_time);
+		// _log(NS, '> prepared-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
 
 		//! read previous(old) node from dynamo.
 		return my_read_node(that).then(that => {
@@ -1009,7 +1010,8 @@ module.exports = (function (_$, name, options) {
 
 			// _log(NS, `- redis:my_save_node(${id})....`);
 			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, node);
-			_log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, $U.json(node));
+			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, $U.json(node));
+			_log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node.updated_at=`, node&&node.updated_at||0);
 			let chain = $redis.my_set_node_footprint(id, node);
 			chain = chain.then(() => $RS.do_create_item(CONF_REDIS_PKEY, id, node)).then(rs => {
 				_log(NS, `> redis:save-item-node(${id}) res=`, $U.json(rs));
