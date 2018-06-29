@@ -63,7 +63,7 @@ module.exports = (function (_$, name, endpoint) {
 			method: METHOD||'GET',
 			uri: url,
 			body: $body,
-			json: true
+			json: (typeof $body === 'string') ? false : true
 		}
 		// _log(NS, ' url :=', options.method, url);
 		_log(NS, '*', options.method, url);
