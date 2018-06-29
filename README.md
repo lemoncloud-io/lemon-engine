@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.16    | optimize log msg.
 | 0.3.15    | add ses-proxy as `SE`.
 | 0.3.14    | add sqs stat as `$SS.do_statistics()`.
 | 0.3.13    | lambda-proxy as 'LS'. set `LS_ENDPOINT`.
