@@ -173,7 +173,8 @@ function initialize($export, options) {
 	require('./lib/web-proxy')(_$, 'WS'); 					// load service, and register as 'WS'
 	require('./lib/cognito-proxy')(_$, 'CS'); 				// load service, and register as 'CS'
 	require('./lib/lambda-proxy')(_$, 'LS'); 				// load service, and register as 'LS'
-	
+	require('./lib/protocol-proxy')(_$,'PR');				// load service, and register as 'PR'
+
 	//! load core services......
 	const buildEngine = require('./core/lemon-engine-model');
 	const createModel = function(_$, name, option){
