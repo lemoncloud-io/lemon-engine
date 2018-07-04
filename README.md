@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.18    | add `protocol-proxy`.
 | 0.3.17    | optimize `http-proxy`.
 | 0.3.16    | optimize log msg.
 | 0.3.15    | add ses-proxy as `SE`.
