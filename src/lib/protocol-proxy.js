@@ -156,9 +156,9 @@ module.exports = (function (_$, name) {
 		const id = url_obj.id || url_obj.ID;
 		const cmd = url_obj.cmd || url_obj.CMD;
 		const $param = url_obj.param || url_obj.$param || url_obj.PARAM;
-		const param = typeof $param === 'object'? queryString.stringify($param) : null;
+		const param = typeof $param === 'object'? queryString.stringify($param) : $param;
 		const $body = url_obj.body || url_obj.$body || url_obj.BODY;
-		const body = typeof $body === 'object'? queryString.stringify($body) : null;
+		const body = typeof $body === 'object'? queryString.stringify($body) : $body;
 		
 		const url = protocol			// Madatory => lemon://
 				+ (sid?sid +'@':'') 	// Optional => sid@
