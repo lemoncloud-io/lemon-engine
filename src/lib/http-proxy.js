@@ -90,7 +90,18 @@ module.exports = (function (_$, name, endpoint) {
 					body = body||statusMessage;
 					return reject(typeof body === 'string' ? new Error(body) : body);
 				}
-				
+                
+                //! try to parse body.
+                try{
+                    if (body && typeof body == 'string' && body.startsWith('{') && body.endsWith('}')){
+                        body = JSON.parse(body);
+                    } else if (body && typeof body == 'string' && body.startsWith('[') && body.endsWith(']')){
+                        body = JSON.parse(body);
+                    }
+                }catch(e){
+                    _err(NS, '!WARN! parse =', e);
+                }
+                
 				//! ok! successed.
 				resolve(body);
 			})
