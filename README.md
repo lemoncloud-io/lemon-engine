@@ -44,6 +44,7 @@ $ http localhost:8082/user/
 
 | Version   | Description
 |--         |--
+| 0.3.20    | try to parse body for `http-proxy`.
 | 0.3.19    | get stringified param and body for `protocol-proxy`.
 | 0.3.18    | add `protocol-proxy`.
 | 0.3.17    | optimize `http-proxy`.
