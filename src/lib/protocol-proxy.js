@@ -34,6 +34,7 @@ module.exports = (function (_$, name) {
 
 	//! item functions.
     thiz.do_execute       = do_execute_protocol;
+	thiz.do_post_execute  = do_post_execute_protocol;
     thiz.do_notify        = do_notify_protocol;
     
 	//! register service.
@@ -85,6 +86,27 @@ module.exports = (function (_$, name) {
 		return $proxy().do_get(PROXY.type, '!', 'execute', {url:url_str});
     }
 
+	/**
+     * Synchronized Call to URL for post
+     * - 동기화 실행으로, 내부적으로 Http/Lambda 호출로 Promise() 된 실행 결과를 얻을 수 있음.
+     * 
+     * @param {*} url 
+     * @returns {*} Result.
+     */
+    function do_post_execute_protocol(url,data){
+        _log(NS, `do_post_execute_protocol()....`);
+        if (!url) return Promise.reject('url is required!');
+
+        // validate url
+		if (!validate_url(url)) return Promise.reject(url);
+
+		// force url to be 'string' type before sending it
+        const url_str = typeof url === 'object' ? build_url(url) : url;
+        
+        // http-proxy.do_get (TYPE, ID, CMD, $param, $body)
+		return $proxy().do_post(PROXY.type, '!', 'execute', {url:url_str},data);
+	}
+	
     /**
      * Asynchronized Call to URL.
      * - 비동기식 실행으로, 내부적으로 SNS를 활용하기도 한다.
