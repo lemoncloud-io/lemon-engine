@@ -69,6 +69,10 @@ module.exports = (function (_$, name) {
      * Synchronized Call to URL.
      * - 동기화 실행으로, 내부적으로 Http/Lambda 호출로 Promise() 된 실행 결과를 얻을 수 있음.
      * 
+     * example:
+     * - do_execute('lemon://imweb-pools/goods/0/next-id') => GET 'lemon-imweb-pools-api/goods/0/next-id'
+     * - do_execute('lemon://imweb-pools/goods/0/next-id#') => POST 'lemon-imweb-pools-api/goods/0/next-id'
+     * 
      * @param {*} url 
      * @returns {*} Result.
      */
