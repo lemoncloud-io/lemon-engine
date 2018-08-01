@@ -51,10 +51,11 @@ const $LEM = _$.LEM(_$, '_'+name, {
     ES_TYPE     : 'messages',					// ES Type Name
     ES_FIELDS   : ES_FIELDS,
     NS_NAME     : name,                         // Notify Service Name. (null means no notifications)
-    ES_MASTER	: 1,							// MASTER NODE.
-    ES_VERSION  : 6,                            // Use ES Version 6.
+    ES_MASTER	: 1,							// ES Master NODE.
+    ES_VERSION  : 6,                            // ES Version 6.x.
     CLONEABLE   : true,                         // 복제 가능하며, parent/cloned 필드를 지원함.
     PARENT_IMUT : false,						// parent-id 변경 가능함(2018.03.15)
+	XECURE_KEY  : 'lemon',					    // Encryption Key (use '*' prefix at property name: ver 0.3.22)
 });    // load core-service with parameters.
 if (!$LEM) throw new Error(NS+'$LEM is required!');
 ```

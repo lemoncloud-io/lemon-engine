@@ -40,10 +40,41 @@ $ http localhost:8082/user/
 
 
 ----------------
+# 개발 참고 
+
+Feature 추가 관련 도움말.
+
+## 암호화 필드 사용 (ver: 0.3.22)
+
+- 암호화는 지원을 위한 방법은 아래와 같음.
+- 그러면, DynamoDB에는 암호화된 값이 저장되며, api 에서는 자동으로 복호화된 값을 얻을 수 있음.
+
+```js
+// 필드명 앞에 '*'를 붙여준다.
+FIELDS = [..., '*passwd']
+
+// LEM() 설정에서, 암호키를 설정함. 기본값은 아래와 같음.
+const $LEM = LEM(_$, '_'+name, {			// use '_' prefix for LEM instance. 
+    ...
+    XECURE_KEY  : ('LM~1212@'+name),		// Encryption Key (use '*' prefix at property name)
+    ...
+});
+
+//! do_read() 부분에, 아래와 같이 do_readX 를 이용함.
+thiz.do_read = (_id, $params) => {
+    ....
+    .then(0 ? $LEM.do_read : $LEM.do_readX)			// use do_readX for decryption.
+    ...
+}
+```
+
+
+----------------
 # VERSION INFO #
 
 | Version   | Description
 |--         |--
+| 0.3.22    | support xecured fields see `XECURE_KEY`. @180801.
 | 0.3.21    | add 'do_post_execute_protocol'
 | 0.3.20    | try to parse body for `http-proxy`.
 | 0.3.19    | get stringified param and body for `protocol-proxy`.
