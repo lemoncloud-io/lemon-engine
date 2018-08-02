@@ -1,6 +1,6 @@
 {
   "name": "lemon-engine",
-  "version": "0.3.21",
+  "version": "0.3.22",
   "description": "lemon core engine module",
   "main": "index.js",
   "scripts": {
@@ -11,6 +11,7 @@
   "author": "Steve (steve@lemoncloud.io)",
   "license": "ISC",
   "dependencies": {
+    "crypto": "^1.0.1",
     "body-parser": "^1.18.2",
     "dynamodb-value": "^1.0.5",
     "express": "^4.16.2",

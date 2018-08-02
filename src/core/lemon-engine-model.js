@@ -220,6 +220,7 @@ module.exports = (function (_$, name, options) {
 	thiz.do_update      = ERR_NOT_IMPLEMENTED;          // update $node by id. (updated_at := now)
 	thiz.do_increment   = ERR_NOT_IMPLEMENTED;          // increment by count ex) stock = stock + 2.
 	thiz.do_read        = ERR_NOT_IMPLEMENTED;          // read-back $node by id.
+	thiz.do_readX       = ERR_NOT_IMPLEMENTED;          // read-back $node by id (with decryption).
 	thiz.do_delete      = ERR_NOT_IMPLEMENTED;          // mark deleted by id (deleted_at := now)
 	thiz.do_destroy     = ERR_NOT_IMPLEMENTED;          // destroy $node by id (real deletion).
 	thiz.do_search      = ERR_NOT_IMPLEMENTED;          // search items by query.
@@ -246,7 +247,7 @@ module.exports = (function (_$, name, options) {
 	/** ****************************************************************************************************************
 	 *  Main Implementation.
 	 ** ****************************************************************************************************************/
-	const CONF_GET_VAL = (name, defval) => thiz[name] === undefined ? defval : thiz[name];
+	const CONF_GET_VAL 		= (name, defval) => thiz[name] === undefined ? defval : thiz[name];
 	const CONF_VERSION      = CONF_GET_VAL('VERSION', 1);           // initial version number(name 'V').
 	const CONF_REVISION     = CONF_GET_VAL('REVISION', 1);          // initial revision number(name 'R').
 	const CONF_VERSION_NAME = CONF_GET_VAL('VERSION_NAME', 'V');    // version name (Default 'V')       // if null, then no version.
@@ -257,7 +258,7 @@ module.exports = (function (_$, name, options) {
 	const CONF_ID_NEXT      = CONF_GET_VAL('ID_NEXT', 0);           // start number of sequence for next-id.
 	const CONF_DYNA_TABLE   = CONF_GET_VAL('DYNA_TABLE', 'TestTable');// DynamoDB Target Table Name.
 	const CONF_REDIS_PKEY   = CONF_GET_VAL('REDIS_PKEY', 'TPKEY');  // Redis search prefix-key name. (optional)
-	const CONF_FIELDS       = CONF_GET_VAL('FIELDS', null);         // Fields to filter. ['id','owner','mid','parent','domain','name'];
+	// const CONF_FIELDS       = CONF_GET_VAL('FIELDS', null);         // Fields to filter. ['id','owner','mid','parent','domain','name'];
 	const CONF_DEFAULTS     = CONF_GET_VAL('DEFAULTS', null);       // Default set of fields (only effective in prepare)
 	const CONF_CLONEABLE    = CONF_GET_VAL('CLONEABLE', false);     // Cloneable Setting. (it requires 'parent', 'cloned' fields).
 	const CONF_CLONED_ID    = CONF_GET_VAL('CLONED_ID', 'cloned');       // default ID Name. (for input parameter)
@@ -267,17 +268,96 @@ module.exports = (function (_$, name, options) {
 	//! CONF_ES : INDEX/TYPE required if to support search. master if FIELDS is null, or slave if FIELDS not empty.
 	const CONF_ES_INDEX     = CONF_GET_VAL('ES_INDEX', 'test-v1');  // ElasticSearch Index Name. (optional)
 	const CONF_ES_TYPE      = CONF_GET_VAL('ES_TYPE', 'test');      // ElasticSearch Type Name of this Table. (optional)
-	const CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);   // ElasticSearch Fields definition. (null 이면 master-record)
+	// const CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);   // ElasticSearch Fields definition. (null 이면 master-record)
     const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', 0);			// ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
     const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);        // ES Version Number. (5 means backward compartible)
     const $ES               = CONF_ES_VERSION > 5 ? $ES6 : $ES5;    // ES Target Service
 	if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
 
+	//! XECURED KEY
+	const CONF_XECURE_KEY	= CONF_GET_VAL('XECURE_KEY', null);		// Encryption/Decryption Key.
+
+	//! initialize CONF_FIELDS, CONF_FIELDS, CONF_XEC_FIELDS.
+	const [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS] = (()=>{
+		let CONF_FIELDS       = CONF_GET_VAL('FIELDS', null);
+		let CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);
+		let CONF_XEC_FIELDS	  = CONF_GET_VAL('XEC_FIELDS', null);
+		const asArray = ($conf)=>{
+			return $conf && typeof $conf == 'string' ? $conf.split(',').reduce((L, val)=>{
+				val = val.trim(); if (val) L.push(val); return val;
+			}, []) : $conf;
+		}
+		//! Validate configuration.
+		if (CONF_FIELDS) {
+			CONF_FIELDS = asArray(CONF_FIELDS);
+			CONF_ES_FIELDS = asArray(CONF_ES_FIELDS||[]);
+			CONF_XEC_FIELDS = asArray(CONF_XEC_FIELDS||[]);
+			if (!Array.isArray(CONF_FIELDS)) throw new Error('FIELDS must be array!');
+			if (!Array.isArray(CONF_ES_FIELDS)) throw new Error('ES_FIELDS must be array!');
+			if (!Array.isArray(CONF_XEC_FIELDS)) throw new Error('XEC_FIELDS must be array!');
+			//! extract special fields like xecured. ex: '*pass' is xecured-fields.
+			CONF_FIELDS = CONF_FIELDS.reduce((L, field)=>{
+				const xecured = field.startsWith('*');
+				field = xecured ? field.substring(1) : field;
+				if (!field) throw new Error('Invalid field name');
+				if (xecured && CONF_XEC_FIELDS.indexOf(field) < 0) CONF_XEC_FIELDS.push(field);
+				L.push(field);
+				return L;
+			}, []);
+			CONF_ES_FIELDS = CONF_ES_FIELDS.reduce((L, field)=>{
+				const xecured = field.startsWith('*');
+				field = xecured ? field.substring(1) : field;
+				if (!field) throw new Error('Invalid field name');
+				if (xecured && CONF_XEC_FIELDS.indexOf(field) < 0) CONF_XEC_FIELDS.push(field);
+				L.push(field);
+				return L;
+			}, []);
+			CONF_XEC_FIELDS.length && _inf(NS, 'XECURED-FIELDS =', CONF_XEC_FIELDS);
+		}
+		//! clear if CONF_FIELDS is empty.
+		const isEmpty = !CONF_FIELDS || !CONF_FIELDS.length;
+		if (isEmpty){
+			CONF_FIELDS = null;
+			CONF_ES_FIELDS = null;
+			CONF_XEC_FIELDS = null;
+		}
+		//! returns finally.
+		return [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS];
+	})();
+
 	//! Notify Service
 	const CONF_NS_NAME      = CONF_GET_VAL('NS_NAME', '');          // '' means no notification services.
 
 	//! DynamoDB Value Marshaller.
-	const DynamoDBValue = require('dynamodb-value');                // DynamoDB Data Converter.
+	const DynamoDBValue 	= require('dynamodb-value');            // DynamoDB Data Converter.
+	const $crypto 			= function(passwd){
+		const crypto = require('crypto');
+		const algorithm = 'aes-256-ctr';
+		if (!crypto) throw new Error('crypto module is required!');
+		const thiz = {crypto, algorithm, passwd};
+		const MAGIC = 'LM!#';
+		const JSON_TAG = '#JSON:';
+		thiz.encrypt = function(val){
+			val = val === undefined ? null : val;
+			// msg = msg && typeof msg == 'object' ? JSON_TAG+JSON.stringify(msg) : msg;
+			//! 어느 데이터 타입이든 저장하기 위해서, object로 만든다음, 암호화 시킨다.
+			var msg    = JSON.stringify({alg: algorithm, val: val});
+			var buffer = new Buffer(MAGIC+(msg||''), "utf8");
+			var passwd = this.passwd||'';
+			var cipher = crypto.createCipher(algorithm, passwd)
+			var crypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
+			return crypted.toString(1 ? 'base64' : 'utf8');
+		}
+		thiz.decrypt = function(msg){
+			var buffer = new Buffer(msg||'', "base64");
+			var passwd = this.passwd||'';
+			var decipher = crypto.createDecipher(algorithm, passwd)
+			var dec = Buffer.concat([decipher.update(buffer) , decipher.final()]).toString('utf8');
+			var $msg = JSON.parse(dec.substr(MAGIC.length))||{};
+			return $msg.val;
+		}
+		return thiz;
+	}
 
 	/////////////////////////
 	//! Notification Service.
@@ -810,6 +890,7 @@ module.exports = (function (_$, name, options) {
 			let node2 = {};
 			let updated_count = 0;
 			// const IGNORE_FIELDS = [CONF_ID_INPUT,CONF_ID_NAME,'created_at','updated_at','deleted_at',CONF_PARENT_ID,CONF_CLONED_ID];
+			const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
 			for(let n in that){
 				if(!that.hasOwnProperty(n)) continue;
 				n = ''+n;
@@ -823,6 +904,13 @@ module.exports = (function (_$, name, options) {
 					node2[n] = that[n];
 					node[n] = that[n];
 					updated_count++;
+					//! encrypt if xecured fields.
+					if ($xec && CONF_XEC_FIELDS && CONF_XEC_FIELDS.indexOf(n) >= 0){
+						node[n] = $xec.encrypt(that[n]);
+						node2[n] = node[n];
+						// _inf(NS, '!! encrypt('+that[n]+') ', node[n]);
+						// _inf(NS, '!! decript('+that[n]+') ', $xec.decrypt(node[n]));
+					}
 				}
 			}
 			node2.updated_at = node.updated_at;         // copy time field.
@@ -869,6 +957,7 @@ module.exports = (function (_$, name, options) {
 			// const IGNORE_FIELDS = [CONF_ID_INPUT,CONF_ID_NAME,'created_at','updated_at','deleted_at',CONF_PARENT_ID,CONF_CLONED_ID];
 			if (MODE !== 'prepare')         //WARN! in prepare mode, node was already populated with default value. (so do not override)
 			{
+				const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
 				for (let n in that){
 					if(!that.hasOwnProperty(n)) continue;
 					n = ''+n;
@@ -878,6 +967,10 @@ module.exports = (function (_$, name, options) {
 					if (IGNORE_FIELDS.indexOf(n) >= 0) continue;
 					if (CONF_FIELDS && CONF_FIELDS.indexOf(n) < 0) continue;        // Filtering Fields
 					node[n] = that[n];
+					//! encrypt if xecured fields.
+					if ($xec && CONF_XEC_FIELDS && CONF_XEC_FIELDS.indexOf(n) >= 0){
+						node[n] = $xec.encrypt(that[n]);
+					}
 				}
 			}
 
@@ -1333,6 +1426,24 @@ module.exports = (function (_$, name, options) {
 		// 	_log(NS, '>> read-node res=', $U.json(that._node));
 		// 	return that;
 		// });
+	};
+
+	const my_filter_read_decrypt = (that) => {
+		if (!that || !that._node) return that;
+		if (!CONF_XEC_FIELDS || !CONF_XEC_FIELDS.length) return that;
+		const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
+		if (!$xec) return that;
+
+		const node = that._node||{};
+		CONF_XEC_FIELDS.reduce((N, key)=>{
+			if (key.startsWith('_') || key.startsWith('$')) return N;
+			let val = N[key];
+			if (val === undefined) return N;
+			val = val ? $xec.decrypt(val) : val;
+			N[key] = val;
+			return N;
+		}, node);
+		return that;
 	};
 
 	//! Save Node - Overwrite All Node.
@@ -2485,6 +2596,15 @@ module.exports = (function (_$, name, options) {
 			.then(_prepare_node)
 			//! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
 			.then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
+			.then(my_notify_node)
+			.then(finish_chain);
+	
+	thiz.do_readX = (id, $node) =>
+		prepare_chain(id, $node, 'read')
+			.then(_prepare_node)
+			//! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
+			.then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
+			.then(my_filter_read_decrypt)
 			.then(my_notify_node)
 			.then(finish_chain);
 
