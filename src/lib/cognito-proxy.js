@@ -33,6 +33,7 @@ module.exports = (function (_$, name) {
 	thiz.do_get_user = do_get_user;
 	thiz.do_get_enable_user = do_get_enable_user;
 	thiz.do_get_disable_user = do_get_disable_user;
+	thiz.do_get_confirm_user = do_get_confirm_user;
 	thiz.do_list_user = do_list_user;
     thiz.do_update_user = do_update_user;
     
@@ -85,6 +86,14 @@ module.exports = (function (_$, name) {
 		if (!userSub) return Promise.reject(new Error('userSub is required!'));
 
 		return $proxy().do_get(userPoolId, userSub, 'disable')
+			.then(_ => _.result);
+	}
+
+	function do_get_confirm_user(userPoolId, userSub){
+		if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));
+		if (!userSub) return Promise.reject(new Error('userSub is required!'));
+
+		return $proxy().do_get(userPoolId, userSub, 'confirm')
 			.then(_ => _.result);
 	}
 
