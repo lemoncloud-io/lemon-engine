@@ -1,6 +1,6 @@
 {
   "name": "lemon-engine",
-  "version": "0.3.22",
+  "version": "0.3.23",
   "description": "lemon core engine module",
   "main": "index.js",
   "scripts": {
