@@ -167,6 +167,7 @@ function initialize($export, options) {
 	require('./lib/redis-proxy')(_$, 'RS');           		// load service, and register as 'RS'
 	require('./lib/elastic-proxy')(_$, 'ES'); 				// load service, and register as 'ES'
 	require('./lib/elastic6-proxy')(_$, 'ES6'); 		    // load service, and register as 'ES6'
+	require('./lib/s3-proxy')(_$, 'S3'); 					// load service, and register as 'S3'
 	require('./lib/sqs-proxy')(_$, 'SS'); 					// load service, and register as 'SS'
 	require('./lib/sns-proxy')(_$, 'SN'); 					// load service, and register as 'SN'
 	require('./lib/ses-proxy')(_$, 'SE'); 					// load service, and register as 'SE'
