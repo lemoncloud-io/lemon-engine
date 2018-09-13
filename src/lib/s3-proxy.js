@@ -92,20 +92,23 @@ module.exports = (function (_$, name) {
     /**
      * Use `s3-api.do_post_multipart()`.
      * 
-     * @param {*} bucket        bucket-name (see backbone)
-     * @param {*} name          parent path.
-     * @param {*} file          file (base64 encoded or ...)
-     * @param {*} type          content-type
-     * @param {*} path          parent folder.
+     * @param {string} bucket        bucket-name (see backbone)
+     * @param {string} name          parent path.
+     * @param {base64} file          file (base64 encoded or ...)
+     * @param {string} type          content-type
+     * @param {string} path          parent folder.
+     * @param {object} tags     Tagging
      */
-	function do_save(bucket, name, file, type, path){
+	function do_save(bucket, name, file, type, path, tags){
 		if (!bucket) return Promise.reject(new Error('bucket is required!'));
 		if (!name) return Promise.reject(new Error('filename is required!'));
         if (!file) return Promise.reject(new Error('filestream is required!'));
         path = path||'';
         type = type||'';
 
-		return $proxy().do_post(bucket, '0', 'multipart', undefined, {path, name, file, type})
+        const body = {path, name, file, type};
+        if (tags) body.tags = tags;
+		return $proxy().do_post(bucket, '0', 'multipart', undefined, body)
 		.then(_ => _.result);
 	}
     

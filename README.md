@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 0.3.25    | `s3-proxy` support `tags` for S3 Tagging.
 | 0.3.24    | add `s3-proxy` as `S3`. @180913.
 | 0.3.23    | cognito: `do_get_confirm_user()`. @180911.
 | 0.3.22    | support xecured fields see `XECURE_KEY`. @180801.
