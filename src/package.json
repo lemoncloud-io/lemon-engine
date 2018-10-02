@@ -1,7 +1,7 @@
 {
   "name": "lemoncloud-engine-js",
   "version": "0.0.0",
-  "description": "lemoncloud.io - core engine module with user/group/chat service.",
+  "description": "lemoncloud.io - Lemon Engine Modle of Node for Robust Micro-service based on DynamoDB + ElastiCache + Elasticsearch.",
   "main": "index.js",
   "scripts": {
     "test": "test"
@@ -12,16 +12,19 @@
   },
   "keywords": [
     "lemoncloud",
+    "AWS", "DynamoDB", "ElastiCache", "Elasticsearch",
     "engine"
   ],
   "author": "Steve (steve@lemoncloud.io)",
   "license": "MIT",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "crypto": "^1.0.1",
     "dynamodb-value": "^1.0.5",
-    "js-yaml": "^3.11.0",
-    "query-string": "^6.0.0",
-    "request": "^2.81.0"
+    "express": "^4.16.2",
+    "js-yaml": "^3.12.0",
+    "query-string": "^6.2.0",
+    "request": "^2.88.0"
   },
   "bugs": {
     "url": "https://github.com/lemoncloud-io/lemoncloud-engine-js/issues"
