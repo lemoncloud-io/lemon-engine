@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.2     | `do_saveES()` direct save into ES.
 | 1.0.1     | updated package dependencies
 | 1.0.0     | support in-memory cache for node transaction.
 | 0.3.25    | `s3-proxy` support `tags` for S3 Tagging.

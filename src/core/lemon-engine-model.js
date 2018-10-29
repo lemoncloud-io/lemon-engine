@@ -2640,101 +2640,116 @@ module.exports = (function (_$, name, options) {
 	thiz.do_finish_chain = (id, $node, mode, ctx) => finish_chain(id, $node, mode, ctx);
 
 	//! Basic Functions.
-	thiz.do_prepare = (id, $node) =>
+	thiz.do_prepare = (id, $node) => 
 		prepare_chain(id, $node, 'prepare')
-			.then(my_prepare_node_prepared)
-			.then(my_save_node)
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(my_prepare_node_prepared)
+        .then(my_save_node)
+        .then(my_notify_node)
+        .then(finish_chain);
 
-	thiz.do_create = (id, $node) =>
-		prepare_chain(id, $node, 'create')
-			.then(my_prepare_node_created)
-			.catch(e => {
-				_err(NS, 'ERR! prepare_node_created =', e instanceof Error, e.message||e);
-				//! WARN! IF NOT FOUND. THEN TRY TO CREATE
-				const message = e && e.message || '';
-				if (e instanceof Error && message.indexOf('404 NOT FOUND') >= 0){
-					_inf(NS, 'WARN! AUTO TRY TO PREPARE NODE. ID='+id);
-					return prepare_chain(id, $node, 'create')
-							.then(that => {
-								const current_time = that._current_time;
-								that = _prepare_node(that);				// force to prepare node.
-								_log(NS, '>> prepared old-node=', $U.json(that._node));
-								// that[CONF_ID_INPUT] = that._id;         // make sure id input.
-								// node[CONF_ID_NAME] = that._id;          // make sure id field.
-								that._node = mark_node_created(that._node, current_time);
-								return that;
-							})
-				}
-				throw e;
-			})
-			.then(my_save_node)
-			.then(my_notify_node)
-			.then(finish_chain);
+	thiz.do_create = (id, $node) => {
+		return prepare_chain(id, $node, 'create')
+        .then(my_prepare_node_created)
+        .catch(e => {
+            _err(NS, 'ERR! prepare_node_created =', e instanceof Error, e.message||e);
+            //! WARN! IF NOT FOUND. THEN TRY TO CREATE
+            const message = e && e.message || '';
+            if (e instanceof Error && message.indexOf('404 NOT FOUND') >= 0){
+                _inf(NS, 'WARN! AUTO TRY TO PREPARE NODE. ID='+id);
+                return prepare_chain(id, $node, 'create')
+                .then(that => {
+                    const current_time = that._current_time;
+                    that = _prepare_node(that);				// force to prepare node.
+                    _log(NS, '>> prepared old-node=', $U.json(that._node));
+                    // that[CONF_ID_INPUT] = that._id;         // make sure id input.
+                    // node[CONF_ID_NAME] = that._id;          // make sure id field.
+                    that._node = mark_node_created(that._node, current_time);
+                    return that;
+                })
+            }
+            throw e;
+        })
+        .then(my_save_node)
+        .then(my_notify_node)
+        .then(finish_chain);
+    }
 
+    //! SAVE NODE DIRECTLY TO ES (ONLY FOR INTERNAL SYNC)
+    thiz.do_saveES = (id, node) => {
+        if (!id) return Promise.reject(new Error('id is required!'));
+        if (!node) return Promise.reject(new Error('node is required!'));
+        return prepare_chain(id, {}, 'save')
+        .then(my_validate_properties)
+        .then(_ => {
+            _._node = node;                         // save node as origin.
+            return _;
+        })
+        .then($elasticsearch.my_save_node)
+        .then(finish_chain)
+    }
+    
 	thiz.do_clone = (id, $node) =>
 		prepare_chain(id, $node, 'clone')
-			.then(my_prepare_node_cloned)
-			.then(my_clone_node)
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(my_prepare_node_cloned)
+        .then(my_clone_node)
+        .then(my_notify_node)
+        .then(finish_chain);
 
 	thiz.do_read = (id, $node) =>
 		prepare_chain(id, $node, 'read')
-			.then(_prepare_node)
-			//! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
-			.then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(_prepare_node)
+        //! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
+        .then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
+        .then(my_notify_node)
+        .then(finish_chain);
 	
 	thiz.do_readX = (id, $node) =>
 		prepare_chain(id, $node, 'read')
-			.then(_prepare_node)
-			//! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
-			.then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
-			.then(my_filter_read_decrypt)
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(_prepare_node)
+        //! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
+        .then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
+        .then(my_filter_read_decrypt)
+        .then(my_notify_node)
+        .then(finish_chain);
 
 	thiz.do_update = (id, $node) =>
 		prepare_chain(id, $node, 'update')
-			.then(my_prepare_node_updated)
-			//! FIELDS 에 지정된 필드만 추출하여 업데이트 실행함.
-			.then(that => that._fields_count === 0 ? that : my_update_node(that))
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(my_prepare_node_updated)
+        //! FIELDS 에 지정된 필드만 추출하여 업데이트 실행함.
+        .then(that => that._fields_count === 0 ? that : my_update_node(that))
+        .then(my_notify_node)
+        .then(finish_chain);
 
 	thiz.do_increment = (id, $node) =>
 		prepare_chain(id, $node, 'increment')
-			.then(my_prepare_node_updated)
-			//! FIELDS 에 지정된 필드만 추출하여 업데이트 실행함.
-			.then(that => that._fields_count === 0 ? that : my_increment_node(that))
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(my_prepare_node_updated)
+        //! FIELDS 에 지정된 필드만 추출하여 업데이트 실행함.
+        .then(that => that._fields_count === 0 ? that : my_increment_node(that))
+        .then(my_notify_node)
+        .then(finish_chain);
 
 	thiz.do_delete = (id, $node) =>
 		prepare_chain(id, $node, 'delete')
-			.then(my_prepare_node_deleted)
-			.then(my_save_node)                     //WARN! - update_node 는 deleted_at 변경을 모른다.
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(my_prepare_node_deleted)
+        .then(my_save_node)                     //WARN! - update_node 는 deleted_at 변경을 모른다.
+        .then(my_notify_node)
+        .then(finish_chain);
 
 	thiz.do_destroy = (id, $node) =>
 		prepare_chain(id, $node, 'destroy')
-			.then(my_delete_node)
-			.then(my_notify_node)
-			.then(finish_chain);
+        .then(my_delete_node)
+        .then(my_notify_node)
+        .then(finish_chain);
 
 	thiz.do_search = (id, $node) =>
 		prepare_chain(id, $node, 'search')
-			.then(my_search_node)
-			.then(finish_chain);
+        .then(my_search_node)
+        .then(finish_chain);
 
 	thiz.on_records = (id, $node) =>
 		prepare_chain(id, $node, 'on_records')
-			.then(my_event_records)
-			.then(finish_chain);
+        .then(my_event_records)
+        .then(finish_chain);
 
 	// thiz.do_notify = (id, $param) =>
 	// 	prepare_chain(id, $param, 'notify')
@@ -2750,18 +2765,18 @@ module.exports = (function (_$, name, options) {
 	//! Maintenance Functions.
 	thiz.do_initialize = (id, $node) =>
 		prepare_chain(id, $node, 'initialize')
-			.then(my_initialize_all)
-			.then(finish_chain);
+        .then(my_initialize_all)
+        .then(finish_chain);
 
 	thiz.do_terminate = (id, $node) =>
 		prepare_chain(id, $node, 'terminate')
-			.then(my_terminate_all)
-			.then(finish_chain);
+        .then(my_terminate_all)
+        .then(finish_chain);
 
 	thiz.do_test_self = (id, $node) =>
 		prepare_chain(id, $node, 'self-test')
-			.then(my_test_self)
-			.then(finish_chain);
+        .then(my_test_self)
+        .then(finish_chain);
 
     thiz.do_next_id = () =>
         my_prepare_id({_id:0})
