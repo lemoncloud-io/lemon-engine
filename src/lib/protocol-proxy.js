@@ -35,7 +35,8 @@ module.exports = (function (_$, name) {
 	//! item functions.
     thiz.do_execute       = do_execute_protocol;
 	thiz.do_post_execute  = do_post_execute_protocol;
-    thiz.do_notify        = do_notify_protocol;
+	thiz.do_notify        = do_notify_protocol;
+	thiz.do_post_notify   = do_post_notify_protocol;
     
 	//! register service.
 	_$(name, thiz);
@@ -130,6 +131,27 @@ module.exports = (function (_$, name) {
 
         // http-proxy.do_get (TYPE, ID, CMD, $param, $body)
 		return $proxy().do_get(PROXY.type, '!', 'notify', {url:url_str});
+	}
+	
+	/**
+     * Asynchronized Call to URL for post
+     * - 비동기식 실행으로, 내부적으로 SNS를 활용하기도 한다.
+     * 
+     * @param {*} url 
+     * @returns {*} MessageID.
+     */
+    function do_post_notify_protocol(url,data){
+        _log(NS, `do_post_notify_protocol()....`);
+		if (!url) return Promise.reject('url is required!');
+		
+		// validate url
+		if (!validate_url(url)) return Promise.reject(url);
+
+		// force url to be 'string' type before sending it
+		const url_str = typeof url === 'object' ? build_url(url) : url;
+
+        // http-proxy.do_post (TYPE, ID, CMD, $param, $body)
+		return $proxy().do_post(PROXY.type, '!', 'notify', {url:url_str},data);
     }
 
 	function validate_url(url){
