@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.4     | optimized 'do_readX' for xecured property.
 | 1.0.3     | add 'do_post_execute_notify'
 | 1.0.2     | `do_saveES()` direct save into ES.
 | 1.0.1     | updated package dependencies
