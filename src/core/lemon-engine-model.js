@@ -363,8 +363,9 @@ module.exports = (function (_$, name, options) {
 			var buffer = new Buffer(msg||'', "base64");
 			var passwd = this.passwd||'';
 			var decipher = crypto.createDecipher(algorithm, passwd)
-			var dec = Buffer.concat([decipher.update(buffer) , decipher.final()]).toString('utf8');
+			var dec  = Buffer.concat([decipher.update(buffer) , decipher.final()]).toString('utf8');
 			var $msg = JSON.parse(dec.substr(MAGIC.length))||{};
+			// _log(NS, '! decrypt['+msg+'] =', $msg.val);
 			return $msg.val;
 		}
 		return thiz;
@@ -911,24 +912,21 @@ module.exports = (function (_$, name, options) {
 			// const IGNORE_FIELDS = [CONF_ID_INPUT,CONF_ID_NAME,'created_at','updated_at','deleted_at',CONF_PARENT_ID,CONF_CLONED_ID];
 			const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
 			for(let n in that){
-				if(!that.hasOwnProperty(n)) continue;
-				n = ''+n;
 				if (!n) continue;
-				if (n.startsWith('_')) continue;
-				if (n.startsWith('$')) continue;
+				if (!that.hasOwnProperty(n)) continue;
+				n = ''+n;
+				if (n.startsWith('_') || n.startsWith('$')) continue;
 				if (IGNORE_FIELDS.indexOf(n) >= 0) continue;
 				if (CONF_FIELDS && CONF_FIELDS.indexOf(n) < 0) continue;        // Filtering Fields
 				//TODO:IMPROVE - 변경된 것만 저장하면, 좀 더 개선될듯..
-				if(n){
+				if (n){
 					node2[n] = that[n];
-					node[n] = that[n];
+					node[n]  = that[n];
 					updated_count++;
 					//! encrypt if xecured fields.
 					if ($xec && CONF_XEC_FIELDS && CONF_XEC_FIELDS.indexOf(n) >= 0){
-						node[n] = $xec.encrypt(that[n]);
+						node[n]  = that[n] ? $xec.encrypt(that[n]) : '';
 						node2[n] = node[n];
-						// _inf(NS, '!! encrypt('+that[n]+') ', node[n]);
-						// _inf(NS, '!! decript('+that[n]+') ', $xec.decrypt(node[n]));
 					}
 				}
 			}
@@ -979,9 +977,9 @@ module.exports = (function (_$, name, options) {
 			{
 				const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
 				for (let n in that){
-					if(!that.hasOwnProperty(n)) continue;
-					n = ''+n;
 					if (!n) continue;
+					if (!that.hasOwnProperty(n)) continue;
+					n = ''+n;
 					if (n.startsWith('_')) continue;
 					if (n.startsWith('$')) continue;
 					if (IGNORE_FIELDS.indexOf(n) >= 0) continue;
@@ -989,7 +987,7 @@ module.exports = (function (_$, name, options) {
 					node[n] = that[n];
 					//! encrypt if xecured fields.
 					if ($xec && CONF_XEC_FIELDS && CONF_XEC_FIELDS.indexOf(n) >= 0){
-						node[n] = $xec.encrypt(that[n]);
+						node[n] = that[n] ? $xec.encrypt(that[n]) : '';
 					}
 				}
 			}
@@ -1515,23 +1513,22 @@ module.exports = (function (_$, name, options) {
         .then(my_cache_save)
 	};
 
-    //! decript the xecured field.
-	const my_filter_read_decrypt = (that) => {
-		if (!that || !that._node) return that;
-		if (!CONF_XEC_FIELDS || !CONF_XEC_FIELDS.length) return that;
+	//! decript the xecured field. ONLY IF on projetion. (NOT TO ORIGIN)
+	const my_filter_read_decrypt = (node) => {
+		if (!node) return node;
+		if (!CONF_XEC_FIELDS || !CONF_XEC_FIELDS.length) return node;
 		const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
-		if (!$xec) return that;
-
-		const node = that._node||{};
-		CONF_XEC_FIELDS.reduce((N, key)=>{
-			if (key.startsWith('_') || key.startsWith('$')) return N;
-			let val = N[key];
+		if (!$xec) return node;
+		// _log(NS, '> my_filter_read_decrypt: node =', $U.copy_node(node));
+		// _log(NS, '> CONF_XEC_FIELDS=', CONF_XEC_FIELDS);
+		//! decrypt each fields.
+		return CONF_XEC_FIELDS.reduce((N, key)=>{
+			const val = N[key];
 			if (val === undefined) return N;
-			val = val ? $xec.decrypt(val) : val;
-			N[key] = val;
+			N[key] = val ? $xec.decrypt(val) : val;
+			// _log(NS, '>> node['+key+'] :=', N[key]);
 			return N;
 		}, node);
-		return that;
 	};
 
 	//! Save Node - Overwrite All Node.
@@ -2700,17 +2697,17 @@ module.exports = (function (_$, name, options) {
         .then(_prepare_node)
         //! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
         .then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
-        .then(my_notify_node)
-        .then(finish_chain);
+        // .then(my_notify_node)
+        .then(finish_chain)
 	
 	thiz.do_readX = (id, $node) =>
 		prepare_chain(id, $node, 'read')
         .then(_prepare_node)
         //! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
         .then(that => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
-        .then(my_filter_read_decrypt)
-        .then(my_notify_node)
-        .then(finish_chain);
+        // .then(my_notify_node)
+        .then(finish_chain)
+        .then(my_filter_read_decrypt)					//NOTE - projection 된 필드를 복호화한다.
 
 	thiz.do_update = (id, $node) =>
 		prepare_chain(id, $node, 'update')
