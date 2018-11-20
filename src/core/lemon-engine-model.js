@@ -1885,7 +1885,7 @@ module.exports = (function (_$, name, options) {
 			const newRecord = $record.dynamodb.NewImage ? DynamoDBValue.toJavascript($record.dynamodb.NewImage) : null;
 			const oldRecord = $record.dynamodb.OldImage ? DynamoDBValue.toJavascript($record.dynamodb.OldImage) : null;
 	
-			const id = keyRecord[CONF_ID_NAME];
+			const ID = keyRecord[CONF_ID_NAME];
 			// keyRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.keyRecord[${ID}]=`, $U.json(keyRecord));
 			// oldRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.oldRecord[${ID}]=`, $U.json(oldRecord));
 			// newRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.newRecord[${ID}]=`, $U.json(newRecord));
@@ -1894,7 +1894,7 @@ module.exports = (function (_$, name, options) {
 			const diff = EVENT_NAME === 'MODIFY' ? $U.diff(oldRecord, newRecord) : null;
 			const updated_at = $U.N(newRecord && newRecord.updated_at || 0);
 			const prev = diff ? $_.reduce(diff, (node, key) => {node[key] = oldRecord[key]; return node}, {}) : null;
-			const that = {_id:id, _node:newRecord, _updated_at:updated_at, _diff:diff, _prev:prev};           // use updated_at for
+			const that = {_id:ID, _node:newRecord, _updated_at:updated_at, _diff:diff, _prev:prev};           // use updated_at for
 			chain = Promise.resolve(that);
 			diff && _log(NS,`>> ${tableName}.different[${ID}]=`, $U.json(diff));
 	
