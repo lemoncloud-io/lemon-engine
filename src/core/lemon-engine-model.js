@@ -1192,18 +1192,26 @@ module.exports = (function (_$, name, options) {
 			if (!CONF_REDIS_PKEY) return Promise.resolve(that);
 
             //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
-            if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
+            // if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
+            const REDIS_PKEY = CONF_REDIS_PKEY.startsWith('#') ? CONF_REDIS_PKEY.substr(1) : CONF_REDIS_PKEY;
+            if (!REDIS_PKEY) return Promise.resolve(that);
             
-			_log(NS, `- redis: delete-item(${ID})....`);
-            return $RS.do_delete_item(CONF_REDIS_PKEY, ID)
-            .then(rs => {
-				_log(NS, `> redis:delete-item-node(${ID}) res=`, $U.json(rs));
-				// if(!node) return Promise.reject(that);
-				return that;
-            })
-            .catch(err =>{
-				_log(NS, `ERR! ignore - redis:delete(${ID}) res=`, err);
-				return that;
+            // _log(NS, `- redis: delete-item(${ID})....`);
+            const my_local_delete_item = (pkey) => {
+                return $RS.do_delete_item(pkey, ID)
+                .then(_ => {
+                    // _log(NS, `> redis: deleted(${pkey}/${ID}) res=`, _);                    // res := 1 or 0.
+                    return _;
+                })
+                .catch(err => {
+                    return err.message||`${err}`;
+                })
+            }
+            //! delete main node, and footprints.
+            return Promise.all([REDIS_PKEY, REDIS_PKEY+'/UPDATED', REDIS_PKEY+'/HASH'].map(my_local_delete_item))
+            .then(_ => {
+                _log(NS, `> redis: deleted(${ID}) res=`, $U.json(_));
+                return that;
             })
 		},
 
@@ -2735,6 +2743,19 @@ module.exports = (function (_$, name, options) {
             return _;
         })
         .then($elasticsearch.do_save_search)
+        .then(finish_chain)
+    }
+
+    //! DIRECTLY CALL TO CLEAR DATA IN REDIS.
+    thiz.do_cleanRedis = (id, node) => {
+        if (!id) return Promise.reject(new Error('id is required!'));
+        // if (!node) return Promise.reject(new Error('node is required!'));
+        return prepare_chain(id, {}, 'clean')
+        .then(_ => {
+            _._node = node;                         // save node as origin.
+            return _;
+        })
+        .then($redis.do_delete_cache)
         .then(finish_chain)
     }
     
