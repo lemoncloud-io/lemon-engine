@@ -215,7 +215,7 @@ module.exports = (function (_$, name, options) {
 	const _err = _$.err;
 
 	//! NAMESPACE
-	const NS = $U.NS(NS_NAME, "green");				 // NAMESPACE TO BE PRINTED.
+	const NS = $U.NS(NS_NAME, "green");				    // NAMESPACE TO BE PRINTED.
 
 	/** ****************************************************************************************************************
 	 *  Public Common Interface Exported.
@@ -573,8 +573,8 @@ module.exports = (function (_$, name, options) {
 	 * @returns {*}
 	 */
 	const my_prepare_id = (that) => {
-		const id = that._id;
-		_log(NS, `- my_prepare_id(${CONF_ID_TYPE}, ${id})....`);
+		const ID = that._id;
+		_log(NS, `- my_prepare_id(${CONF_ID_TYPE}, ${ID})....`);
 		if(CONF_ID_TYPE.startsWith('#')){
             //! 이름이 '#'으로 시작하고, CONF_ID_NEXT 가 있을 경우, 내부적 ID 생성 목적으로 시퀀스를 생성해 둔다.
             if (CONF_ID_TYPE && CONF_ID_TYPE.startsWith('#') && CONF_ID_TYPE.length > 1 && CONF_ID_NEXT > 0) {
@@ -587,7 +587,7 @@ module.exports = (function (_$, name, options) {
                 })
             }
             // NOP
-		} else if(CONF_ID_TYPE && !id){
+		} else if(CONF_ID_TYPE && !ID){
 			// _log(NS, '> creating next-id by type:'+CONF_ID_TYPE);
             return $MS.do_get_next_id(CONF_ID_TYPE)
             .then(id => {
@@ -596,7 +596,7 @@ module.exports = (function (_$, name, options) {
 				return that;
 			})
 		}
-		_log(NS, '> prepared-id =', id);
+		_log(NS, '> prepared-id =', ID);
 		return Promise.resolve(that);      //WARN! must return that.
 	};
 
@@ -614,7 +614,7 @@ module.exports = (function (_$, name, options) {
 	 * @returns {*}
 	 */
 	const _prepare_node = (that) => {
-		if (!that._current_mode) throw new Error(NS + '_current_mode is required!');
+		if (!that._current_mode) throw new Error('._current_mode is required!');
 		const MODE = that._current_mode;
 		const DEFAULTS = CONF_DEFAULTS||{};
 
@@ -674,7 +674,7 @@ module.exports = (function (_$, name, options) {
 
 	// Node State := Prepared
 	const mark_node_prepared = (node, current_time) => {
-		// if(!current_time) throw new Error(NS + 'current_time is required!');
+		// if(!current_time) throw new Error('current_time is required!');
 		node.created_at = 0;
 		node.updated_at = current_time;
 		node.deleted_at = current_time;
@@ -683,7 +683,7 @@ module.exports = (function (_$, name, options) {
 
 	// Node State := Created
 	const mark_node_created = (node, current_time) => {
-		// if(!current_time) throw new Error(NS + 'current_time is required!');
+		// if(!current_time) throw new Error('current_time is required!');
 		node.created_at = current_time;
 		node.updated_at = current_time;
 		node.deleted_at = 0;
@@ -692,7 +692,7 @@ module.exports = (function (_$, name, options) {
 
 	// Node State := Updated
 	const mark_node_updated = (node, current_time) => {
-		// if(!current_time) throw new Error(NS + 'current_time is required!');
+		// if(!current_time) throw new Error('current_time is required!');
 		// node.created_at = 0;
 		node.updated_at = current_time;
 		// node.deleted_at = 0;
@@ -701,7 +701,7 @@ module.exports = (function (_$, name, options) {
 
 	// Node State := Deleted
 	const mark_node_deleted = (node, current_time) => {
-		// if(!current_time) throw new Error(NS + 'current_time is required!');
+		// if(!current_time) throw new Error('current_time is required!');
 		// node.created_at = 0;
 		node.updated_at = current_time;
 		node.deleted_at = current_time;
@@ -710,9 +710,9 @@ module.exports = (function (_$, name, options) {
 
 	// 필요한 경우 ID 생성, 캐쉬된 노드 정보 읽어 옴.
 	const my_prepare_node_prepared = (that) => {
-		// if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-		if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-		if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+		// if (!that._id) return Promise.reject(new Error('._id is required!'));
+		if (!that._node) return Promise.reject(new Error('._node is required!'));
+		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
 		const id = that._id;
 		const node = that._node;              // node can be null if not loaded.
@@ -734,45 +734,44 @@ module.exports = (function (_$, name, options) {
 
 		//! read previous(old) node from dynamo.
 		return my_read_node(that)
-			.catch(e => {
-				// _err(NS, 'not found. err=', e);
-                const msg = e && e.message || '';
-                if (msg.indexOf('404 NOT FOUND') >= 0){
-                    //! ignore it.
-				    _err(NS, 'not found. err=', msg);
-                } else {
-                    throw e;
-                }
-				return that;
-			})
-			.then(that => {
-				// _log(NS, '>> get-item-node old=', $U.json(that._node));
-				// _log(NS, '>> get-item-node old.len=', $U.json(that._node).length);
-				// _log(NS, '>> that =', that);
-				that = _prepare_node(that);
-				// _log(NS, '>> prepared old-node=', $U.json(that._node));
+        .catch(e => {
+            // _err(NS, 'not found. err=', e);
+            const msg = e && e.message || '';
+            if (msg.indexOf('404 NOT FOUND') >= 0){
+                _err(NS, 'not found. err=', msg);                                       //! ignore it.
+            } else {
+                throw e;
+            }
+            return that;
+        })
+        .then(that => {
+            // _log(NS, '>> get-item-node old=', $U.json(that._node));
+            // _log(NS, '>> get-item-node old.len=', $U.json(that._node).length);
+            // _log(NS, '>> that =', that);
+            that = _prepare_node(that);
+            // _log(NS, '>> prepared old-node=', $U.json(that._node));
 
-				//!VALIDATE [PREPARED] STATE.
-				const node = that._node || {};
-				if (that._force_create){
-					_err(NS, 'WARN! _force_create is set!');
-				} else if (!node.deleted_at){		// if not deleted.
-					_err(NS, 'INVALID STATE FOR PREPARED. ID=',id ,', TIMES[CUD]=', [node.created_at, node.updated_at, node.deleted_at]);
-					return Promise.reject(new Error('INVALID STATE. deleted_at:'+node.deleted_at));
-				}
+            //!VALIDATE [PREPARED] STATE.
+            const node = that._node || {};
+            if (that._force_create){
+                _err(NS, 'WARN! _force_create is set!');
+            } else if (!node.deleted_at){		// if not deleted.
+                _err(NS, 'INVALID STATE FOR PREPARED. ID=',id ,', TIMES[CUD]=', [node.created_at, node.updated_at, node.deleted_at]);
+                return Promise.reject(new Error('INVALID STATE. deleted_at:'+node.deleted_at));
+            }
 
-				that[CONF_ID_INPUT] = that._id;         // make sure id input.
-				node[CONF_ID_NAME] = that._id;          // make sure id field.
-				that._node = mark_node_prepared(that._node, current_time);
-				return that;
-			})
+            that[CONF_ID_INPUT] = that._id;         // make sure id input.
+            node[CONF_ID_NAME] = that._id;          // make sure id field.
+            that._node = mark_node_prepared(that._node, current_time);
+            return that;
+        })
 	};
 
 	// 신규 노드 생성 (또는 기존 노드 overwrite) 준비.
 	const my_prepare_node_created = (that) => {
-		if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-		if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-		if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+		if (!that._id) return Promise.reject(new Error('._id is required!'));
+		if (!that._node) return Promise.reject(new Error('._node is required!'));
+		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
 		const id = that._id;
 		const node = that._node;
@@ -803,9 +802,9 @@ module.exports = (function (_$, name, options) {
 
 	// 복제용 노드 (또는 기존 노드 overwrite) 준비.
 	const my_prepare_node_cloned = (that) => {
-		if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-		if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-		if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+		if (!that._id) return Promise.reject(new Error('._id is required!'));
+		if (!that._node) return Promise.reject(new Error('._node is required!'));
+		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
 		const id = that._id;
 		const node = that._node;
@@ -824,9 +823,9 @@ module.exports = (function (_$, name, options) {
 
 	// 노드 업데이트 준비
 	const my_prepare_node_updated = (that) => {
-		if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-		if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-		if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+		if (!that._id) return Promise.reject(new Error('._id is required!'));
+		if (!that._node) return Promise.reject(new Error('._node is required!'));
+		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
 		const id = that._id;
 		const node = that._node;
@@ -852,9 +851,9 @@ module.exports = (function (_$, name, options) {
 
 	// 삭제된 노드 준비.
 	const my_prepare_node_deleted = (that) => {
-		if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-		if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-		if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+		if (!that._id) return Promise.reject(new Error('._id is required!'));
+		if (!that._node) return Promise.reject(new Error('._node is required!'));
+		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
 		const id = that._id;
 		const node = that._node;
@@ -880,13 +879,13 @@ module.exports = (function (_$, name, options) {
 		//! read
 		do_read_dynamo : that =>
 		{
-			if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));         // new Error() for stack-trace.
-			const id = that._id;
-			// _log(NS, `- dynamo:my_read_node (${id})....`);
+			if (!that._id) return Promise.reject(new Error('._id is required!'));         // new Error() for stack-trace.
+			const ID = that._id;
+			_log(NS, `- dynamo: read(${ID})....`);
 			const idType = CONF_ID_TYPE.startsWith('#') ? 'String' :'';
-            return $DS.do_get_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]:id, idType})
+            return $DS.do_get_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]:ID, idType})
             .then(node => {
-				// _log(NS, `> dynamo:get-item-node(${id}) res=`, $U.json(node));
+				_log(NS, `> dynamo: node(${ID}) res=`, $U.json(node));
 				that._node = node;
 				return that;
 			})
@@ -895,15 +894,15 @@ module.exports = (function (_$, name, options) {
 		//! update
 		do_update_dynamo : that =>
 		{
-			if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-			if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-			// if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+			if (!that._id) return Promise.reject(new Error('._id is required!'));
+			if (!that._node) return Promise.reject(new Error('._node is required!'));
+			// if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-			const id = that._id;
+			const ID = that._id;
 			const node = that._node;
 			// const current_time = that._current_time;
 
-			// _log(NS, `- dynamo:my_update_node(${id})....`);
+			_log(NS, `- dynamo: update(${ID})....`);
 			// _log(NS, '> node-id =', id, ', current-time =', current_time);
 
 			//! copy attributes into node.
@@ -931,7 +930,7 @@ module.exports = (function (_$, name, options) {
 				}
 			}
 			node2.updated_at = node.updated_at;         // copy time field.
-			// _log(NS, '> dynamo:updated-node =', node2);
+			_log(NS, '> dynamo: updated =', node2);
 
 			//! save back into main.
 			that._updated_node = null;
@@ -940,18 +939,18 @@ module.exports = (function (_$, name, options) {
 			//! if no update, then just returns. (
 			if (!updated_count) {
 				if (CONF_FIELDS) return that;           // ignore reject.
-				return Promise.reject(new Error(NS + 'nothing to update'));
+				return Promise.reject(new Error('nothing to update'));
 			}
 
 			//! Update Revision Number. R := R + 1
 			if (node[CONF_REVISION_NAME] !== undefined) node[CONF_REVISION_NAME] = $U.N(node[CONF_REVISION_NAME],0) + 1;
 
 			//! then, save into DynamoDB (update Revision Number. R := R + 1)
-			return $DS.do_update_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: id}, node2, CONF_REVISION_NAME ? {[CONF_REVISION_NAME]:1} : null)
+			return $DS.do_update_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: ID}, node2, CONF_REVISION_NAME ? {[CONF_REVISION_NAME]:1} : null)
             .then(_ => {
                 that._updated_node = node2;          // SAVE INTO _updated.
                 that._node = Object.assign(that._node, node2);
-                // _log(NS, `> dynamo:updated-item(${id}) res=`, $U.json(_));
+                _log(NS, `> dynamo: updated(${ID}) res=`, $U.json(_));
                 return that;
 			})
 		},
@@ -959,17 +958,17 @@ module.exports = (function (_$, name, options) {
 		//! save
 		do_save_dynamo : that =>
 		{
-			if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-			if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-			// if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+			if (!that._id) return Promise.reject(new Error('._id is required!'));
+			if (!that._node) return Promise.reject(new Error('._node is required!'));
+			// if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-			const id = that._id;
+			const ID = that._id;
 			const node = that._node;
 			const MODE = that._current_mode||'';
 			const CURRENT_TIME = that._current_time;
 
-			// _log(NS, `- dynamo:my_save_node(${id})....`);
-			_log(NS, '> dynamo:node-id =', id, ', current-time =', CURRENT_TIME, ', node :=', $U.json(node));
+			_log(NS, `- dynamo: save(${ID})....`);
+			_log(NS, '> dynamo:node-id =', ID, ', current-time =', CURRENT_TIME, ', node :=', $U.json(node));
 
 			//! override attributes into node.
 			// const IGNORE_FIELDS = [CONF_ID_INPUT,CONF_ID_NAME,'created_at','updated_at','deleted_at',CONF_PARENT_ID,CONF_CLONED_ID];
@@ -996,9 +995,9 @@ module.exports = (function (_$, name, options) {
 			if (node[CONF_REVISION_NAME] !== undefined) node[CONF_REVISION_NAME] = $U.N(node[CONF_REVISION_NAME],0) + 1;
 
 			//! then, save into DynamoDB
-            return $DS.do_create_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: id}, node)
+            return $DS.do_create_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: ID}, node)
             .then(_ => {
-				// _log(NS, `> dynamo:saved-item(${id}) res=`, _);
+				_log(NS, `> dynamo: saved(${ID}) res=`, _);
 				return that;
 			})
 		},
@@ -1006,15 +1005,15 @@ module.exports = (function (_$, name, options) {
 		//! increment
 		do_increment_dynamo : that =>
 		{
-			if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
-			if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-			// if (!that._current_time) return Promise.reject(new Error(NS + '_current_time is required!'));
+			if (!that._id) return Promise.reject(new Error('._id is required!'));
+			if (!that._node) return Promise.reject(new Error('._node is required!'));
+			// if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-			const id = that._id;
+			const ID = that._id;
 			const node = that._node;
 			// const current_time = that._current_time;
 
-			// _log(NS, `- dynamo:my_update_node(${id})....`);
+			_log(NS, `- dynamo: increment(${ID})....`);
 			// _log(NS, '> node-id =', id, ', current-time =', current_time);
 
 			//! copy attributes into node.
@@ -1036,7 +1035,7 @@ module.exports = (function (_$, name, options) {
 				}
 			}
 			node2.updated_at = node.updated_at;         // copy time field.
-			_log(NS, '> dynamo:increment-node['+id+'] :=', node2);
+			_log(NS, '> dynamo: incremented['+ID+'] :=', node2);
 
 			//! save back into main.
 			that._updated_node = null;
@@ -1045,16 +1044,16 @@ module.exports = (function (_$, name, options) {
 			//! if no update, then just returns. (
 			if (!updated_count) {
 				if (CONF_FIELDS) return that;           // ignore reject.
-				return Promise.reject(new Error(NS + 'nothing to update'));
+				return Promise.reject(new Error('nothing to update'));
 			}
 
 			//! Update Revision Number. R := R + 1
 			if (node[CONF_REVISION_NAME] !== undefined) node[CONF_REVISION_NAME]= $U.N(node[CONF_REVISION_NAME], 0) + 1;
 
 			//! then, save into DynamoDB (update Revision Number. R := R + 1)
-			return $DS.do_increment_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: id}, node2, CONF_REVISION_NAME ? {[CONF_REVISION_NAME]:1} : null)
+			return $DS.do_increment_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: ID}, node2, CONF_REVISION_NAME ? {[CONF_REVISION_NAME]:1} : null)
             .then(_ => {
-                // _log(NS, `> dynamo:updated-item(${id}) res=`, $U.json(_));
+                _log(NS, `> dynamo: increment(${ID}) res=`, $U.json(_));
                 that._updated_node = node2;          // SAVE INTO _updated.
                 // that._node = Object.assign(that._node, node2);   //WARN! - DO NOT ASSIGN AGAIN. ARLEADY DONE IN ABOVE.
 				return that;
@@ -1066,12 +1065,12 @@ module.exports = (function (_$, name, options) {
 		{
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
-            // _log(NS, `- dynamo: my_delete_node(${ID})....`);
+            _log(NS, `- dynamo: delete(${ID})....`);
 
 			//! do delete command.
             return $DS.do_delete_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]:ID})
             .then(node => {
-				_log(NS, `> dynamo:deleted-item-node(${ID}) res=`, $U.json(node));
+				_log(NS, `> dynamo: deleted(${ID}) res=`, $U.json(node));
 				that._node = node||{};
 				return that;
 			})
@@ -1081,7 +1080,10 @@ module.exports = (function (_$, name, options) {
 
 	/**
 	 * Redis
-	 *
+	 * - Dynamo와 중간에서 메인 캐시 역활을 함.
+     * - 상호 효과적인 동기화를 위해서, updated_at과 hash값을 활용함.
+     * - PKEY = '#' 일 경우, $elasticsearch가 그 역활을 대신하도록 함.
+     * 
 	 * //TODO - Redis 에서 오브젝트 단위로 읽고 쓸 수 있도록 하기...
 	 */
 	const $redis = {
@@ -1093,19 +1095,33 @@ module.exports = (function (_$, name, options) {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			//! Redis Key 가 없다면, read 실퍠로 넘겨줘야함.
-			if (!CONF_REDIS_PKEY) return Promise.reject(that);
-			
-			// _log(NS, `- redis:my_read_node(${id})....`);
+            if (!CONF_REDIS_PKEY) return Promise.reject(that);
+            
+            //NOTE - '#'으로 시작하면, elasticsearch로 대신함.
+            if (CONF_REDIS_PKEY.startsWith('#')){
+                return $elasticsearch.do_read_search(that)
+                .catch(err => {
+                    //! 읽은 node가 없을 경우에도 발생할 수 있으므로, Error인 경우에만 처리한다.
+                    if (err instanceof Error) {
+                        _err(NS, `! redis: read-search(${CONF_REDIS_PKEY}, ${ID}) err :=`, err.message||err);
+                        that._error = err;
+                    }
+                    throw that;
+                })
+            }
+            
+            //! read via redis.
+			_log(NS, `- redis: get-item(${ID})....`);
 			return $RS.do_get_item(CONF_REDIS_PKEY, ID).then(node => {
-				// _log(NS, `> redis:get-item(${CONF_REDIS_PKEY}, ${id}) res =`, $U.json(node));
-				// _log(NS, `> redis:get-item(${CONF_REDIS_PKEY}, ${id}) res.len =`, node ? $U.json(node).length : null);
+				// _log(NS, `> redis:get-item(${CONF_REDIS_PKEY}, ${ID}) res =`, $U.json(node));
+				// _log(NS, `> redis:get-item(${CONF_REDIS_PKEY}, ${ID}) res.len =`, node ? $U.json(node).length : null);
 				if(!node) return Promise.reject(that);                                  //WARN! reject that if not found.
 				that._node = node;
 				return that;
 			}).catch(err => {
 				//! 읽은 node가 없을 경우에도 발생할 수 있으므로, Error인 경우에만 처리한다.
 				if (err instanceof Error) {
-					_err(NS, `! redis:get-item(${CONF_REDIS_PKEY}, ${ID}) err :=`, err.message||err);
+					_err(NS, `! redis: get-item(${CONF_REDIS_PKEY}, ${ID}) err :=`, err.message||err);
 					that._error = err;
 				}
 				throw that;
@@ -1121,11 +1137,14 @@ module.exports = (function (_$, name, options) {
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!that._node) return Promise.reject(new Error('._node is required!'));
             if (!CONF_REDIS_PKEY) return Promise.resolve(that);
+
+            //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
+            if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
             
 			const node = that._node;
-			// _log(NS, `- redis:my_save_node(${id})....`);
-			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, node);
-			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${id}). node=`, $U.json(node));
+			_log(NS, `- redis: create-item(${ID})....`);
+			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${ID}). node=`, node);
+			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${ID}). node=`, $U.json(node));
 			// _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${ID}). node.updated_at=`, node&&node.updated_at||0);
 			let chain = $redis.do_set_cache_footprint(ID, node);
             chain = chain.then(() => $RS.do_create_item(CONF_REDIS_PKEY, ID, node))
@@ -1137,6 +1156,9 @@ module.exports = (function (_$, name, options) {
 			return chain;
 		},
 
+        /**
+         * Update Node.
+         */
 		do_update_cache : (that) =>
 		{
 			const ID = that._id;
@@ -1144,8 +1166,11 @@ module.exports = (function (_$, name, options) {
 			if (!that._node) return Promise.reject(new Error('._node is required!'));
 			if (!CONF_REDIS_PKEY) return Promise.resolve(that);
 
+            //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
+            if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
+            
 			const node = that._node;
-			// _log(NS, `- redis:my_update_node(${id})....`);
+			_log(NS, `- redis: update-item(${ID})....`);
 			let chain = $redis.do_set_cache_footprint(ID, node);
 			//WARN! IT IS NOT SUPPORTED YET!!!
             chain = chain.then(() => $RS.do_update_item(CONF_REDIS_PKEY, ID, node))
@@ -1157,13 +1182,19 @@ module.exports = (function (_$, name, options) {
 			return chain;
 		},
 
+        /**
+         * Delete Node.
+         */
 		do_delete_cache : (that) =>
 		{
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!CONF_REDIS_PKEY) return Promise.resolve(that);
 
-			// _log(NS, `- redis:my_delete_node(${id})....`);
+            //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
+            if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
+            
+			_log(NS, `- redis: delete-item(${ID})....`);
             return $RS.do_delete_item(CONF_REDIS_PKEY, ID)
             .then(rs => {
 				_log(NS, `> redis:delete-item-node(${ID}) res=`, $U.json(rs));
@@ -1177,46 +1208,52 @@ module.exports = (function (_$, name, options) {
 		},
 
 		//! set foot-print information from node.
-		do_set_cache_footprint : (id, node) =>
+		do_set_cache_footprint : (ID, node) =>
 		{
-			if (!id) return Promise.reject(new Error('id is required!'));
+			if (!ID) return Promise.reject(new Error('id is required!'));
 			if (!CONF_REDIS_PKEY) return Promise.resolve(0);
 			node = node || {};
 
 			const updated_at = $U.N(node.updated_at, 0);
 			const hash_value = $U.hash(node);
 
-			// _log(NS, `- redis:my_set_node_footprint(${id})....`,'params=', [updated_at, hash_value]);
-			return $RS.do_create_item([CONF_REDIS_PKEY+'/UPDATED', CONF_REDIS_PKEY+'/HASH'], id, [updated_at, hash_value])
+			// _log(NS, `- redis:my_set_node_footprint(${ID})....`,'params=', [updated_at, hash_value]);
+			return $RS.do_create_item([CONF_REDIS_PKEY+'/UPDATED', CONF_REDIS_PKEY+'/HASH'], ID, [updated_at, hash_value])
             .then(data => {
-				// _log(NS, `> redis:set node-footprint(${id}) res=`, $U.json(data));
+				// _log(NS, `> redis:set node-footprint(${ID}) res=`, $U.json(data));
 				return data;
 			})
 		},
 
 		//! get updated-at by id
-		do_get_cache_updated : (id) =>
+		do_get_cache_updated : (ID) =>
 		{
-			if (!id) return Promise.reject(new Error('id is required!'));
+			if (!ID) return Promise.reject(new Error('id is required!'));
 			if (!CONF_REDIS_PKEY) return Promise.resolve(-1);
 
-			// _log(NS, `- redis:my_get_updated_at(${id})....`);
-            return $RS.do_get_item(CONF_REDIS_PKEY+'/UPDATED', id)
+            //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
+            if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(-1);
+
+			// _log(NS, `- redis:my_get_updated_at(${ID})....`);
+            return $RS.do_get_item(CONF_REDIS_PKEY+'/UPDATED', ID)
             .then(data => {
-				// _log(NS, `> redis:get-updated-at(${id}) res=`, data);
+				// _log(NS, `> redis:get-updated-at(${ID}) res=`, data);
 				return data;
 			})
 		},
 		//! get hash-value by id
-		do_get_cache_hash : (id) =>
+		do_get_cache_hash : (ID) =>
 		{
-			if (!id) return Promise.reject(new Error('id is required!'));
+			if (!ID) return Promise.reject(new Error('id is required!'));
 			if (!CONF_REDIS_PKEY) return Promise.resolve(-1);
 
-			// _log(NS, `- redis:my_get_hash_value(${id})....`);
-            return $RS.do_get_item(CONF_REDIS_PKEY+'/HASH', id)
+            //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
+            if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(-1);
+
+			// _log(NS, `- redis:my_get_hash_value(${ID})....`);
+            return $RS.do_get_item(CONF_REDIS_PKEY+'/HASH', ID)
             .then(data => {
-				// _log(NS, `> redis:get-hash-value(${id}) res=`, data);
+				// _log(NS, `> redis:get-hash-value(${ID}) res=`, data);
 				return data;
 			})
 		},
@@ -1230,7 +1267,7 @@ module.exports = (function (_$, name, options) {
 	 *  - Core/Meta/...  들이 1차원적으로 ES에 인덱싱되어져 있음.
 	 *  - Core (master 노드) 에서만 검색이 가능하게..... (대표로 해서...)
 	 *  - Parent/Child 관계에 있어서... (예: Atem/Item, Atem/Deal) 이걸 어떻게 풀어갈까???
-	 *
+     * 
 	 */
 	const $elasticsearch = {
 		//! read
@@ -1238,9 +1275,8 @@ module.exports = (function (_$, name, options) {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
-
-			// _log(NS, `- elasticsearch:my_read_node(${id})....`);
-            return $ES.do_get_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, CONF_ES_FIELDS)
+            _log(NS, `- elasticsearch: read(${ID})....`);
+            return $ES.do_get_item(CONF_ES_INDEX, CONF_ES_TYPE, ID)
             .then(node => {
 				// _log(NS, `> elasticsearch:get-item(${ID}) =`, $U.json(node));
 				if (!node) return Promise.reject(that);                                  // reject if not found.
@@ -1260,7 +1296,7 @@ module.exports = (function (_$, name, options) {
 			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
 
 			const node = that._node;
-			// _log(NS,'> elasticsearch:node=', $U.json(node));
+			// _log(NS,'> elasticsearch: save.node =', $U.json(node));
 			//! copy only fields, and update node.
 			if (CONF_ES_FIELDS){
 				let node2 = $_.reduce(CONF_ES_FIELDS, (obj,v) => {
@@ -1278,26 +1314,26 @@ module.exports = (function (_$, name, options) {
 				if (node.updated_at !== undefined) node2.updated_at = node.updated_at;
 				if (node.deleted_at !== undefined) node2.deleted_at = node.deleted_at;
 
-				// _log(NS, `- elasticsearch:my_save_node2(${id}).... node2=`, $U.json(node2));
+				// _log(NS, `- elasticsearch:my_save_node2(${ID}).... node2=`, $U.json(node2));
 				if (CONF_ES_MASTER){
                     return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                     .then(_ => {
-						// _log(NS, `! elasticsearch:saved-item(${ID}) res=`, $U.json(_));
+						_log(NS, `! elasticsearch: saved-item(${ID}) res=`, $U.json(_));
 						return that;
 					});		
 				} else {
                     return $ES.do_update_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                     .then(_ => {
-						// _log(NS, `! elasticsearch:updated-item(${ID}) res=`, $U.json(_));
+						_log(NS, `! elasticsearch: updated-item(${ID}) res=`, $U.json(_));
 						return that;
 					})
 				}
 			}
 
-			// _log(NS, `- elasticsearch:my_save_node(${id})....`);
+			// _log(NS, `- elasticsearch:my_save_node(${ID})....`);
             return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node)
             .then(_ => {
-				// _log(NS, `! elasticsearch:saved-item2(${ID}) res=`, $U.json(_));
+				_log(NS, `! elasticsearch: create-item(${ID}) res=`, $U.json(_));
 				return that;
 			});
 		},
@@ -1327,18 +1363,18 @@ module.exports = (function (_$, name, options) {
 				if (node.updated_at !== undefined) node2.updated_at = node.updated_at;
 				if (node.deleted_at !== undefined) node2.deleted_at = node.deleted_at;
 
-				// _log(NS, `- elasticsearch:my_update_node2(${id})....`);
+				// _log(NS, `- elasticsearch:my_update_node2(${ID})....`);
                 return $ES.do_update_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                 .then(_ => {
-					_log(NS, `! elasticsearch:updated-item(${ID}) res=`, $U.json(_));
+					_log(NS, `! elasticsearch: updated-item(${ID}) res=`, $U.json(_));
 					return that;
 				})
 			}
 
-			// _log(NS, `- elasticsearch:my_update_node(${id})....`);
+			// _log(NS, `- elasticsearch:my_update_node(${ID})....`);
             return $ES.do_update_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node)
             .then(_ => {
-				_log(NS, `! elasticsearch:updated-item(${ID}) res=`, $U.json(_));
+				_log(NS, `! elasticsearch: updated-item(${ID}) res=`, $U.json(_));
 				return that;
 			});
 		},
@@ -1353,10 +1389,10 @@ module.exports = (function (_$, name, options) {
 				return that;
 			}
 
-			// _log(NS, `- elasticsearch:my_delete_node(${id})....`);
+			// _log(NS, `- elasticsearch:my_delete_node(${ID})....`);
             return $ES.do_delete_item(CONF_ES_INDEX, CONF_ES_TYPE, ID)
             .then(_ => {
-				_log(NS, `! elasticsearch:deleted-item(${ID}) res=`, $U.json(_));
+				_log(NS, `! elasticsearch: deleted-item(${ID}) res=`, $U.json(_));
 				return that;
 			})
             .catch(err =>{
@@ -1366,7 +1402,7 @@ module.exports = (function (_$, name, options) {
 		},
 		//! search
 		do_search : that => {
-			// if (!that._id) return Promise.reject(new Error(NS + 'elasticsearch:_id is required!'));
+			// if (!that._id) return Promise.reject(new Error('elasticsearch:_id is required!'));
 			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
 			// const id = that._id;
             // _log(NS, `- elasticsearch:do_search_item()....`);
@@ -1508,11 +1544,13 @@ module.exports = (function (_$, name, options) {
         //! read node via cache.
         if (local_cache_read(that)) return Promise.resolve(that);
 
-		// _log(NS, `- my_read_node (${id})...., that=`, $U.json(that));
+		// _log(NS, `- my_read_node (${ID})...., that=`, $U.json(that));
 		return Promise.resolve(that)
         .then($redis.do_read_cache)                             // STEP 1. Read Node from Redis (의도적으로 error 발생)
         //- Dynamo 에서 읽어 왔다면, Redis 에 없는 경우이므로, 이때는 Redis 에 저장해 준다.
         .catch(that => {
+            if (that && that instanceof Error) throw that;
+            //! try to read via dynamo
             return $dynamo.do_read_dynamo(that)                 // STEP 2. If failed, Read Node from DynamoDB.
             .then(that => {
                 // report error if not found.
@@ -1523,6 +1561,7 @@ module.exports = (function (_$, name, options) {
                 return that;
             })
             .then($redis.do_save_cache)                         // STEP 2-2. save back to Redis also.
+            .then($elasticsearch.do_save_search)                // STEP 2-3. save back to ElasticSearch also.
         })
         .then(local_cache_save)
 	};
@@ -1582,10 +1621,10 @@ module.exports = (function (_$, name, options) {
 		return Promise.resolve(that)
         //! copy the current-node with new id.
         .then(that => {
-            // if (!that._id) return Promise.reject(new Error(NS + '_id is required!'));
+            // if (!that._id) return Promise.reject(new Error('._id is required!'));
             //! if not cloneable, then clone-id is required.
             if (!CONF_CLONEABLE) {
-                // if (!that._clone_id) return Promise.reject(new Error(NS + '_clone_id is required!'));
+                // if (!that._clone_id) return Promise.reject(new Error('._clone_id is required!'));
                 return that;
             }
 
@@ -1616,8 +1655,8 @@ module.exports = (function (_$, name, options) {
         //! save back.
         .then(that => {
             const ID = that._id;
-            if (!that._node) return Promise.reject(new Error(NS + '_node is required!'));
-            if (!that._clone_id) return Promise.reject(new Error(NS + '_clone_id is required!'));
+            if (!that._node) return Promise.reject(new Error('._node is required!'));
+            if (!that._clone_id) return Promise.reject(new Error('._clone_id is required!'));
 
             //! now override id with clone-id.
             that._id = that._clone_id;      // override ID with clone-id.
@@ -1727,7 +1766,7 @@ module.exports = (function (_$, name, options) {
 	const my_delete_node = (that) => {
         const ID = that._id;
         if (!ID) return Promise.reject(new Error('._id is required!'));
-		// _log(NS, `- my_delete_node (${id})....`);
+		// _log(NS, `- my_delete_node (${ID})....`);
 		return Promise.resolve(that)
         .then($dynamo.do_delete_dynamo)                   // STEP 1. Delete Node from DynamoDB by node-id.
         .then($redis.do_delete_cache)                    // STEP 2. Delete Node from Redis.
@@ -1759,7 +1798,7 @@ module.exports = (function (_$, name, options) {
 		if (!that._id) return Promise.reject(new Error('_id is required!'));
 
         const mode = that._current_mode;
-		// _log(NS, `- my_notify_node (${id}, ${mode})....`);
+		// _log(NS, `- my_notify_node (${ID}, ${mode})....`);
 		return Promise.resolve(that)
         .then(that => {
             // _log(NS, '>> notify-node res=', $U.json(that._updated_node));
@@ -1779,7 +1818,7 @@ module.exports = (function (_$, name, options) {
                 _log(NS, '>>> notify event-id:', EID, ', notifiable=', is_notifiable);
                 return my_notify_event(EID, 1 ? that : that._node)
                 .then(_ => {
-                    // _log(NS, `! notified-node (${id}, ${mode}) res=`, _);
+                    // _log(NS, `! notified-node (${ID}, ${mode}) res=`, _);
                     return that;
                 });
             }
@@ -1794,7 +1833,7 @@ module.exports = (function (_$, name, options) {
 	 *  Event Handler.
 	 ** ****************************************************************************************************************/
 	const my_event_records = (that) => {
-		if (!that.records) return Promise.reject(new Error(NS + 'records is required!'));
+		if (!that.records) return Promise.reject(new Error('records is required!'));
 		const records = that.records.slice(0);          // copy array.
 
 		_log(NS, `- my_event_records().... records.len=`, records.length);
@@ -1847,9 +1886,9 @@ module.exports = (function (_$, name, options) {
 			const oldRecord = $record.dynamodb.OldImage ? DynamoDBValue.toJavascript($record.dynamodb.OldImage) : null;
 	
 			const id = keyRecord[CONF_ID_NAME];
-			// keyRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.keyRecord[${id}]=`, $U.json(keyRecord));
-			// oldRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.oldRecord[${id}]=`, $U.json(oldRecord));
-			// newRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.newRecord[${id}]=`, $U.json(newRecord));
+			// keyRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.keyRecord[${ID}]=`, $U.json(keyRecord));
+			// oldRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.oldRecord[${ID}]=`, $U.json(oldRecord));
+			// newRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.newRecord[${ID}]=`, $U.json(newRecord));
 	
 			//! 이제 변경된 데이터를 추적해서, 이후 처리 지원. (update 는 호출만되어도 이벤트가 발생하게 됨)
 			const diff = EVENT_NAME === 'MODIFY' ? $U.diff(oldRecord, newRecord) : null;
@@ -1857,7 +1896,7 @@ module.exports = (function (_$, name, options) {
 			const prev = diff ? $_.reduce(diff, (node, key) => {node[key] = oldRecord[key]; return node}, {}) : null;
 			const that = {_id:id, _node:newRecord, _updated_at:updated_at, _diff:diff, _prev:prev};           // use updated_at for
 			chain = Promise.resolve(that);
-			diff && _log(NS,`>> ${tableName}.different[${id}]=`, $U.json(diff));
+			diff && _log(NS,`>> ${tableName}.different[${ID}]=`, $U.json(diff));
 	
 			// _log(NS,`>> Record(${tableName}) that=`, that);
 	
@@ -1869,7 +1908,7 @@ module.exports = (function (_$, name, options) {
 						const ID = that._id;
                         return $redis.do_get_cache_updated(ID)
                         .then(updated_at => {
-							_err(NS, `>> ${tableName}.updated_at[${ID}] res=`, updated_at, ' <- ', that._updated_at
+							_inf(NS, `>> ${tableName}.updated_at[${ID}] res=`, updated_at, ' <- ', that._updated_at
 								,(that._updated_at !== updated_at ? '*' : ''));
 							//! check if latest node is present.
 							if (!updated_at || that._updated_at >= updated_at)
@@ -1880,12 +1919,12 @@ module.exports = (function (_$, name, options) {
                                 .then(hash_value => {
                                     // _log(NS,'>> old hash-value =', hash_value);
                                     if(hash_value && hash_value === hashValue){
-                                        _log(NS,'! WARN! ignored due to hash-value matching =', hash_value);
+                                        _log(NS,'!WARN! ignored due to hash-value matching =', hash_value);
                                         return that;
                                     }
+                                    if(hash_value !== -1) _log(NS,'! INFO! node was updated. hash :=', hashValue,'<-',hash_value);
 
-                                    _log(NS,'! INFO! node was updated. hash :=', hashValue,'<-',hash_value);
-                                    //! otherwise, save node back.
+                                    //! otherwise, save node back....
                                     return $redis.do_save_cache(that)
                                     .then($elasticsearch.do_save_search);
                                 })
@@ -1941,7 +1980,7 @@ module.exports = (function (_$, name, options) {
                 const EID = CONF_NS_NAME+':record'+':'+mode;
                 _log(NS, '>>> notify event-id:', EID, ', notifiable=', is_notifiable);
                 return my_notify_event(EID, 1 ? that : that._node).then(_ => {
-                    // _log(NS, `! notified-node (${id}, ${mode}) res=`, _);
+                    // _log(NS, `! notified-node (${ID}, ${mode}) res=`, _);
                     return that
                 })
             }
@@ -1980,7 +2019,7 @@ module.exports = (function (_$, name, options) {
 	//
 	// //! notify 를 발생시킨다.
 	// const my_notify_event = (type, data, trace_id, notifier) => {
-	// 	if (!type) return Promise.reject(new Error(NS + 'notify:type is required!'));
+	// 	if (!type) return Promise.reject(new Error('notify:type is required!'));
 	// 	const ID = NS_NAME+':'+type;
 	// 	if (!has_subscriber(ID)) return Promise.resolve(false);
 	//
@@ -1995,10 +2034,10 @@ module.exports = (function (_$, name, options) {
 
 	// //! Promised notify-trigger.
 	// const my_notify_trigger = (that) => {
-	// 	if (!that._id) return Promise.reject(new Error(NS + 'notify:_id is required!'));
-	// 	// if (!that.params) return Promise.reject(new Error(NS + 'params is required!'));
+	// 	if (!that._id) return Promise.reject(new Error('notify:_id is required!'));
+	// 	// if (!that.params) return Promise.reject(new Error('params is required!'));
 	// 	const id = ''+that._id;
-	// 	_log(NS, `- my_notify_trigger(${id}).... that=`, $U.json(that));
+	// 	_log(NS, `- my_notify_trigger(${ID}).... that=`, $U.json(that));
 	//
 	// 	if(!id.startsWith(NS_NAME+':')){
 	// 		_log(NS, '! WARN - ignored due to id='+id+' by NS='+NS_NAME);
@@ -2016,11 +2055,11 @@ module.exports = (function (_$, name, options) {
 
 	// //! Bubbled Subscriber to Notify.
 	// const my_notify_subscribe = (that) => {
-	// 	if (!that._id) return Promise.reject(new Error(NS + 'notify:_id is required!'));
-	// 	if (!that.params) return Promise.reject(new Error(NS + 'notify:params is required!'));
+	// 	if (!that._id) return Promise.reject(new Error('notify:_id is required!'));
+	// 	if (!that.params) return Promise.reject(new Error('notify:params is required!'));
 	// 	let id = ''+that._id;
 	// 	let params = that.params;
-	// 	_log(NS, `- my_notify_subscribe(${id}).... params=`, typeof params);
+	// 	_log(NS, `- my_notify_subscribe(${ID}).... params=`, typeof params);
 	//
 	// 	//! If starts with ':', then auto-complete notify-id.
 	// 	if(id.startsWith(':')){
@@ -2050,7 +2089,7 @@ module.exports = (function (_$, name, options) {
 	// 	} else if (typeof params === 'object' && params instanceof Promise){
 	// 		handler = params;
 	// 	} else {
-	// 		return Promise.reject(new Error(NS + 'invalid params type:'+(typeof params)));
+	// 		return Promise.reject(new Error('invalid params type:'+(typeof params)));
 	// 	}
 	//
 	// 	//! register into list.
@@ -2059,7 +2098,7 @@ module.exports = (function (_$, name, options) {
 	// 		if (!id.endsWith(':*')){
 	// 			if (!thiz.$notify[id]) thiz.$notify[id] = [];
 	// 			thiz.$notify[id].push(handler);
-	// 			_log(NS, `! notify-subscribe(${id}) count=`, thiz.$notify[id].length);
+	// 			_log(NS, `! notify-subscribe(${ID}) count=`, thiz.$notify[id].length);
 	// 		} else {
 	// 			const MODES = ['create','update','delete'];
 	// 			const id2 = id.substring(0, id.length-1);
@@ -2067,7 +2106,7 @@ module.exports = (function (_$, name, options) {
 	// 				let id = id2 + mode;
 	// 				if (!thiz.$notify[id]) thiz.$notify[id] = [];
 	// 				thiz.$notify[id].push(handler);
-	// 				_log(NS, `! notify-subscribe(${id}) count=`, thiz.$notify[id].length);
+	// 				_log(NS, `! notify-subscribe(${ID}) count=`, thiz.$notify[id].length);
 	// 			})
 	// 		}
 	// 	}
