@@ -155,6 +155,9 @@
  *  - Update()/Increment() 실행시 항상 R := R + 1 으로 증분시킴.
  *  - Version 은 노드 저장 엔진의 버전을 따라감.
  *
+ * ---------------------------
+ * ## HISTORY 
+ *  - 1.0.8 시계열데이터를 ES_TIMESERIES로 지원함 => save() 자동 timestamp 저장하고, DynamoTable 에는 마지막 상태만 저장.
  *
  * ---------------------------
  * ## TODO LIST - LEMON
@@ -279,17 +282,15 @@ module.exports = (function (_$, name, options) {
 	//! CONF_ES : INDEX/TYPE required if to support search. master if FIELDS is null, or slave if FIELDS not empty.
 	const CONF_ES_INDEX     = CONF_GET_VAL('ES_INDEX', 'test-v1');          // ElasticSearch Index Name. (optional)
 	const CONF_ES_TYPE      = CONF_GET_VAL('ES_TYPE', 'test');              // ElasticSearch Type Name of this Table. (optional)
-	// const CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);   // ElasticSearch Fields definition. (null 이면 master-record)
     const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', 0);			        // ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
     const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);                // ES Version Number. (5 means backward compartible)
-    const $ES               = CONF_ES_VERSION > 5 ? $ES6 : $ES5;            // ES Target Service
-	if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
+    const CONF_ES_TIMESERIES= CONF_GET_VAL('ES_TIMESERIES', false);         // ES Timestamp for Time-Series Data (added @181120)
 
-	//! XECURED KEY
-	const CONF_XECURE_KEY	= CONF_GET_VAL('XECURE_KEY', null);		// Encryption/Decryption Key.
+	//! Security Configurations.
+	const CONF_XECURE_KEY	= CONF_GET_VAL('XECURE_KEY', null);		        // Encryption/Decryption Key.
 
-	//! initialize CONF_FIELDS, CONF_FIELDS, CONF_XEC_FIELDS.
-	const [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS] = (()=>{
+	//! Initial CONF_FIELDS, CONF_FIELDS, CONF_XEC_FIELDS.
+	const [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS] = (()=>{           // ElasticSearch Fields definition. (null 이면 master-record)
 		let CONF_FIELDS       = CONF_GET_VAL('FIELDS', null);
 		let CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);
 		let CONF_XEC_FIELDS	  = CONF_GET_VAL('XEC_FIELDS', null);
@@ -334,10 +335,18 @@ module.exports = (function (_$, name, options) {
 		}
 		//! returns finally.
 		return [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS];
-	})();
+    })();
+    
+    //! VALIDATE CONFIGURATION.
+    if (CONF_ES_TIMESERIES && CONF_REDIS_PKEY && !CONF_REDIS_PKEY.startsWith('#')) throw new Error('ES_TIMESERIES - Redis should be inactive. PKEY:'+CONF_REDIS_PKEY);
+    if (CONF_ES_TIMESERIES && CONF_ES_FIELDS) throw new Error('ES_TIMESERIES - CONF_ES_FIELDS should be null');
 
 	//! Notify Service
 	const CONF_NS_NAME      = CONF_GET_VAL('NS_NAME', '');          // '' means no notification services.
+
+    //! ES Target Service
+    const $ES               = CONF_ES_VERSION > 5 ? $ES6 : $ES5;
+	if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
 
 	//! DynamoDB Value Marshaller.
 	const DynamoDBValue 	= require('dynamodb-value');            // DynamoDB Data Converter.
@@ -714,20 +723,26 @@ module.exports = (function (_$, name, options) {
 		if (!that._node) return Promise.reject(new Error('._node is required!'));
 		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-		const id = that._id;
-		const node = that._node;              // node can be null if not loaded.
-		const current_time = that._current_time;
+        //! CONF_ES_TIMESERIES 일 경우, 무조건 데이터 생성으로 간주함.
+        if (CONF_ES_TIMESERIES){
+            that._node = that._node||{};
+            return Promise.resolve(that);
+        }
+
+        //! prepare internal node.
+		const ID = that._id;
+		const CURRENT_TIME = that._current_time;
 		// _log(NS, '> prepared-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
 
 		//! if no id, then create new node-id.
-		if (!id) {
+		if (!ID) {
 			that = _prepare_node(that);
             return my_prepare_id(that)
             .then(that => {
-				let node = that._node||{};
+				const node = that._node||{};
 				that[CONF_ID_INPUT] = that._id;       // make sure id input.
 				node[CONF_ID_NAME] = that._id;        // make sure id field.
-				that._node = mark_node_prepared(node, current_time);
+				that._node = mark_node_prepared(node, CURRENT_TIME);
 				return that;
 			})
 		}
@@ -735,34 +750,27 @@ module.exports = (function (_$, name, options) {
 		//! read previous(old) node from dynamo.
 		return my_read_node(that)
         .catch(e => {
-            // _err(NS, 'not found. err=', e);
             const msg = e && e.message || '';
-            if (msg.indexOf('404 NOT FOUND') >= 0){
-                _err(NS, 'not found. err=', msg);                                       //! ignore it.
-            } else {
-                throw e;
-            }
+            if (!msg.indexOf('404 NOT FOUND') >= 0) throw e;        
+            _inf(NS, 'WARN! NOT FOUND. msg=', msg);
             return that;
         })
         .then(that => {
             // _log(NS, '>> get-item-node old=', $U.json(that._node));
-            // _log(NS, '>> get-item-node old.len=', $U.json(that._node).length);
-            // _log(NS, '>> that =', that);
             that = _prepare_node(that);
-            // _log(NS, '>> prepared old-node=', $U.json(that._node));
 
             //!VALIDATE [PREPARED] STATE.
             const node = that._node || {};
             if (that._force_create){
                 _err(NS, 'WARN! _force_create is set!');
             } else if (!node.deleted_at){		// if not deleted.
-                _err(NS, 'INVALID STATE FOR PREPARED. ID=',id ,', TIMES[CUD]=', [node.created_at, node.updated_at, node.deleted_at]);
+                _err(NS, 'INVALID STATE FOR PREPARED. ID=',ID ,', TIMES[CUD]=', [node.created_at, node.updated_at, node.deleted_at]);
                 return Promise.reject(new Error('INVALID STATE. deleted_at:'+node.deleted_at));
             }
 
             that[CONF_ID_INPUT] = that._id;         // make sure id input.
             node[CONF_ID_NAME] = that._id;          // make sure id field.
-            that._node = mark_node_prepared(that._node, current_time);
+            that._node = mark_node_prepared(that._node, CURRENT_TIME);
             return that;
         })
 	};
@@ -771,14 +779,20 @@ module.exports = (function (_$, name, options) {
 	const my_prepare_node_created = (that) => {
 		if (!that._id) return Promise.reject(new Error('._id is required!'));
 		if (!that._node) return Promise.reject(new Error('._node is required!'));
-		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
+        if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-		const id = that._id;
-		const node = that._node;
-		const current_time = that._current_time;
-		_log(NS, '> prepared-id =', id, ', current-time =', current_time);
-		// _log(NS, '> prepared-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
+        //! CONF_ES_TIMESERIES 일 경우, 무조건 데이터 생성으로 간주함.
+        if (CONF_ES_TIMESERIES){
+            that._node = that._node||{};
+            return Promise.resolve(that);
+        }
 
+        //! 이전 데이터를 읽어온다.
+		const ID = that._id;
+		const CURRENT_TIME = that._current_time;
+		_log(NS, '> prepared-id =', ID, ', current-time =', CURRENT_TIME);
+        // _log(NS, '> prepared-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
+        
 		//! read previous(old) node from dynamo.
         return my_read_node(that)
         .then(that => {
@@ -788,14 +802,14 @@ module.exports = (function (_$, name, options) {
 			//!VALIDATE [CREATED] STATE.
 			const node = that._node || {};
 			if (that._force_create){
-				_err(NS, 'WARN! _force_create is set!');
+				_inf(NS, 'WARN! _force_create is set!');
 			} else if (!node.deleted_at){		// if not deleted.
-				_err(NS, 'INVALID STATE FOR CREATED. ID=',id ,', TIMES[CUD]=', [node.created_at, node.updated_at, node.deleted_at]);
+				_err(NS, 'INVALID STATE FOR CREATED. ID=',ID ,', TIMES[CUD]=', [node.created_at, node.updated_at, node.deleted_at]);
 				return Promise.reject(new Error('INVALID STATE. deleted_at:'+node.deleted_at));
 			}
 
+			that._node = mark_node_created(node, CURRENT_TIME);
 			//!MARK [CREATED]
-			that._node = mark_node_created(that._node, current_time);
 			return that;
 		})
 	};
@@ -806,17 +820,23 @@ module.exports = (function (_$, name, options) {
 		if (!that._node) return Promise.reject(new Error('._node is required!'));
 		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-		const id = that._id;
+        //! CONF_ES_TIMESERIES 일 경우, 무조건 데이터 생성으로 간주함.
+        if (CONF_ES_TIMESERIES){
+            that._node = that._node||{};
+            return Promise.resolve(that);
+        }
+
+		const ID = that._id;
 		const node = that._node;
-		const current_time = that._current_time;
-		// _log(NS, '> cloned-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
+		const CURRENT_TIME = that._current_time;
+		// _log(NS, '> cloned-id =', ID, ', current-time =', CURRENT_TIME, ', node =', $U.json(node));
 
 		//! read previous(old) node from dynamo.
         return my_read_node(that)
         .then(that => {
 			// _log(NS, '>> get-item-node old=', $U.json(that._node));
 			that = _prepare_node(that);
-			that._node = mark_node_created(that._node, current_time);           // as created for cloning.
+			that._node = mark_node_created(that._node, CURRENT_TIME);           // as created for cloning.
 			return that;
 		})
 	};
@@ -827,10 +847,16 @@ module.exports = (function (_$, name, options) {
 		if (!that._node) return Promise.reject(new Error('._node is required!'));
 		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-		const id = that._id;
+        //! CONF_ES_TIMESERIES 일 경우, 무조건 데이터 생성으로 간주함.
+        if (CONF_ES_TIMESERIES){
+            that._node = that._node||{};
+            return Promise.resolve(that);
+        }
+
+		const ID = that._id;
 		const node = that._node;
-		const current_time = that._current_time;
-		// _log(NS, '> updated-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
+		const CURRENT_TIME = that._current_time;
+		// _log(NS, '> updated-id =', ID, ', current-time =', CURRENT_TIME, ', node =', $U.json(node));
 
 		//! check if available fields.
 		that = _prepare_node(that);
@@ -844,7 +870,7 @@ module.exports = (function (_$, name, options) {
         return my_read_node(that)
         .then(that => {
 			// _log(NS, '>> get-item-node old=', $U.json(that._node));
-			that._node = mark_node_updated(that._node, current_time);
+			that._node = mark_node_updated(that._node, CURRENT_TIME);
 			return that;
 		})
 	};
@@ -855,17 +881,23 @@ module.exports = (function (_$, name, options) {
 		if (!that._node) return Promise.reject(new Error('._node is required!'));
 		if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 
-		const id = that._id;
-		const node = that._node;
-		const current_time = that._current_time;
-		// _log(NS, '> deleted-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
+        //! CONF_ES_TIMESERIES 일 경우, 무조건 데이터 생성으로 간주함.
+        if (CONF_ES_TIMESERIES){
+            that._node = that._node||{};
+            return Promise.resolve(that);
+        }
+
+		const ID = that._id;
+		// const node = that._node;
+		const CURRENT_TIME = that._current_time;
+		// _log(NS, '> deleted-id =', ID, ', current-time =', CURRENT_TIME, ', node =', $U.json(node));
 
 		//! if no node, read previous(old) node from dynamo.
         return my_read_node(that)
         .then(that => {
 			// _log(NS, '>> get-item-node old=', $U.json(that._node));
 			that = _prepare_node(that);
-			that._node = mark_node_deleted(that._node, current_time);
+			that._node = mark_node_deleted(that._node, CURRENT_TIME);
 			return that;
 		})
 	};
@@ -1099,6 +1131,17 @@ module.exports = (function (_$, name, options) {
             
             //NOTE - '#'으로 시작하면, elasticsearch로 대신함.
             if (CONF_REDIS_PKEY.startsWith('#')){
+                //! 다만, TIMESERIES이면, DYNAMO에서 직접 읽어 온다.    @181120.
+                if (CONF_ES_TIMESERIES){
+                    return $dynamo.do_read_dynamo(that)                 // STEP 2. If failed, Read Node from DynamoDB.
+                    .then(that => {
+                        const node = that._node||{};
+                        if (node[CONF_ID_NAME] === undefined) return Promise.reject(new Error('404 NOT FOUND. '+CONF_DYNA_TABLE+'.id:'+(that._id||'')));
+                        return that;
+                    })
+                }
+
+                //! 캐시를 대신하여, ES에서 ID 로 읽어오기.
                 return $elasticsearch.do_read_search(that)
                 .catch(err => {
                     //! 읽은 node가 없을 경우에도 발생할 수 있으므로, Error인 경우에만 처리한다.
@@ -1300,7 +1343,8 @@ module.exports = (function (_$, name, options) {
 		do_save_search : that => {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
-			if (!that._node) return Promise.reject(new Error('elasticsearch:_node is required!'));
+			if (!that._node) return Promise.reject(new Error('._node is required!'));
+			if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
 
 			const node = that._node;
@@ -1326,22 +1370,42 @@ module.exports = (function (_$, name, options) {
 				if (CONF_ES_MASTER){
                     return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                     .then(_ => {
-						_log(NS, `! elasticsearch: saved-item(${ID}) res=`, $U.json(_));
+						_log(NS, `! elasticsearch: saved-item(${ID})@1 res=`, $U.json(_));
 						return that;
 					});		
 				} else {
                     return $ES.do_update_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                     .then(_ => {
-						_log(NS, `! elasticsearch: updated-item(${ID}) res=`, $U.json(_));
+						_log(NS, `! elasticsearch: updated-item(${ID})@1 res=`, $U.json(_));
 						return that;
 					})
 				}
-			}
+            }
+            
+            //! TIMESERIES 데이터 일경우..
+            if (CONF_ES_TIMESERIES){
+                const keys = Object.keys(node).reduce((L, key)=>{
+                    if (key.startsWith('_') || key.startsWith('$')) return L;
+                    key && L.push(key);
+                    return L;
+                }, []);
+                if (keys.length) return Promise.reject(new Error('Nothing to save. keys=0'));
+                const node2 = keys.reduce((O, key)=>{
+                    O[key] = node[key];
+                    return O;
+                }, {'@timestamp': that._current_time})
+                //! save to elastic.
+                return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
+                .then(_ => {
+                    _log(NS, `! elasticsearch: saved-item(${ID})@2 res=`, $U.json(_));
+                    return that;
+                });		
+            }
 
 			// _log(NS, `- elasticsearch:my_save_node(${ID})....`);
             return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node)
             .then(_ => {
-				_log(NS, `! elasticsearch: create-item(${ID}) res=`, $U.json(_));
+				_log(NS, `! elasticsearch: create-item(${ID})@3 res=`, $U.json(_));
 				return that;
 			});
 		},
@@ -1505,6 +1569,9 @@ module.exports = (function (_$, name, options) {
 
     //! save into local-cache.
     const local_cache_save = (that) => {
+        //! CONF_ES_TIMESERIES 일 경우, 내부 캐시 안함.
+        if (CONF_ES_TIMESERIES) return that;
+
         const key       = as_cache_key(that);
         const node      = that._node;
         const curr_ms   = that._current_time || $U.current_time_ms();
@@ -2191,11 +2258,16 @@ module.exports = (function (_$, name, options) {
 
 		//! ElasticSearch for Initial Type.
 		if (CONF_ES_INDEX && CONF_ES_TYPE && CONF_ES_FIELDS) {
-
 			//TODO - Use Dynamic Field Template!!!..
             //! see:https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html
             //!INFO! optimized for ES6.0 @180520
 			const ES_SETTINGS = {
+                "template": CONF_ES_INDEX,
+                // "settings": {
+                //     "index": {
+                //         "refresh_interval": "5s"
+                //     }
+                // },
 				"mappings" : {
 					"_default_": {
 						// "_all": {"enabled": true},   only for ES5 (see below)
@@ -2214,6 +2286,7 @@ module.exports = (function (_$, name, options) {
 								}
 							}
 						}],
+                        "_source":    { "enabled": CONF_ES_VERSION >= 6 ? true : false },
 						"properties": {
 							"@version": {"type": CONF_ES_VERSION >= 6 ? "text" : "string", "index": CONF_ES_VERSION >= 6 ? false : "not_analyzed"},
 							// "geoip": {
@@ -2242,36 +2315,16 @@ module.exports = (function (_$, name, options) {
 						}
 					}
 				}
-				// 	"item": {
-				// 		"properties": {
-				// 			"title":    { "type": "text"  },
-				// 			"name":     { "type": "text"  },
-				// 			"age":      { "type": "integer" },
-				// 			"created_at":  {
-				// 				"type":   "date",
-				// 				"format": "strict_date_optional_time||epoch_millis"
-				// 			},
-				// 			"updated_at":  {
-				// 				"type":   "date",
-				// 				"format": "strict_date_optional_time||epoch_millis"
-				// 			},
-				// 			"deleted_at":  {
-				// 				"type":   "date",
-				// 				"format": "strict_date_optional_time||epoch_millis"
-				// 			}
-				// 		}
-				// 	},
-				// 	"blogpost": {
-				// 		"_all":       { "enabled": false  },
-				// 		"properties": {
-				// 			"body":     { "type": "text"  },
-				// 		}
-				// 	}
-				// }
             }
             
             if (!(CONF_ES_VERSION >= 6)){
                 ES_SETTINGS.mappings._default_["all"] = {"enabled": true};
+            }
+
+            //! timeseries 데이터로, 기본 timestamp 값을 넣어준다. (주위! save시 current-time 값 자동 저장)
+            if (!!CONF_ES_TIMESERIES){
+                ES_SETTINGS.mappings.settings = {"index": { "refresh_interval": "5s"}};
+                ES_SETTINGS.mappings._default_.properties["@timestamp"] = { "type": "date", "doc_values": true };
             }
 
 			//! add actions
