@@ -281,10 +281,10 @@ module.exports = (function (_$, name, options) {
 	
 	//! CONF_ES : INDEX/TYPE required if to support search. master if FIELDS is null, or slave if FIELDS not empty.
 	const CONF_ES_INDEX     = CONF_GET_VAL('ES_INDEX', 'test-v1');          // ElasticSearch Index Name. (optional)
-	const CONF_ES_TYPE      = CONF_GET_VAL('ES_TYPE', 'test');              // ElasticSearch Type Name of this Table. (optional)
-    const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', 0);			        // ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
-    const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);                // ES Version Number. (5 means backward compartible)
     const CONF_ES_TIMESERIES= CONF_GET_VAL('ES_TIMESERIES', false);         // ES Timestamp for Time-Series Data (added @181120)
+	const CONF_ES_TYPE      = CONF_GET_VAL('ES_TYPE', '');              	// ElasticSearch Type Name of this Table. (optional) #이게 ES6가면서 type이 의미 없어짐!.
+    const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', CONF_ES_TIMESERIES ? 1 : 0);// ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
+    const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);                // ES Version Number. (5 means backward compartible)
     _log(NS, '! CONF_ES_TIMESERIES=', CONF_ES_TIMESERIES);
     
 	//! Security Configurations.
@@ -1006,31 +1006,29 @@ module.exports = (function (_$, name, options) {
 			const CURRENT_TIME = that._current_time;
 
 			_log(NS, `- dynamo: save(${ID})....`);
-			_log(NS, '> dynamo:node-id =', ID, ', current-time =', CURRENT_TIME, ', node :=', $U.json(node));
 
 			//! override attributes into node.
 			// const IGNORE_FIELDS = [CONF_ID_INPUT,CONF_ID_NAME,'created_at','updated_at','deleted_at',CONF_PARENT_ID,CONF_CLONED_ID];
 			if (MODE !== 'prepare')         //WARN! in prepare mode, node was already populated with default value. (so do not override)
 			{
 				const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
-				for (let n in that){
-					if (!n) continue;
-					if (!that.hasOwnProperty(n)) continue;
-					n = ''+n;
-					if (n.startsWith('_')) continue;
-					if (n.startsWith('$')) continue;
-					if (IGNORE_FIELDS.indexOf(n) >= 0) continue;
-					if (CONF_FIELDS && CONF_FIELDS.indexOf(n) < 0) continue;        // Filtering Fields
-					node[n] = that[n];
+				for (let key in that){
+					if (!key) continue;
+					if (!that.hasOwnProperty(key)) continue;
+					key = `${key}`;
+					if (key.startsWith('_') || key.startsWith('$')) continue;
+					if (IGNORE_FIELDS.indexOf(key) >= 0) continue;
+					if (CONF_FIELDS && CONF_FIELDS.indexOf(key) < 0) continue;        // Filtering Fields
+					node[key] = that[key];
 					//! encrypt if xecured fields.
-					if ($xec && CONF_XEC_FIELDS && CONF_XEC_FIELDS.indexOf(n) >= 0){
-						node[n] = that[n] ? $xec.encrypt(that[n]) : '';
+					if ($xec && CONF_XEC_FIELDS && CONF_XEC_FIELDS.indexOf(key) >= 0){
+						node[key] = that[key] ? $xec.encrypt(that[key]) : '';
 					}
 				}
 			}
-
 			//! Update Revision Number. R := R + 1
 			if (node[CONF_REVISION_NAME] !== undefined) node[CONF_REVISION_NAME] = $U.N(node[CONF_REVISION_NAME],0) + 1;
+			_log(NS, '> save@node-id =', ID, ', current-time =', CURRENT_TIME, ', node :=', $U.json(node));
 
 			//! then, save into DynamoDB
             return $DS.do_create_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: ID}, node)
@@ -1331,7 +1329,7 @@ module.exports = (function (_$, name, options) {
 		do_read_search : that => {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
-			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
+			if (!CONF_ES_INDEX) return that;
             _log(NS, `- elasticsearch: read(${ID})....`);
             return $ES.do_get_item(CONF_ES_INDEX, CONF_ES_TYPE, ID)
             .then(node => {
@@ -1351,17 +1349,20 @@ module.exports = (function (_$, name, options) {
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!that._node) return Promise.reject(new Error('._node is required!'));
 			if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
-			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
+			if (!CONF_ES_INDEX) return that;
 
 			const node = that._node;
+			const CURRENT_TIME = that._current_time;
 			// _log(NS,'> elasticsearch: save.node =', $U.json(node));
 			//! copy only fields, and update node.
 			if (CONF_ES_FIELDS){
-				let node2 = $_.reduce(CONF_ES_FIELDS, (obj,v) => {
+				//! copy fields out-of origin.
+				const node2 = $_.reduce(CONF_ES_FIELDS, (obj,v) => {
 					if (node[v] !== undefined) obj[v] = node[v];
 					return obj;
 				}, {});
 
+				//! ignore if empty set.
 				if (!Object.keys(node2).length) {
 					_err(NS, `! elasticsearch:WARN! nothing to update (${ID})....`);
 					return that;
@@ -1372,8 +1373,17 @@ module.exports = (function (_$, name, options) {
 				if (node.updated_at !== undefined) node2.updated_at = node.updated_at;
 				if (node.deleted_at !== undefined) node2.deleted_at = node.deleted_at;
 
-				// _log(NS, `- elasticsearch:my_save_node2(${ID}).... node2=`, $U.json(node2));
-				if (CONF_ES_MASTER){
+				_log(NS, `> elasticsearch:save(${CONF_ES_MASTER}/${ID}).... node2=`, $U.json(node2));
+				if (CONF_ES_TIMESERIES){
+					//! TIMESERIES 데이터 일경우. 시간 저장.
+					node2['@timestamp'] = CURRENT_TIME;
+					node2[CONF_ID_NAME] = ID;
+					return $ES.do_push_item(CONF_ES_INDEX, CONF_ES_TYPE, node2)
+                    .then(_ => {
+						_log(NS, `! elasticsearch: pushed-item(${ID})@1 res=`, $U.json(_));
+						return that;
+					});		
+				} else if (CONF_ES_MASTER){
                     return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                     .then(_ => {
 						_log(NS, `! elasticsearch: saved-item(${ID})@1 res=`, $U.json(_));
@@ -1386,26 +1396,6 @@ module.exports = (function (_$, name, options) {
 						return that;
 					})
 				}
-            }
-            
-            //! TIMESERIES 데이터 일경우..
-            if (CONF_ES_TIMESERIES){
-                const keys = Object.keys(node).reduce((L, key)=>{
-                    if (key.startsWith('_') || key.startsWith('$')) return L;
-                    key && L.push(key);
-                    return L;
-                }, []);
-                if (keys.length) return Promise.reject(new Error('Nothing to save. keys=0'));
-                const node2 = keys.reduce((O, key)=>{
-                    O[key] = node[key];
-                    return O;
-                }, {'@timestamp': that._current_time})
-                //! save to elastic.
-                return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
-                .then(_ => {
-                    _log(NS, `! elasticsearch: saved-item(${ID})@2 res=`, $U.json(_));
-                    return that;
-                });		
             }
 
 			// _log(NS, `- elasticsearch:my_save_node(${ID})....`);
@@ -1421,7 +1411,7 @@ module.exports = (function (_$, name, options) {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!that._updated_node) return Promise.reject(new Error('._updated_node is required!'));
-			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
+			if (!CONF_ES_INDEX) return that;
 
 			const node = that._updated_node;
 			//! copy only fields, and update node.
@@ -1460,7 +1450,7 @@ module.exports = (function (_$, name, options) {
 		do_delete_search : that => {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
-			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
+			if (!CONF_ES_INDEX) return that;
 
 			if (CONF_ES_FIELDS && !CONF_ES_MASTER) {
 				_log(NS, `! elasticsearch:WARN! ignore delete (${ID})....`);
@@ -1481,7 +1471,7 @@ module.exports = (function (_$, name, options) {
 		//! search
 		do_search : that => {
 			// if (!that._id) return Promise.reject(new Error('elasticsearch:_id is required!'));
-			if (!CONF_ES_INDEX || !CONF_ES_TYPE) return that;
+			if (!CONF_ES_INDEX) return that;
 			// const id = that._id;
             // _log(NS, `- elasticsearch:do_search_item()....`);
             
@@ -1495,7 +1485,7 @@ module.exports = (function (_$, name, options) {
 			param.$page 	= $U.N(that.page, 0);
 			param.$limit 	= $U.N(that.ipp, that.ipp === 0 ? 0 : 10); //allow ipp to be set 0.
 			// param.$exist = '!deleted_at';			// NOT INCLUDE DELETED.
-			param.deleted_at = that.deleted_at !== undefined ? that.deleted_at : '0';
+			if (!CONF_ES_TIMESERIES) param.deleted_at = that.deleted_at !== undefined ? that.deleted_at : '0';
 			if (that.$source) param.$source = that.$source;		// copy source.
 
 			//! custom query.
@@ -1504,7 +1494,8 @@ module.exports = (function (_$, name, options) {
 			if (that.O) param.$O = that.O;				// OrderBy (default asc by name)
 
 			//! add default-sort if no search query.
-			param.$O = param.$O || (CONF_ID_TYPE.startsWith('#') ? 'id.keyword' : 'id');
+			if (CONF_ES_TIMESERIES) param.$O = param.$O || '!@timestamp';							// 최신순으로 정렬.
+			param.$O = param.$O || (CONF_ID_TYPE.startsWith('#') ? CONF_ID_NAME+'.keyword' : CONF_ID_NAME);			// 기본은 아이디 값으로.
 			
 			//build query parameters.
 			if (CONF_ES_FIELDS){
@@ -1516,20 +1507,23 @@ module.exports = (function (_$, name, options) {
 			}
 
 			//! 검색 파라미터로 검색을 시작한다.
+			_log(NS, `! elasticsearch: search[${CONF_ES_INDEX}/${CONF_ES_TYPE}] =`, $U.json(param));
             return $ES.do_search_item(CONF_ES_INDEX, CONF_ES_TYPE, param)
             .then(_ => {
-				// _log(NS, `! elasticsearch:searched-item() res=`, $U.json(_));
-				// _log(NS, `! elasticsearch:searched-item() res=`, $U.json(_));
-
+				// _log(NS, `> elasticsearch: search-res=`, $U.json(_));
 				//! move hits.hits[] to _hits.
-				let hits = _ && _.hits || {};
-
-				//! rebuild.
+				const hits = _ && _.hits || {};
 				const $lst = hits.hits || [];
 				const $res = hits;
 
+				const local_list_map = (_)=>{
+					const node = _._score ? $U.extend({'_score':_._score}, _._source) : _._source;
+					if (CONF_ES_TIMESERIES) node['@id'] = _._id;
+					return node;
+				}
+
 				//! copy result...
-				that.list = $lst.map(_ => $U.extend({'_score':_._score}, _._source));
+				that.list = $lst.map(local_list_map);
 				that.total = $U.N($res.total||0);
 				that.page = param.$page;			// page number
 				that.ipp = param.$limit;			// page count per paging.
@@ -2220,7 +2214,7 @@ module.exports = (function (_$, name, options) {
 				}).catch(e => {
                     const msg = e.message||`${e}`;
 					_err(NS, '> create-table error=', e);
-					if (e.code === 'ResourceInUseException') return {'result': false, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'type':e.code};            //IGNORE! duplicated table.
+					if (e.code === 'ResourceInUseException') return {'result': false, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'code':e.code};            //IGNORE! duplicated table.
 					//if (e.code == 'NetworkingError') return false;
                     // throw e;
                     return {'result': false, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'error': msg};
@@ -2242,7 +2236,7 @@ module.exports = (function (_$, name, options) {
 			}).catch(e => {
                 const msg = e.message||`${e}`;
 				_err(NS, '> create-id-seq error=', e);
-				if (e.code === 'ER_TABLE_EXISTS_ERROR') return {'result': false, 'name': 'MySQL', 'type': e.code};;            //IGNORE! duplicated sequence-table.
+				if (e.code === 'ER_TABLE_EXISTS_ERROR') return {'result': false, 'name': 'MySQL', 'code': e.code};;            //IGNORE! duplicated sequence-table.
 				//if (e.code == 'NetworkingError') return false;
                 // throw e;
                 return {'result': false, 'name': 'MySQL', 'error': msg};
@@ -2260,7 +2254,7 @@ module.exports = (function (_$, name, options) {
 			}).catch(e => {
                 const msg = e.message||`${e}`;
 				_err(NS, '> create-id-seq error=', e);
-				if (e.code === 'ER_TABLE_EXISTS_ERROR') return {'result': false, 'name': 'MySQL', 'type':e.code};            //IGNORE! duplicated sequence-table.
+				if (e.code === 'ER_TABLE_EXISTS_ERROR') return {'result': false, 'name': 'MySQL', 'code':e.code};            //IGNORE! duplicated sequence-table.
 				//if (e.code == 'NetworkingError') return false;
                 // throw e;
                 return {'result': false, 'name': 'MySQL', 'error': msg};
@@ -2270,7 +2264,7 @@ module.exports = (function (_$, name, options) {
 		}
 
 		//! ElasticSearch for Initial Type.
-		if (CONF_ES_INDEX && CONF_ES_TYPE && CONF_ES_FIELDS) {
+		if (CONF_ES_INDEX && CONF_ES_FIELDS) {
 			//TODO - Use Dynamic Field Template!!!..
             //! see:https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic-templates.html
             //!INFO! optimized for ES6.0 @180520
@@ -2302,17 +2296,8 @@ module.exports = (function (_$, name, options) {
                         "_source":    { "enabled": CONF_ES_VERSION >= 6 ? true : false },
 						"properties": {
 							"@version": {"type": CONF_ES_VERSION >= 6 ? "text" : "string", "index": CONF_ES_VERSION >= 6 ? false : "not_analyzed"},
-							// "geoip": {
-							// 	"type": "object",
-							// 	"dynamic": true,
-							// 	"path": "full",
-							// 	"properties": {
-							// 		"location": {"type": "geo_point"}
-							// 	}
-							// },
 							"title":    { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  },
 							"name":     { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  },
-							// "stock":    { "type": "integer" },
 							"created_at":  {
 								"type":   "date",
 								"format": "strict_date_optional_time||epoch_millis"
@@ -2328,37 +2313,43 @@ module.exports = (function (_$, name, options) {
 						}
 					}
 				}
-            }
-            
+			}
+
+			//! ES6 추가 구성...
             if (!(CONF_ES_VERSION >= 6)){
                 ES_SETTINGS.mappings._default_["all"] = {"enabled": true};
             }
 
+			//! ID가 문자열이면, 인덱스를 추가해 줌.
+			if (CONF_ID_NAME && CONF_ID_TYPE.startsWith('#')){
+				ES_SETTINGS.mappings._default_.properties[CONF_ID_NAME] = { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  };
+			}
+            
             //! timeseries 데이터로, 기본 timestamp 값을 넣어준다. (주위! save시 current-time 값 자동 저장)
             if (!!CONF_ES_TIMESERIES){
                 ES_SETTINGS.settings = {"index": { "refresh_interval": "5s"}};
-                ES_SETTINGS.mappings._default_.properties["@timestamp"] = { "type": "date", "doc_values": true };
-            }
+				ES_SETTINGS.mappings._default_.properties["@timestamp"] = { "type": "date", "doc_values": true };
+				ES_SETTINGS.mappings._default_.properties["ip"] = {"type": "ip"};
+				const CLEANS = '@version,title,created_at,updated_at,deleted_at'.split(',');
+				CLEANS.map(key=> delete ES_SETTINGS.mappings._default_.properties[key]);
+			}
 
 			//! add actions
 			actions.push(Promise.resolve('ElasticSearch')
+			.then(_ => {
+				_log(NS, '# initialize ElasticSearch. ES_TYPE=', CONF_ES_TYPE);
+				return $ES.do_create_index_type(CONF_ES_INDEX, CONF_ES_TYPE, ES_SETTINGS)
 				.then(_ => {
-					_log(NS, '# initialize ElasticSearch (Type) ', CONF_ES_TYPE);
-					return $ES.do_create_index_type(CONF_ES_INDEX, CONF_ES_TYPE, ES_SETTINGS).then(_ => {
-						_log(NS, '> create-es-index res=', _);
-						return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX};
-					})
-			}).catch(e => {
-                const msg = e.message||`${e}`;
-				_err(NS, '> create-es-index error=', e);
-				if (e.type === 'index_already_exists_exception') return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'warn':e.type};    //IGNORE! duplicated sequence-table.
-                // throw e;
-                return {'result': false, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'error': msg};
-			}).then(_ => {
-				//TODO - initialize document index setting (or use template)
-				// CONF_FIELDS;
-				return _;
-			}));
+					_log(NS, '> create-es-index res=', _);
+					return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'settings': ES_SETTINGS};
+				}).catch(e => {
+					const msg = e.message||e.reason||`${e}`;
+					_err(NS, '> create-es-index error=', e);
+					if (e.type === 'index_already_exists_exception') return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'warn':e.type};    //IGNORE! duplicated sequence-table.
+					// throw e;
+					return {'result': false, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'error': msg};
+				})}
+			));
 		} else {
 			_log(NS, 'MS: WARN! ignored configuration. ES_TYPE=', CONF_ES_TYPE);
 		}
@@ -2367,7 +2358,7 @@ module.exports = (function (_$, name, options) {
         //TODO - catch error per each action. and report.
 		return Promise.all(actions).then(_ => {
 			_log(NS, '>> results=', _);
-			that._result = _;
+			that.results = _;
 			return that;
 		})
 	};
@@ -2384,12 +2375,15 @@ module.exports = (function (_$, name, options) {
 			_log(NS, '# terminate DynamoDB');
 			actions.push($DS.do_delete_table(CONF_DYNA_TABLE).then(_ => {
 				// _log(NS, '> delete-table res=', _);
-				return _.TableDescription.TableName === CONF_DYNA_TABLE;
+				const res = _.TableDescription.TableName === CONF_DYNA_TABLE;
+				return {'result': true, 'name': 'dynamo:'+CONF_DYNA_TABLE};
 			}).catch(e => {
-				// _err(NS, '> create-table error=', e);
-				if (e.code === 'ResourceNotFoundException') return true;            //IGNORE! destroyed table.
+				const msg = e.message||`${e}`;
+				_err(NS, '> delete-table error=', e);
+				if (e.code === 'ResourceNotFoundException') return {'result': true, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'code':e.code};            //IGNORE! destroyed table.
 				//if (e.code == 'NetworkingError') return false;
-				throw e;
+				// throw e;
+				return {'result': false, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'error': msg};
 			}));
 		}
 
@@ -2397,12 +2391,14 @@ module.exports = (function (_$, name, options) {
 			_log(NS, '# terminate MySQL (Sequence) ');
 			actions.push($MS.do_delete_id_seq(CONF_ID_TYPE).then(_ => {
 				_log(NS, '> delete-id-seq res=', _);
-				return true;
+				return {'result': true, 'name': 'MySQL:'+CONF_ID_TYPE};
 			}).catch(e => {
-				// _err(NS, '> create-id-seq error=', e);
-				if (e.code === 'ER_BAD_TABLE_ERROR') return true;                //IGNORE! no-table.
+				const msg = e.message||`${e}`;
+				_err(NS, '> delete-id-seq error=', e);
+				if (e.code === 'ER_BAD_TABLE_ERROR') return {'result': true, 'name': 'MySQL:'+CONF_ID_TYPE, 'code':e.code};                //IGNORE! no-table.
 				//if (e.code == 'NetworkingError') return false;
-				throw e;
+				// throw e;
+				return {'result': false, 'name': 'MySQL:'+CONF_ID_TYPE, 'error': msg};
 			}));
         //! 이름이 '#'으로 시작하고, CONF_ID_NEXT 가 있을 경우, 내부적 ID 생성 목적으로 시퀀스를 생성해 둔다.
         } else if (CONF_ID_TYPE && CONF_ID_TYPE.startsWith('#') && CONF_ID_TYPE.length > 1 && CONF_ID_NEXT > 0) {
@@ -2410,35 +2406,41 @@ module.exports = (function (_$, name, options) {
             const ID_NAME = CONF_ID_TYPE.substring(1);
 			actions.push($MS.do_delete_id_seq(ID_NAME).then(_ => {
 				_log(NS, '> delete-id-seq['+ID_NAME+'] res=', _);
-				return true;
+				return {'result': true, 'name': 'MySQL:'+ID_NAME};
 			}).catch(e => {
-				// _err(NS, '> create-id-seq error=', e);
-				if (e.code === 'ER_BAD_TABLE_ERROR') return true;                //IGNORE! no-table.
+				const msg = e.message||`${e}`;
+				_err(NS, '> delete-id-seq error=', e);
+				if (e.code === 'ER_BAD_TABLE_ERROR') return {'result': true, 'name': 'MySQL:'+ID_NAME, 'code':e.code};                //IGNORE! no-table.
 				//if (e.code == 'NetworkingError') return false;
-				throw e;
+				// throw e;
+				return {'result': false, 'name': 'MySQL:'+ID_NAME, 'error': msg};
 
             }));
 		} else {
 			_log(NS, '# ignored MySQL (Sequence) ');
 		}
 
-		if (CONF_ES_INDEX && CONF_ES_TYPE) {
+		//! terminate by index.
+		if (CONF_ES_INDEX) {
 			_log(NS, '# terminate ES (Index) ');
 			actions.push($ES.do_delete_index_type(CONF_ES_INDEX,  1 ? null : CONF_ES_TYPE).then(_ => {
 				_log(NS, '> delete-es-index res=', _);
-				return true;
+				return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX};
 			}).catch(e => {
-				_err(NS, '> create-es-index error=', e);
+				const msg = e.message||e.reason||`${e}`;
+				_err(NS, '> delete-es-index error=', e);
 				//if (e.code == 'NetworkingError') return false;
-				throw e;
+				// throw e;
+				return {'result': false, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'error': msg};
 			}));
 		} else {
 			_log(NS, '# ignored ES (Index) ');
 		}
 
+		//! execute each
 		return Promise.all(actions).then(_ => {
 			_log(NS, '>> results=', _);
-			that._result = _;
+			that.results = _;
 			return that;
 		});
 	};
