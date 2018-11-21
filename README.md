@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.9     | `ES_TIMESERIES` - onRecords, do not update cache if timeseries.
 | 1.0.8     | `ES_TIMESERIES` to support Time-Series Data (ex: item-trace)
 | 1.0.6     | hot-fix of iota.
 | 1.0.5     | use elasticsearch as 1st cache. see `REDIS_PKEY = '#'`.

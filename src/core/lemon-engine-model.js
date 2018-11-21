@@ -1981,6 +1981,9 @@ module.exports = (function (_$, name, options) {
 				case "MODIFY":          // both records.
 					chain = chain.then(that => {
 						const ID = that._id;
+						if (CONF_ES_TIMESERIES) return that;					//ignore!.
+
+						//! update cache if stream is latest!!.
                         return $redis.do_get_cache_updated(ID)
                         .then(updated_at => {
 							_inf(NS, `>> ${tableName}.updated_at[${ID}] res=`, updated_at, ' <- ', that._updated_at
