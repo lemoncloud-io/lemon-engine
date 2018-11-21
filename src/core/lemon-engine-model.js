@@ -285,15 +285,17 @@ module.exports = (function (_$, name, options) {
     const CONF_ES_MASTER	= CONF_GET_VAL('ES_MASTER', 0);			        // ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
     const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);                // ES Version Number. (5 means backward compartible)
     const CONF_ES_TIMESERIES= CONF_GET_VAL('ES_TIMESERIES', false);         // ES Timestamp for Time-Series Data (added @181120)
-
+    _log(NS, '! CONF_ES_TIMESERIES=', CONF_ES_TIMESERIES);
+    
 	//! Security Configurations.
 	const CONF_XECURE_KEY	= CONF_GET_VAL('XECURE_KEY', null);		        // Encryption/Decryption Key.
 
 	//! Initial CONF_FIELDS, CONF_FIELDS, CONF_XEC_FIELDS.
 	const [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS] = (()=>{           // ElasticSearch Fields definition. (null 이면 master-record)
 		let CONF_FIELDS       = CONF_GET_VAL('FIELDS', null);
-		let CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', 0 ? null:['updated_at','name']);
-		let CONF_XEC_FIELDS	  = CONF_GET_VAL('XEC_FIELDS', null);
+		let CONF_ES_FIELDS    = CONF_GET_VAL('ES_FIELDS', CONF_ES_TIMESERIES ? null : ['updated_at','name']);
+        let CONF_XEC_FIELDS	  = CONF_GET_VAL('XEC_FIELDS', null);
+        // _log(NS, '! CONF_ES_FIELDS=', CONF_ES_FIELDS);
 		const asArray = ($conf)=>{
 			return $conf && typeof $conf == 'string' ? $conf.split(',').reduce((L, val)=>{
 				val = val.trim(); if (val) L.push(val); return val;
@@ -325,21 +327,25 @@ module.exports = (function (_$, name, options) {
 				return L;
 			}, []);
 			CONF_XEC_FIELDS.length && _inf(NS, 'XECURED-FIELDS =', CONF_XEC_FIELDS);
-		}
+        }
+        
 		//! clear if CONF_FIELDS is empty.
 		const isEmpty = !CONF_FIELDS || !CONF_FIELDS.length;
 		if (isEmpty){
 			CONF_FIELDS = null;
 			CONF_ES_FIELDS = null;
 			CONF_XEC_FIELDS = null;
-		}
+		} else if (CONF_ES_FIELDS && !CONF_ES_FIELDS.length){
+            CONF_ES_FIELDS = CONF_ES_TIMESERIES ? CONF_FIELDS : null;
+        }
 		//! returns finally.
 		return [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS];
     })();
+    _log(NS, '! CONF_ES_FIELDS :=', CONF_ES_FIELDS && CONF_ES_FIELDS.join(', '));
     
     //! VALIDATE CONFIGURATION.
     if (CONF_ES_TIMESERIES && CONF_REDIS_PKEY && !CONF_REDIS_PKEY.startsWith('#')) throw new Error('ES_TIMESERIES - Redis should be inactive. PKEY:'+CONF_REDIS_PKEY);
-    if (CONF_ES_TIMESERIES && CONF_ES_FIELDS) throw new Error('ES_TIMESERIES - CONF_ES_FIELDS should be null');
+    if (CONF_ES_TIMESERIES && !CONF_ES_FIELDS.length) throw new Error('ES_TIMESERIES - CONF_ES_FIELDS should be valid!');
 
 	//! Notify Service
 	const CONF_NS_NAME      = CONF_GET_VAL('NS_NAME', '');          // '' means no notification services.
@@ -2208,13 +2214,16 @@ module.exports = (function (_$, name, options) {
 					_log(NS, '# initialize ', _);
 					return $DS.do_create_table(CONF_DYNA_TABLE, CONF_ID_NAME, ID_TYPE).then(_ => {
 						// _log(NS, '> create-table res=', _);
-						return _.TableDescription.TableName === CONF_DYNA_TABLE;
+                        const res = _.TableDescription.TableName === CONF_DYNA_TABLE;
+                        return {'result': res, 'name': 'dynamo:'+CONF_DYNA_TABLE};
 					})
 				}).catch(e => {
-					// _err(NS, '> create-table error=', e);
-					if (e.code === 'ResourceInUseException') return false;            //IGNORE! duplicated table.
+                    const msg = e.message||`${e}`;
+					_err(NS, '> create-table error=', e);
+					if (e.code === 'ResourceInUseException') return {'result': false, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'type':e.code};            //IGNORE! duplicated table.
 					//if (e.code == 'NetworkingError') return false;
-					throw e;
+                    // throw e;
+                    return {'result': false, 'name': 'dynamo:'+CONF_DYNA_TABLE, 'error': msg};
 				})
 			);
 		} else {
@@ -2228,13 +2237,15 @@ module.exports = (function (_$, name, options) {
 					_log(NS, '# initialize MySQL (Sequence) ');
 					return $MS.do_create_id_seq(CONF_ID_TYPE, CONF_ID_NEXT).then(_ => {
 						_log(NS, '> create-id-seq res=', _);
-						return true;
+						return {'result': true, 'name': 'sequence'};
 					})
 			}).catch(e => {
-				// _err(NS, '> create-id-seq error=', e);
-				if (e.code === 'ER_TABLE_EXISTS_ERROR') return false;            //IGNORE! duplicated sequence-table.
+                const msg = e.message||`${e}`;
+				_err(NS, '> create-id-seq error=', e);
+				if (e.code === 'ER_TABLE_EXISTS_ERROR') return {'result': false, 'name': 'MySQL', 'type': e.code};;            //IGNORE! duplicated sequence-table.
 				//if (e.code == 'NetworkingError') return false;
-				throw e;
+                // throw e;
+                return {'result': false, 'name': 'MySQL', 'error': msg};
             }));
         //! 이름이 '#'으로 시작하고, CONF_ID_NEXT 가 있을 경우, 내부적 ID 생성 목적으로 시퀀스를 생성해 둔다.
         } else if (CONF_ID_TYPE && CONF_ID_TYPE.startsWith('#') && CONF_ID_TYPE.length > 1 && CONF_ID_NEXT > 0) {
@@ -2244,13 +2255,15 @@ module.exports = (function (_$, name, options) {
                     const ID_NAME = CONF_ID_TYPE.substring(1);
 					return $MS.do_create_id_seq(ID_NAME, CONF_ID_NEXT).then(_ => {
 						_log(NS, '> create-id-seq['+ID_NAME+'] res=', _);
-						return true;
+                        return {'result': true, 'name': 'MySQL'};
 					})
 			}).catch(e => {
-				// _err(NS, '> create-id-seq error=', e);
-				if (e.code === 'ER_TABLE_EXISTS_ERROR') return false;            //IGNORE! duplicated sequence-table.
+                const msg = e.message||`${e}`;
+				_err(NS, '> create-id-seq error=', e);
+				if (e.code === 'ER_TABLE_EXISTS_ERROR') return {'result': false, 'name': 'MySQL', 'type':e.code};            //IGNORE! duplicated sequence-table.
 				//if (e.code == 'NetworkingError') return false;
-				throw e;
+                // throw e;
+                return {'result': false, 'name': 'MySQL', 'error': msg};
 			}));
 		} else {
 			_log(NS, 'MS: WARN! ignored configuration. ID_TYPE=', CONF_ID_TYPE);
@@ -2323,7 +2336,7 @@ module.exports = (function (_$, name, options) {
 
             //! timeseries 데이터로, 기본 timestamp 값을 넣어준다. (주위! save시 current-time 값 자동 저장)
             if (!!CONF_ES_TIMESERIES){
-                ES_SETTINGS.mappings.settings = {"index": { "refresh_interval": "5s"}};
+                ES_SETTINGS.settings = {"index": { "refresh_interval": "5s"}};
                 ES_SETTINGS.mappings._default_.properties["@timestamp"] = { "type": "date", "doc_values": true };
             }
 
@@ -2333,12 +2346,14 @@ module.exports = (function (_$, name, options) {
 					_log(NS, '# initialize ElasticSearch (Type) ', CONF_ES_TYPE);
 					return $ES.do_create_index_type(CONF_ES_INDEX, CONF_ES_TYPE, ES_SETTINGS).then(_ => {
 						_log(NS, '> create-es-index res=', _);
-						return true;
+						return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX};
 					})
 			}).catch(e => {
+                const msg = e.message||`${e}`;
 				_err(NS, '> create-es-index error=', e);
-				if (e.type === 'index_already_exists_exception') return true;    //IGNORE! duplicated sequence-table.
-				throw e;
+				if (e.type === 'index_already_exists_exception') return {'result': true, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'warn':e.type};    //IGNORE! duplicated sequence-table.
+                // throw e;
+                return {'result': false, 'name': 'elasticsearch:'+CONF_ES_INDEX, 'error': msg};
 			}).then(_ => {
 				//TODO - initialize document index setting (or use template)
 				// CONF_FIELDS;
