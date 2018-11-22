@@ -757,7 +757,7 @@ module.exports = (function (_$, name, options) {
 		return my_read_node(that)
         .catch(e => {
             const msg = e && e.message || '';
-            if (!msg.indexOf('404 NOT FOUND') >= 0) throw e;        
+            if (msg.indexOf('404 NOT FOUND') < 0) throw e;        
             _inf(NS, 'WARN! NOT FOUND. msg=', msg);
             return that;
         })
