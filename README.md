@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.11    | bug: save when 404 NOT FOUND
 | 1.0.10    | improve validate_properties.
 | 1.0.9     | `ES_TIMESERIES` - onRecords, do not update cache if timeseries.
 | 1.0.8     | `ES_TIMESERIES` to support Time-Series Data (ex: item-trace)
