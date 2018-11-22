@@ -1593,10 +1593,11 @@ module.exports = (function (_$, name, options) {
     const my_validate_properties = (that) =>{
         const ID = that._id;
         Object.keys(that).forEach((key, i)=>{
-            if (key.startsWith('_') || key.startsWith('$')) return;
-            if (!that.hasOwnProperty(key)) return;
+            if (!that.hasOwnProperty(key)) return;                                  // Check OwnProperty
+            if (key.startsWith('_') || key.startsWith('$')) return;                 // Ignore internal properties.
+            if (CONF_FIELDS && CONF_FIELDS.indexOf(key) < 0) return;                // Ignore if not defined as FIELDS.
             const val = that[key];
-            if (val && typeof val == 'object'){
+            if (val && typeof val == 'object'){                                     // ONLY check if object type.
                 if (Array.isArray(val)){
                     const vals = val;
                     vals.forEach((val2, j)=>{
