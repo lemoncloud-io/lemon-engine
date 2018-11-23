@@ -1348,11 +1348,11 @@ module.exports = (function (_$, name, options) {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!that._node) return Promise.reject(new Error('._node is required!'));
-			if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
+			// if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 			if (!CONF_ES_INDEX) return that;
 
 			const node = that._node;
-			const CURRENT_TIME = that._current_time;
+			const CURRENT_TIME = that._current_time || $U.current_time_ms();
 			// _log(NS,'> elasticsearch: save.node =', $U.json(node));
 			//! copy only fields, and update node.
 			if (CONF_ES_FIELDS){
