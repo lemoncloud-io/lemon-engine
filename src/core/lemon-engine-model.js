@@ -757,7 +757,7 @@ module.exports = (function (_$, name, options) {
 		return my_read_node(that)
         .catch(e => {
             const msg = e && e.message || '';
-            if (!msg.indexOf('404 NOT FOUND') >= 0) throw e;        
+            if (msg.indexOf('404 NOT FOUND') < 0) throw e;        
             _inf(NS, 'WARN! NOT FOUND. msg=', msg);
             return that;
         })
@@ -1348,11 +1348,11 @@ module.exports = (function (_$, name, options) {
 			const ID = that._id;
 			if (!ID) return Promise.reject(new Error('._id is required!'));
 			if (!that._node) return Promise.reject(new Error('._node is required!'));
-			if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
+			// if (!that._current_time) return Promise.reject(new Error('._current_time is required!'));
 			if (!CONF_ES_INDEX) return that;
 
 			const node = that._node;
-			const CURRENT_TIME = that._current_time;
+			const CURRENT_TIME = that._current_time || $U.current_time_ms();
 			// _log(NS,'> elasticsearch: save.node =', $U.json(node));
 			//! copy only fields, and update node.
 			if (CONF_ES_FIELDS){
@@ -1593,10 +1593,11 @@ module.exports = (function (_$, name, options) {
     const my_validate_properties = (that) =>{
         const ID = that._id;
         Object.keys(that).forEach((key, i)=>{
-            if (key.startsWith('_') || key.startsWith('$')) return;
-            if (!that.hasOwnProperty(key)) return;
+            if (!that.hasOwnProperty(key)) return;                                  // Check OwnProperty
+            if (key.startsWith('_') || key.startsWith('$')) return;                 // Ignore internal properties.
+            if (CONF_FIELDS && CONF_FIELDS.indexOf(key) < 0) return;                // Ignore if not defined as FIELDS.
             const val = that[key];
-            if (val && typeof val == 'object'){
+            if (val && typeof val == 'object'){                                     // ONLY check if object type.
                 if (Array.isArray(val)){
                     const vals = val;
                     vals.forEach((val2, j)=>{
