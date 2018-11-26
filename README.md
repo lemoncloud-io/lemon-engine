@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.13    | support callback(url) as `$protocol().do_post_notify_protocol(url, body, callback)` vis SNS.
 | 1.0.12    | bug: _current_time error in records
 | 1.0.11    | bug: save when 404 NOT FOUND
 | 1.0.10    | improve validate_properties.

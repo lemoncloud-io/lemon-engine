@@ -71,7 +71,7 @@ module.exports = (function (_$, name) {
 		const url_str = url && typeof url === 'object' ? build_url(url) : url;
 		const that = {url: url_str};
 		if (body !== undefined) that.body = body;						// data body to post.
-		if (callback !== undefined) that.callback = callback;			// callback url (ONLY for SNS)
+		if (callback !== undefined) that.callback = typeof callback === 'object' ? build_url(callback) : callback;			// callback url (ONLY for SNS)
 		return Promise.resolve(that)
 	}
 
@@ -153,7 +153,7 @@ module.exports = (function (_$, name) {
 		.then(chain_validate_url)
 		.then(_ => {
 			const url = _.url||'';
-			const body = _._body||'';
+			const body = _.body||'';
 			return $proxy().do_post(PROXY.type, '!', 'execute', {url}, body);
 		})
 	}
@@ -163,9 +163,10 @@ module.exports = (function (_$, name) {
      * - 비동기식 실행으로, 내부적으로 SNS를 활용하기도 한다.
      * 
      * @param {string|object} url 
+     * @param {string|object} callback		SNS Notification 실행후, 결과 처리를 받기 위해서 추가됨 @181125
      * @returns {Promised}
      */
-    function do_notify_protocol(url){
+    function do_notify_protocol(url, callback){
         _log(NS, `do_notify_protocol()....`);
         if (!url) return Promise.reject(new Error('url is required!'));
 		
@@ -175,11 +176,13 @@ module.exports = (function (_$, name) {
 		// const url_str = typeof url === 'object' ? build_url(url) : url;
         // // http-proxy.do_get (TYPE, ID, CMD, $param, $body)
 		// return $proxy().do_get(PROXY.type, '!', 'notify', {url:url_str});
-		return chain_prepare_url(url, body)
+		return chain_prepare_url(url, '', callback)
 		.then(chain_validate_url)
 		.then(_ => {
-			const url = _.url||'';
-			return $proxy().do_get(PROXY.type, '!', 'notify', {url});
+            const url = _.url||'';
+			// const body = _.body||'';
+			const callback = _.callback||'';
+			return $proxy().do_get(PROXY.type, '!', 'notify', {url, callback});
 		})
 	}
 	
@@ -208,9 +211,9 @@ module.exports = (function (_$, name) {
 			const url = _.url||'';
 			const body = _.body||'';
 			const callback = _.callback||'';
-			return $proxy().do_post(PROXY.type, '!', 'notify', {url}, body);				//! original code.
+			// return $proxy().do_post(PROXY.type, '!', 'notify', {url}, body);				//! original code.
 			// ! 기존의 호환성 유지를 위해서, 변경된 규칙은 body에 {url, body, callback} 구조체로 보낸다.
-			// return $proxy().do_post(PROXY.type, '!', 'notify', '', _);					//! support callback @181125.
+			return $proxy().do_post(PROXY.type, '!', 'notify', '', _);					    //! support callback @181125.
 		})
     }
 
