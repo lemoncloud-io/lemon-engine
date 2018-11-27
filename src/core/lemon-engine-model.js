@@ -2326,7 +2326,12 @@ module.exports = (function (_$, name, options) {
 
 			//! ID가 문자열이면, 인덱스를 추가해 줌.
 			if (CONF_ID_NAME && CONF_ID_TYPE.startsWith('#')){
-				ES_SETTINGS.mappings._default_.properties[CONF_ID_NAME] = { "type": CONF_ES_VERSION >= 6 ? "text" : "string"  };
+                ES_SETTINGS.mappings._default_.properties[CONF_ID_NAME] = { 
+                    "type": CONF_ES_VERSION >= 6 ? "text" : "string",
+                    "fields": {
+                        "keyword": {type: "keyword", ignore_above: 256}
+                    }
+                };
 			}
             
             //! timeseries 데이터로, 기본 timestamp 값을 넣어준다. (주위! save시 current-time 값 자동 저장)
