@@ -1500,6 +1500,7 @@ module.exports = (function (_$, name, options) {
 			//build query parameters.
 			if (CONF_ES_FIELDS){
 				CONF_ES_FIELDS.forEach(field => {
+                    if (field == 'page' || field == 'ipp') return;
 					if (that[field] !== undefined) param[field] = that[field];						// EQUAL filter.
 					if (that['!'+field] !== undefined) param['!'+field] = that['!'+field];			// NOT filter.
 					if (that['#'+field] !== undefined) param['#'+field] = that['#'+field];			// PROJECTION filter.
