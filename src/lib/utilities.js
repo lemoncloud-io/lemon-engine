@@ -47,7 +47,9 @@ module.exports = (function (_$) {
 	thiz.hash = _hash;                                  // Get Hash Value (32-bits)
 	thiz.md5 = _md5;                                  	// Get md5 hash Value with encoding(default hex, base64)
 	thiz.hmac = _hmac;                                  // Get hmac key-validate hash Value
-
+	thiz.qs_parse = _qs_parse;							// Parse query string 
+	thiz.qs_stringify = _qs_stringify;					// Stringify query object
+	
 	thiz.logger_factory = _logger_factory;				//! logger factory : logger_factory().create('hi');
 	thiz.load_data_csv = _load_data_csv;                //! load csv file in data folder. (../data/~)
 	thiz.load_data_yml = _load_data_yaml;               //! load yml file in data folder. (../data/~)
@@ -542,6 +544,29 @@ module.exports = (function (_$) {
 		encoding = encoding || "base64";
 		algorithm = algorithm || "sha256";
 		return crypto.createHmac(algorithm, KEY).update(data).digest(encoding);
+	}
+
+	function _qs_parse(query){
+		const QUERY_STRING = require('query-string');
+		const param = QUERY_STRING.parse(query);
+		Object.keys(param).forEach((key)=>{
+			if(false);
+			//! 빈 파라미터의 값을 빈 문자열로 치환
+			else if(param[key]===null){
+				param[key] = "";
+			}
+			//! 숫자로 된 문자열이 오면 숫자로 변환
+			else if(/^[1-9][0-9]*$/.test(param[key])){
+				param[key] = _N(param[key]);
+			}
+		})
+		return param;
+	}
+
+	function _qs_stringify(query){
+		const QUERY_STRING = require('query-string');
+		const param = QUERY_STRING.stringify(query);
+		return param;
 	}
 
 	/** ****************************************************************************************************************

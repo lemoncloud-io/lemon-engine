@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.17    | add 'qs_parse', 'qs_stringify' in utility
 | 1.0.16    | `cron-proxy` support `Rules` in CloudWatch.
 | 1.0.15    | reserved search param page/ipp.
 | 1.0.14    | impromve ES6 index initializer. see `do_initialize()`
