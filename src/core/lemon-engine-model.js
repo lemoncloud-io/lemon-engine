@@ -1492,6 +1492,7 @@ module.exports = (function (_$, name, options) {
 			if (that.Q) param.$Q = that.Q;
 			if (that.A) param.$A = that.A;				// Aggregation (simply to count terms)
 			if (that.O) param.$O = that.O;				// OrderBy (default asc by name)
+			if (that.H) param.$H = that.H;				// Highlight
 
 			//! add default-sort if no search query.
 			if (CONF_ES_TIMESERIES) param.$O = param.$O || '!@timestamp';							// 최신순으로 정렬.
@@ -1520,6 +1521,13 @@ module.exports = (function (_$, name, options) {
 				const local_list_map = (_)=>{
 					const node = _._score ? $U.extend({'_score':_._score}, _._source) : _._source;
 					if (CONF_ES_TIMESERIES) node['@id'] = _._id;
+					
+					if (_.highlight != undefined) {
+						Object.keys(_.highlight).forEach(key=>{
+							node[key + "_highlight"] = _.highlight[key][0];
+						})
+					}
+
 					return node;
 				}
 
