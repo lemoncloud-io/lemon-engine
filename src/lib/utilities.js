@@ -84,8 +84,8 @@ module.exports = (function (_$) {
 	//! some helper function.s
 	function get_env(name, def_val) {
 		// ovrride get_env() function.
-		if (typeof $_.get_env === 'function')		return $_.get_env(name, def_val);
-		if (typeof $_.environ === 'function')		return $_.environ(name, def_val);
+		if (typeof _$.get_env === 'function')		return _$.get_env(name, def_val);
+		if (typeof _$.environ === 'function')		return _$.environ(name, def_val);
 
 		// as default, load from proces.env.
 		let val = process && process.env[name] || undefined;
