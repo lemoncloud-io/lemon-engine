@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.18    | slack notification with `#commit-log` channel.
 | 1.0.18    | add highlight $H for elasicsearch
 | 1.0.17    | add 'qs_parse', 'qs_stringify' in utility
 | 1.0.16    | `cron-proxy` support `Rules` in CloudWatch.
