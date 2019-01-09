@@ -34,6 +34,6 @@
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git@bitbucket.org:lemon-project/lemon-engine.git"
+    "url": "git@github.com:lemoncloud-io/lemon-engine.git"
   }
 }
