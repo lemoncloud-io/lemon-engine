@@ -37,6 +37,8 @@ module.exports = (function (_$, name) {
 	thiz.do_post_execute  		= do_post_execute_protocol;
 	thiz.do_notify        		= do_notify_protocol;
 	thiz.do_post_notify   		= do_post_notify_protocol;
+	thiz.do_queue        		= do_queue_protocol;
+	thiz.do_post_queue   		= do_post_queue_protocol;
     
 	//! register service.
 	_$(name, thiz);
@@ -214,6 +216,61 @@ module.exports = (function (_$, name) {
 			// return $proxy().do_post(PROXY.type, '!', 'notify', {url}, body);				//! original code.
 			// ! 기존의 호환성 유지를 위해서, 변경된 규칙은 body에 {url, body, callback} 구조체로 보낸다.
 			return $proxy().do_post(PROXY.type, '!', 'notify', '', _);					    //! support callback @181125.
+		})
+	}
+	
+    /**
+     * Asynchronized Call to URL via SQS
+     * - 비동기식 실행으로, 내부적으로 SQS를 활용하기도 한다.
+     * 
+     * @param {string|object} url 
+     * @returns {Promised}
+     */
+    function do_queue_protocol(url){
+        _log(NS, `do_queue_protocol()....`);
+        if (!url) return Promise.reject(new Error('url is required!'));
+		
+		// // validate url
+		// if (!chain_validate_url(url)) return Promise.reject(url);
+		// // force url to be 'string' type before sending it
+		// const url_str = typeof url === 'object' ? build_url(url) : url;
+        // // http-proxy.do_get (TYPE, ID, CMD, $param, $body)
+		// return $proxy().do_get(PROXY.type, '!', 'notify', {url:url_str});
+		return chain_prepare_url(url)
+		.then(chain_validate_url)
+		.then(_ => {
+            const url = _.url||'';
+			// const body = _.body||'';
+			return $proxy().do_get(PROXY.type, '!', 'queue', {url});
+		})
+	}
+	
+	/**
+     * Asynchronized Call to URL for post via SQS
+     * - 비동기식 실행으로, 내부적으로 SQS를 활용하기도 한다.
+     * 
+     * @param {string|object} url 
+     * @param {string|object} body 
+     * @returns {Promised}
+     */
+    function do_post_queue_protocol(url, body){
+        _log(NS, `do_post_queue_protocol()....`);
+        if (!url) return Promise.reject(new Error('url is required!'));
+		
+		// // validate url
+		// if (!chain_validate_url(url)) return Promise.reject(url);
+		// // force url to be 'string' type before sending it
+		// const url_str = typeof url === 'object' ? build_url(url) : url;
+        // // http-proxy.do_post (TYPE, ID, CMD, $param, $body)
+		// return $proxy().do_post(PROXY.type, '!', 'notify', {url:url_str}, body);
+		return chain_prepare_url(url, body)
+		.then(chain_validate_url)
+		.then(_ => {
+			const url = _.url||'';
+			const body = _.body||'';
+			// return $proxy().do_post(PROXY.type, '!', 'notify', {url}, body);				//! original code.
+			// ! 기존의 호환성 유지를 위해서, 변경된 규칙은 body에 {url, body} 구조체로 보낸다.
+			return $proxy().do_post(PROXY.type, '!', 'queue', '', {url,body});			
 		})
     }
 
