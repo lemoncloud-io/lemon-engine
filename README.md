@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.20    | add $exist for elasticsearch to check existing field
 | 1.0.19    | add do_queue_protocol in protocol-proxy
 | 1.0.18    | add highlight $H for elasicsearch
 | 1.0.17    | add 'qs_parse', 'qs_stringify' in utility
