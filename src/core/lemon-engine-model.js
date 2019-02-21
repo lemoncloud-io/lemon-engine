@@ -1487,6 +1487,7 @@ module.exports = (function (_$, name, options) {
 			// param.$exist = '!deleted_at';			// NOT INCLUDE DELETED.
 			if (!CONF_ES_TIMESERIES) param.deleted_at = that.deleted_at !== undefined ? that.deleted_at : '0';
 			if (that.$source) param.$source = that.$source;		// copy source.
+			if (that.$exist) param.$exist = that.$exist;		// check existing field.
 
 			//! custom query.
 			if (that.Q) param.$Q = that.Q;
