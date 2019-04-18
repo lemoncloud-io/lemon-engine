@@ -15,7 +15,7 @@ module.exports = (function (_$) {
 
 	// use underscore util.
 	const $_ = _$._;                                // re-use global instance (utils).
-	if (!$_) throw new Error('$_ is required!');
+	if (!$_) throw new Error('$_(lodash) is required!');
 
 	//////////////////////////////////////////////////
 	// define public exports.
