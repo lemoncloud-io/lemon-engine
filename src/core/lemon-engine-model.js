@@ -968,7 +968,7 @@ module.exports = (function (_$, name, options) {
 				}
 			}
 			node2.updated_at = node.updated_at;         // copy time field.
-			_log(NS, '> dynamo: updated =', node2);
+			_log(NS, '> dynamo: updated['+ID+']['+updated_count+'] =', $U.json(node2));
 
 			//! save back into main.
 			that._updated_node = null;
@@ -1033,7 +1033,7 @@ module.exports = (function (_$, name, options) {
 			//! then, save into DynamoDB
             return $DS.do_create_item(CONF_DYNA_TABLE, {[CONF_ID_NAME]: ID}, node)
             .then(_ => {
-				_log(NS, `> dynamo: saved(${ID}) res=`, _);
+				_log(NS, `> dynamo: saved(${ID}) res=`, $U.json(_));
 				return that;
 			})
 		},
@@ -1071,7 +1071,7 @@ module.exports = (function (_$, name, options) {
 				}
 			}
 			node2.updated_at = node.updated_at;         // copy time field.
-			_log(NS, '> dynamo: incremented['+ID+'] :=', node2);
+			_log(NS, '> dynamo: incremented['+ID+'] :=', $U.json(node2));
 
 			//! save back into main.
 			that._updated_node = null;
