@@ -186,16 +186,6 @@ function initialize($export, options) {
     }
     _$('LEM', buildEngine);                                 // register: lemon-engine-model (as factory function).
 
-    //WARN:TODO - move below messges-service to seperated module.
-    //! load basic core services......
-    // require('./service/messages-service')(_$, 'MMS');    // Loading & Register as 'MMS'
-    
-    // //! load api functions......
-    // const _meta = require('./api/_meta-api')(_$);
-    // const group = require('./api/group-api')(_$);
-    // const user  = require('./api/user-api')(_$);
-    // const chat  = require('./api/chat-api')(_$);
-    
     //! export.
     return Object.assign($export, {createModel, createHttpProxy});
 }

@@ -1,42 +1,19 @@
 # lemon-engine
 
-레몬 코어 엔진으로, 백엔드 서버에 `lemon-backend-api` 가 있어야 함.
+레몬 코어 엔진으로, 노드 동기화 관련 핵심 모듈
 
-* npm 패키지로 `lemoncloud-engine-js`를 배포시킴.
+- 백엔드 서버에 `lemon-backend-api` 가 있어야 함.
 
-## REQUIREMENT
-
-모듈 개발용 메인 소스로 다음과 같은 프로세스로 개발
-
-1. 여기에 메인 소스가 관리됨.
-1. 자체 Unit Test가 작동하여야 함.
-1. public 소스는 `npm publish`를 통해서 배포되며, 배포 모듈은 `lemon-engine-js` 임.
-1. 버전은 package.json에 업데이트 시켜줌.
+- npm 패키지로 `lemon-engine`를 배포시킴.
 
 
 # NPM 모듈 배포
 
 배포하기 순서
 
-1. package.json 의 version 정보를 변경
-1. `$ npm run publish` 실행
-1. [lemoncloud-engine-js](https://www.npmjs.com/package/lemoncloud-engine-js) 으로 배포됨.
-
-
-# LOCAL 실행
-
-* Proxy 서버의 개발/디버깅 목적으로 이 엔진을 로컬에서 실행 가능함
-
-```bash
-# run backend api 
-$ cd ../lemon-backend-api && npm run server-local
-
-# run lemon-engine with proxy service
-$ nodemon express --port 8082
-
-# test api
-$ http localhost:8082/user/
-```
+1. `package.json` 의 `version` 정보를 변경
+1. `$ npm run publish` 실행 (단, npm 로그인 필요!)
+1. [lemon-engine](https://www.npmjs.com/package/lemon-engine) 으로 배포됨.
 
 
 ----------------
