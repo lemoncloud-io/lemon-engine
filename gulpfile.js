@@ -30,9 +30,6 @@ var conf = {
 
 //! main folder.
 gulp.paths = conf['dist'];      // default as nano.
-function set_conf(name){
-	gulp.paths = conf[name]||{};
-}
 
 /////////////////////////////////////////////////////////////////////////////
 // require('require-dir')('./gulp');
@@ -71,58 +68,63 @@ gulp.task('copy-all', function() {
 
 //- just copies of others
 gulp.task('package', function() {
-    const $pck0 = require('./package.json'); 
-    const $pck2 = require('./src/package.json');
-
-	const ver = $pck0.version||'0.0.0';
-	console.log('#version =', ver);
-	const readme = fs.readFileSync("README.md", "utf8");
-	// console.log('#readme =', readme);
+    const $pck = require(gulp.paths.dist+'/package.json');          // might be old package
+    const $pck0 = require('./package.json');                        // current package version.
+	const version = $pck0.version||'0.0.0';
+	console.log('#version =', version);
 
 	const myChange = (body)=>{
 		body = body.trim();
-		// console.log('> body=', typeof body, body);
-		if (body.startsWith('{') && body.endsWith('}')){        // must be 'package.json'
-            //! load body & parse.
-            const $body = JSON.parse(body);
-            console.log('> '+($body.name||'')+'#version =', ver,'<-',$body.version);
-            //! update version/author/license/dependencies
-            $body.version = $body.version||ver;
-            $body.name = $body.name||$pck0.name;
-            $body.description = $body.description||$pck0.description;
-            $body.author = $body.author||$pck0.author;
-            $body.license = $body.license||$pck0.license;
-            $body.dependencies = $body.dependencies||$pck0.dependencies;
-            $body.repository = $body.repository||$pck0.repository;
-            $body.keywords = $body.keywords||$pck0.keywords;
-            $body.bugs = $body.bugs||$pck0.bugs;
-            $body.homepage = $body.homepage||$pck0.homepage;
-            //! to json file.
-			body = JSON.stringify($body, undefined, '  ');
-		}
-        else if(body.startsWith('# ')){			// it must be md file.
-            const TAIL = '\n----------------';
-			const a = body.lastIndexOf(TAIL);
-			const b = a > 0 ? readme.lastIndexOf(TAIL) : 0;
-			if (a > 0 && b > 0){
-				body = body.substring(0, a) + readme.substring(b);
-            }
-            
-            //! now replace variable.
-            const date = (new Date()).toLocaleString();
-            body = body.replace(/\{\{name\}\}/ig, $pck2.name);
-            body = body.replace(/\{\{date\}\}/ig, date);
-            body = body.replace(/\{\{version\}\}/ig, $pck0.version);
-            body = body.replace(/\{\{description\}\}/ig, $pck2.description);
-        }
-        else {
-            console.log('WARN! unknown text body=', typeof body, body);
-        }
-		return body;
+		// must be 'package.json'
+        if (!body.startsWith('{') || !body.endsWith('}')) throw new Error('json is required!')
+        //! load body & parse.
+        const $body = JSON.parse(body);
+        console.log('> '+($body.name||'')+'#version =', version, '<-', $body.version||$pck.version||'');
+        //! update information.
+        $body.version = $body.version||version;
+        $body.name = $body.name||$pck0.name;
+        $body.description = $body.description||$pck0.description;
+        $body.author = $body.author||$pck0.author;
+        $body.license = $body.license||$pck0.license;
+        $body.dependencies = $body.dependencies||$pck0.dependencies;
+        $body.repository = $body.repository||$pck0.repository;
+        $body.keywords = $body.keywords||$pck0.keywords;
+        $body.bugs = $body.bugs||$pck0.bugs;
+        $body.homepage = $body.homepage||$pck0.homepage;
+        //! to json file.
+        return JSON.stringify($body, undefined, '  ');
 	}
 	//! run copy & replace.
 	return gulp.src([
 		path.join(gulp.paths.src, '/package.json'),
+	])
+	.pipe(change(myChange))
+	.pipe(gulp.dest(gulp.paths.dist));
+})
+
+//- just copies of others
+gulp.task('readme', function() {
+    const $pck = require(gulp.paths.dist+'/package.json');
+	const readme = fs.readFileSync("README.md", "utf8");
+
+	const myChange = (body)=>{
+        const TAIL = '\n----------------';
+        const a = body.lastIndexOf(TAIL);
+        const b = a > 0 ? readme.lastIndexOf(TAIL) : 0;
+        if (a > 0 && b > 0){
+            body = body.substring(0, a) + readme.substring(b);
+        }
+        
+        //! now replace variable.
+        const date = (new Date()).toLocaleString();
+        body = body.replace(/\{\{name\}\}/ig, $pck.name);
+        body = body.replace(/\{\{date\}\}/ig, date);
+        body = body.replace(/\{\{version\}\}/ig, $pck.version);
+        body = body.replace(/\{\{description\}\}/ig, $pck.description);
+        return body;
+	}
+	//! run copy & replace.
+	return gulp.src([
 		path.join(gulp.paths.src, '/README.md'),
 	])
 	.pipe(change(myChange))
@@ -130,7 +132,7 @@ gulp.task('package', function() {
 })
 
 //- default to build.
-gulp.task('default', ['scripts', 'package']);
+gulp.task('default', ['scripts', 'package', 'readme']);
 
 //! simple build.
 gulp.task('simple', () =>
