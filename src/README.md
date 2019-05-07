@@ -19,38 +19,38 @@ $ npm update lemo-engine --save
 ```js
 //! define instance scope.
 const $scope = {
-    name : 'LEMON-MESSAGES'             // name of scope
-    ,env : process.env                  // environment setting (see below)
+    name : 'LEMON'                      // name of scope
+    ,env : process.env||{}              // environment settings for backbone service url.
 }
 
-//! load engine with configuration.
-const handler = require('lemo-engine')($scope);
+//! load engine with environment scope.
+const engine = require('lemon-engine')($scope);
 
 //! instance manager in scope of $scope
-const _$ = handler._$;
+const _$ = engine._$;
 
-// data properties.
+// deefine properties.
 const FIELDS = [
-    'id', 'type', 'parent', 'name', 'message'
+    'id', 'type', 'parent', 'name', ...
 ];
 const ES_FIELDS = FIELDS;
 
-//! create engine for Messages.
+//! config engines (as example)
 const $LEM = _$.LEM(_$, '_'+name, {
     ID_TYPE         : '#STRING',        // WARN! '#' means no auto-generated id.
     ID_NEXT         : 1000,             // ID Starts
     FIELDS          : FIELDS,           // Properties
-    DYNA_TABLE      : 'Messages',       // DynamoDB Table
+    DYNA_TABLE      : 'Lemons',         // DynamoDB Table
     REDIS_PKEY      : 'CMMS',           // REDIS PKEY
-    ES_INDEX        : 'messages-v1',    // ES Index Name
-    ES_TYPE         : 'messages',       // ES Type Name
+    ES_INDEX        : 'lemons-v1',      // ES Index Name
+    ES_TYPE         : 'none',           // ES Type Name (deprecated since ES6)
     ES_FIELDS       : ES_FIELDS,        // ES Fields List.
     NS_NAME         : name,             // Notify Service Name. (null means no notifications)
     ES_MASTER       : 1,                // ES Master NODE.
-    ES_VERSION      : 6,                // ES Version 6.x.
-    CLONEABLE       : true,             // 복제 가능하며, parent/cloned 필드를 지원함.
-    PARENT_IMUT     : false,            // parent-id 변경 가능함(2018.03.15)
-    ES_TIMESERIES   : false,            // Time-Series 데이터로, 시계열 정보를 저장할때 이용함.
+    ES_VERSION      : 6,                // ES Target Version (6 means 6.x)
+    CLONEABLE       : true,             // Clonable with parent/cloned property.
+    PARENT_IMUT     : false,            // Immutable of parent property (2018.03.15)
+    ES_TIMESERIES   : false,            // As time-Series data, useful when saving time-series.
     XECURE_KEY      : 'lemon',          // Encryption Key (use '*' prefix at property name: ver 0.3.22)
 });
 ```
