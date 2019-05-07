@@ -88,9 +88,15 @@ gulp.task('package', function() {
             console.log('> '+($body.name||'')+'#version =', ver,'<-',$body.version);
             //! update version/author/license/dependencies
             $body.version = $body.version||ver;
+            $body.name = $body.name||$pck0.name;
+            $body.description = $body.description||$pck0.description;
             $body.author = $body.author||$pck0.author;
             $body.license = $body.license||$pck0.license;
             $body.dependencies = $body.dependencies||$pck0.dependencies;
+            $body.repository = $body.repository||$pck0.repository;
+            $body.keywords = $body.keywords||$pck0.keywords;
+            $body.bugs = $body.bugs||$pck0.bugs;
+            $body.homepage = $body.homepage||$pck0.homepage;
             //! to json file.
 			body = JSON.stringify($body, undefined, '  ');
 		}
