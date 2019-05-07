@@ -71,7 +71,10 @@ gulp.task('copy-all', function() {
 
 //- just copies of others
 gulp.task('package', function() {
-	const ver = require('./package.json').version||'0.0.1';
+    const $pck0 = require('./package.json'); 
+    const $pck2 = require('./src/package.json');
+
+	const ver = $pck0.version||'0.0.0';
 	console.log('#version =', ver);
 	const readme = fs.readFileSync("README.md", "utf8");
 	// console.log('#readme =', readme);
@@ -79,22 +82,36 @@ gulp.task('package', function() {
 	const myChange = (body)=>{
 		body = body.trim();
 		// console.log('> body=', typeof body, body);
-		if (body.startsWith('{') && body.endsWith('}')){
-			const $body = JSON.parse(body);
-			// console.log('> body=', $body);
-			console.log('> version =', ver,'<-',$body.version);
-			if($body.version) 
-				$body.version = ver;
-			//TODO - sync dependencies version.
+		if (body.startsWith('{') && body.endsWith('}')){        // must be 'package.json'
+            //! load body & parse.
+            const $body = JSON.parse(body);
+            console.log('> '+($body.name||'')+'#version =', ver,'<-',$body.version);
+            //! update version/author/license/dependencies
+            $body.version = $body.version||ver;
+            $body.author = $body.author||$pck0.author;
+            $body.license = $body.license||$pck0.license;
+            $body.dependencies = $body.dependencies||$pck0.dependencies;
+            //! to json file.
 			body = JSON.stringify($body, undefined, '  ');
 		}
-		else if(body.startsWith('# ')){			// it must be md file.
-			const a = body.lastIndexOf('----------------');
-			const b = a > 0 ? readme.lastIndexOf('----------------') : 0;
+        else if(body.startsWith('# ')){			// it must be md file.
+            const TAIL = '\n----------------';
+			const a = body.lastIndexOf(TAIL);
+			const b = a > 0 ? readme.lastIndexOf(TAIL) : 0;
 			if (a > 0 && b > 0){
 				body = body.substring(0, a) + readme.substring(b);
-			}
-		}
+            }
+            
+            //! now replace variable.
+            const date = (new Date()).toLocaleString();
+            body = body.replace(/\{\{name\}\}/ig, $pck2.name);
+            body = body.replace(/\{\{date\}\}/ig, date);
+            body = body.replace(/\{\{version\}\}/ig, $pck0.version);
+            body = body.replace(/\{\{description\}\}/ig, $pck2.description);
+        }
+        else {
+            console.log('WARN! unknown text body=', typeof body, body);
+        }
 		return body;
 	}
 	//! run copy & replace.
