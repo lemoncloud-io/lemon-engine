@@ -74,6 +74,7 @@ thiz.do_read = (_id, $params) => {
 
 | Version   | Description
 |--         |--
+| 1.0.23    | add `agw-proxy` as `AG`. @190509.
 | 1.0.22    | improve log
 | 1.0.21    | `environ.TS` for time-stamp.
 | 1.0.20    | add $exist for elasticsearch to check existing field
