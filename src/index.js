@@ -178,6 +178,7 @@ function initialize($export, options) {
     require('./lib/lambda-proxy')(_$, 'LS');                // load service, and register as 'LS'
     require('./lib/protocol-proxy')(_$,'PR');               // load service, and register as 'PR'
     require('./lib/cron-proxy')(_$,'CR');                   // load service, and register as 'CR'
+    require('./lib/agw-proxy')(_$,'AG');                    // load service, and register as 'AG'
 
     //! load core services......
     const buildEngine = require('./core/lemon-engine-model');
