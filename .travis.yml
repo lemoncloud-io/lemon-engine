@@ -1,0 +1,12 @@
+language: node_js
+node_js:
+    - 8.10.0
+install:
+    - npm install
+script:
+    - npm run test
+env:
+    # codecov token: see https://codecov.io/gh/lemoncloud-io/lemon-engine/settings
+    - CODECOV_TOKEN="...."
+after_success:
+    - ./node_modules/.bin/codecov
