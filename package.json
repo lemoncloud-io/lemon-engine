@@ -2,20 +2,52 @@
   "name": "lemon-engine",
   "version": "2.0.4",
   "description": "Lemon Engine Module to Synchronize Node over DynamoDB + ElastiCache + Elasticsearch by [lemoncloud](https://lemoncloud.io)",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "gulp",
-    "publish": "cd dist && npm publish",
-    "test": "test --timeout 10000"
+    "nodemon": "NODE_ENV=development STAGE=local nodemon dist/local.js",
+    "start": "npm run build && concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run nodemon\"",
+    "build": "npm run build-ts",
+    "build-ts": "tsc",
+    "watch-ts": "tsc -w",
+    "dev:test": "jest --config=jest.config.json --watchAll",
+    "test": "jest --config=jest.config.json",
+    "doc": "npm run doc:html && open dist/docs/index.html",
+    "doc:html": "typedoc src/libs --exclude **/*.spec.ts --target ES6 --mode file --out dist/docs",
+    "doc:publish": "npm run doc:html && gh-pages -m \"docs(gh-pages): publish gh-pages via typedoc\" -d dist/docs",
+    "lint": "tsc --noEmit && eslint '*/**/*.{js,ts,jsx,tsx}' --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test && npm run lint && npm run format",
+    "-": "------------------------------------------------------------",
+    "!": "------------------------------------------------------------"
   },
-  "author": "Steve (steve@lemoncloud.io)",
+  "husky": {
+    "hooks": {
+      "!pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,ts,tsx,jsx}": [
+      "npm run lint",
+      "git add"
+    ]
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "engines": {
+    "node": ">=8.10.0"
+  },
+  "author": "Steve Jung (steve@lemoncloud.io)",
   "license": "MIT",
   "dependencies": {
     "body-parser": "^1.19.0",
     "dynamodb-value": "^1.0.5",
     "js-yaml": "^3.13.1",
     "query-string": "^6.5.0",
-    "request": "^2.88.0"
+    "request": "^2.88.0",
+    "source-map-support": "^0.5.12"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
