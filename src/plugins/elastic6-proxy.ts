@@ -10,7 +10,7 @@
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
 import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
-import httpProxy from './http-proxy';
+import httpProxy, { HttpProxy } from './http-proxy';
 
 const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
     name = name || 'ES6';
@@ -53,11 +53,11 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
     const ENDPOINT = $U.env('ES6_ENDPOINT');
-    const $proxy = function() {
+    const $proxy = function(): HttpProxy {
         if (!ENDPOINT) throw new Error('env:ES6_ENDPOINT is required!');
         const SVC = 'X' + name;
-        const $SVC = _$(SVC);
-        return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT); // re-use proxy by name
+        const $SVC = _$(SVC) as HttpProxy;
+        return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT) as HttpProxy; // re-use proxy by name
     };
 
     /** ****************************************************************************************************************

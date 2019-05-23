@@ -11,10 +11,37 @@
  */
 import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
 
+/**
+ * Define Interface
+ * 
+ * @see http://www.albertgao.xyz/2016/08/11/how-to-declare-a-function-type-variable-in-typescript/
+ */
+export interface HttpProxy extends EnginePluginService {
+    /**
+     * GET
+     */
+    do_get: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+
+    /**
+     * PUT
+     */
+    do_put: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+
+    /**
+     * POST
+     */
+    do_post: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+
+    /**
+     * DELETE
+     */
+    do_delete: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+}
+
 import REQUEST from 'request';
 import queryString from 'query-string';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): HttpProxy {
     name = name || 'HS';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -30,7 +57,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     if (!REQUEST) throw new Error('request is required!');
 
     //! prepare instance.
-    const thiz = function(){} as EnginePluginService;
+    const thiz = function(){} as HttpProxy;
     // const thiz: any = { endpoint };
     thiz.endpoint = () => ENDPOINT;
 
