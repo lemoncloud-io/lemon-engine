@@ -25,6 +25,10 @@ import morgan from 'morgan';
 // import { join } from 'path';
 //import * as compression from 'compression';
 
+//! NOTE - ONLY FOR LOCAL TEST
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.sample' });
+
 //! load routes.
 //NOTE - IMPORTANT after loading env.
 import routes from './routes';

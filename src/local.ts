@@ -12,7 +12,7 @@ require('source-map-support').install();
 //TODO - generate config.json out of package.json.
 import config from './config.json';
 // import environ from './environ';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 
 // if (process.env.NODE_ENV === 'development')
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -21,7 +21,7 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // process.env = environ(process.env);
 
 //! Load environment variables from .env file if exists.
-dotenv.config({ path: '.env.sample' });
+// dotenv.config({ path: '.env.sample' });
 
 //! logging options.
 const NS = 'local';
