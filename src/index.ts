@@ -16,7 +16,7 @@
  */
 import { EngineService, EnginePluginService } from './common/types'
 import * as _ from "lodash";
-import util from './core/utilities';
+import utilities from './core/utilities';
 
 interface EngineOption {
     name?: string;
@@ -114,6 +114,11 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
         // returns default.
         return val === undefined ? defVal : val;
     }
+    // timestamp like 2016-12-08 13:30:44
+    function _ts() {
+        return utilities.timestamp();
+    }
+
     //! common function for logging.
     var $console: EngineConsole = {thiz: console, log: console.log, error: console.error, auto_ts: TS, auto_color: LC};
     var _log: EngineLogger = function (...arg: any[]) {
@@ -186,13 +191,8 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     STAGE && _inf('#STAGE =', STAGE);
 
     //! load utilities.
-    const $U = new util(_$);
+    const $U = new utilities(_$);
     _$.U = $U;
-
-    // timestamp like 2016-12-08 13:30:44
-    function _ts() {
-        return $U.ts();
-    }
 
     //! proxy maker.
     _$.createHttpProxy = (name: string, endpoint: string) => {

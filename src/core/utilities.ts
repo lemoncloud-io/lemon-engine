@@ -22,10 +22,13 @@ class Utilities {
         this.log = _$.log;
         this.err = _$.err;
         this.name = `${NS}-utils`;
+    }
 
+    protected lodash(){
         // use underscore util.
-        const $_ = _$._;
+        const $_ = this._$._;
         if (!$_) throw new Error('$_(lodash) is required!');
+        return $_;
     }
     
     //! some helper function.s
@@ -162,7 +165,7 @@ class Utilities {
     }
 
     // timestamp value.
-    public ts(d?: any) {
+    public static timestamp(d?: any) {
         var dt = d && typeof d === 'object' ? d : d ? new Date(d) : new Date();
         var y = dt.getFullYear();
         var m = dt.getMonth() + 1; //Months are zero based
@@ -193,9 +196,13 @@ class Utilities {
         return ret;
     }
 
+    public ts(d?: any) {
+        return Utilities.timestamp(d);
+    }
+
     // parse timestamp to date.
     public dt(ts?: any) {
-        ts = ts || ts();
+        ts = ts || this.ts();
         var aa = ts.split(' ');
         var dd = aa[0].split('-');
         var hh = aa[1].split(':');
@@ -205,6 +212,7 @@ class Utilities {
         var h = parseInt(hh[0]),
             i = parseInt(hh[1]),
             s = parseInt(hh[2]);
+        //NOTE - unable to add to prototype.
         // //! addtional function: add_seconds()
         // if (!Date.prototype.add_seconds) {
         // 	Date.prototype.add_seconds = function (dx: number) {
@@ -380,7 +388,7 @@ class Utilities {
     }
 
     public diff(obj1: any, obj2: any) {
-        const $_ = this._$._;
+        const $_ = this.lodash();
         const diff = Object.keys(obj1).reduce((result, key) => {
             if (!obj2.hasOwnProperty(key)) {
                 result.push(key);
@@ -397,7 +405,7 @@ class Utilities {
     public diff_node(obj1: any, obj2: any) {
         let keys1: any = [],
             keys2: any = [];
-        const $_ = this._$._;
+        const $_ = this.lodash();
         Object.keys(obj1).forEach(key => {
             if (key.startsWith('_')) return;
             if (key.startsWith('$')) return;
@@ -515,6 +523,5 @@ class Utilities {
         return param;
     }
 };
-
 
 export default Utilities;
