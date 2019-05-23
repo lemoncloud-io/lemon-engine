@@ -12,8 +12,7 @@ const FIELDS = [
 ];
 
 //! create engine in global scope.
-const handler = engine(global, { env: process.env });
-const _$ = handler._$;
+const _$ = engine(global, { env: process.env });
 const name = 'TST';
 
 //! reuse core module
@@ -21,16 +20,16 @@ export const $U = _$.U;
 if (!$U) throw new Error('$U(utilities) is required!');
 
 //! load common(log) functions
-export const _log = _$.log;
-export const _inf = _$.inf;
-export const _err = _$.err;
+const _log = _$.log;
+const _inf = _$.inf;
+const _err = _$.err;
 
 // NAMESPACE TO BE PRINTED.
 const NS = $U.NS(name);
 
 //! define model.
 /* eslint-disable prettier/prettier */
-const model = handler.createModel(_$, `_${name}`, {
+const model = _$.createModel(`_${name}`, {
     ID_TYPE: '#STRING',             // WARN! '#' means no auto-generated id.
     ID_NEXT: 0,                     // Next-ID Number (0 means no auto-sequence).
     FIELDS: FIELDS,                 // Properties.
@@ -53,5 +52,21 @@ router.get('/', async (_: Request, res: Response) => {
     const data = await model.do_search();
     res.json(data);
 });
+
+router.get('/!diff', async (_: Request, res: Response) => {
+    const A = {a:1, b:2};
+    const B = {b:2, c:4};
+    const data: any = {diff: _$.U.diff(A, B)};
+    data.TS = _$.environ('TS');
+    res.json(data);
+});
+
+router.get('/!hello', async (_: Request, res: Response) => {
+    const data: any = {
+        hello: model.hello()
+    };
+    res.json(data);
+});
+
 
 export default router;

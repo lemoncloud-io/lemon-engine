@@ -193,25 +193,31 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-export default function (_$?: any, name?: string, options?: any): any {
-    "use strict";
+import { EngineService, EnginePluginService, EnginePluginMaker, GeneralFuntion } from '../common/types';
+
+interface LemonEngineModel extends EnginePluginService {
+    // postToConnection: any;
+    hello: GeneralFuntion;
+}
+
+const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): LemonEngineModel {
     const NS_NAME = name || 'LEM';
 
     const $U = _$.U;                                // re-use global instance (utils).
-    const $_ = _$._;                                 // re-use global instance (_ lodash).
-    const $MS = _$.MS;                              // re-use global instance (mysql-service).
-    const $DS = _$.DS;                              // re-use global instance (dynamo-service).
-    const $RS = _$.RS;                              // re-use global instance (redis-service).
-    const $ES5 = _$.ES;                             // re-use global instance (elasticsearch-service).
-    const $ES6 = _$.ES6;                            // re-use global instance (elastic6-service).
+    const $_ = _$._;                                // re-use global instance (_ lodash).
+    const $MS = _$('MS');                           // re-use global instance (mysql-service).
+    const $DS = _$('DS');                           // re-use global instance (dynamo-service).
+    const $RS = _$('RS');                           // re-use global instance (redis-service).
+    const $ES5 = _$('ES');                          // re-use global instance (elasticsearch-service).
+    const $ES6 = _$('ES6');                         // re-use global instance (elastic6-service).
 
-    if (!$U) throw new Error('$U is required!');
-    if (!$_) throw new Error('$U is required!');
+    if (!$U) throw new Error('$U(utilities) is required!');
+    if (!$_) throw new Error('$_(underscore) is required!');
     if (!$MS) throw new Error('$MS is required!');
     if (!$DS) throw new Error('$DS is required!');
     if (!$RS) throw new Error('$RS is required!');
     // if (!$ES5) throw new Error('$ES is required!');
-    // if (!$ES6) throw new Error('$ES6 is required!');
+    if (!$ES6) throw new Error('$ES6 is required!');
 
     //! load common(log) functions
     const _log = _$.log;
@@ -225,7 +231,9 @@ export default function (_$?: any, name?: string, options?: any): any {
      *  Public Common Interface Exported.
      ** ****************************************************************************************************************/
     //! prepare instance.
-    const thiz = options||{};
+    const thiz = function(){} as LemonEngineModel;
+    thiz.hello = () => `LEMON: ${NS_NAME}`;
+
     const ERR_NOT_IMPLEMENTED = (id: string) => {throw new Error(`NOT_IMPLEMENTED - ${NS}:${JSON.stringify(id)}`)};
 
     //! public exported functions (INFO! bind final function at bottom of this)
@@ -258,11 +266,10 @@ export default function (_$?: any, name?: string, options?: any): any {
     //! register as service.
     if (!name.startsWith('_')) _$(name, thiz);
 
-
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    const CONF_GET_VAL      = (name: string, defval: any) => thiz[name] === undefined ? defval : thiz[name];
+    const CONF_GET_VAL      = (name: string, defval: any) => options[name] === undefined ? defval : options[name];
     const CONF_VERSION      = CONF_GET_VAL('VERSION', 1);                   // initial version number(name 'V').
     const CONF_REVISION     = CONF_GET_VAL('REVISION', 1);                  // initial revision number(name 'R').
     const CONF_VERSION_NAME = CONF_GET_VAL('VERSION_NAME', 'V');            // version name (Default 'V')       // if null, then no version.
@@ -2946,3 +2953,5 @@ export default function (_$?: any, name?: string, options?: any): any {
     //! returns.
     return thiz;
 }
+
+export default maker;

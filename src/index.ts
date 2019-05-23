@@ -11,27 +11,74 @@
  *     env : object     - environment settings.
  * }
  * 
- * @param $root         main scope.
+ * @param scope         main scope like global, browser, ...
  * @param options       configuration.
  */
+import { EngineService, EnginePluginService } from './common/types'
+import * as _ from "lodash";
+import util from './core/utilities';
+
 interface EngineOption {
     name?: string;
-    env?: any;
+    env?: {[key: string]: string};
 }
 
-// interface EngineInterface {
-// }
+interface EngineLogger {
+    (...arg: any[]): any;
+}
 
-// class EngineImplement implements EngineInterface {
-//     constructor(public name: string){}
-// }
+interface EngineFunction {
+    (...arg: any[]): any;
+}
 
-export default function ($root?: any, options?: EngineOption) {
-    // function _$$() {};
-    // $root = $root || new _$$();
-    // const engine = new EngineImplement('lemon-engine');
-    $root = $root || {};
-    options = options || {};
+interface ServiceMaker {
+    (name: string, options: any): any;
+}
+
+interface EngineConsole {
+    thiz: any;
+    log: EngineLogger;
+    error: EngineLogger;
+    auto_ts: boolean;
+    auto_color: boolean;
+}
+
+interface EngineInterface extends EngineService {
+    // (name: string, opts: any): any;
+    STAGE: string;
+    id: string;
+    extend: EngineFunction;
+    ts: EngineFunction;
+    // U: util;
+    // environ: EngineFunction;
+    $console: EngineConsole;
+    createModel: ServiceMaker;
+    createHttpProxy: ServiceMaker;
+    $plugins: {[key: string]: EnginePluginService};
+}
+
+//! load common services....
+import buildEngine from './core/lemon-engine-model';
+
+import httpProxy from './plugins/http-proxy';
+import mysql from './plugins/mysql-proxy';
+import dynamo from './plugins/dynamo-proxy';
+import redis from './plugins/redis-proxy';
+import elastic6 from './plugins/elastic6-proxy';
+import s3 from './plugins/s3-proxy';
+import sqs from './plugins/sqs-proxy';
+import sns from './plugins/sns-proxy';
+import ses from './plugins/ses-proxy';
+import web from './plugins/web-proxy';
+import cognito from './plugins/cognito-proxy';
+import lambda from './plugins/lambda-proxy';
+import protocol from './plugins/protocol-proxy';
+import cron from './plugins/cron-proxy';
+import agw from './plugins/agw-proxy';
+
+
+export default function initiate(scope: any = {}, options: EngineOption = {}) {
+    scope = scope || {};
 
     //! load configuration.
     const ROOT_NAME = options.name || 'lemon';
@@ -39,16 +86,15 @@ export default function ($root?: any, options?: EngineOption) {
     const TS = (_get_env('TS', '1') === '1');                                                   // PRINT TIME-STAMP.
     const LC = (STAGE === 'local'||STAGE === 'express'||_get_env('LC', '')==='1');              // COLORIZE LOG.
 
+    const LEVEL_LOG = '-';
+    const LEVEL_INF = 'I';
+    const LEVEL_ERR = 'E';
+    
     const RED = "\x1b[31m";
     const BLUE = "\x1b[32m";
     const YELLOW = "\x1b[33m";
     const RESET = "\x1b[0m";
 
-    function _ts(_d?: Date) {                                              // timestamp like 2016-12-08 13:30:44
-        let dt = _d || new Date();
-        let [y, m, d, h, i, s] = [dt.getFullYear(), dt.getMonth() + 1, dt.getDate(), dt.getHours(), dt.getMinutes(), dt.getSeconds()];
-        return (y < 10 ? "0" : "") + y + "-" + (m < 10 ? "0" : "") + m + "-" + (d < 10 ? "0" : "") + d + " " + (h < 10 ? "0" : "") + h + ":" + (i < 10 ? "0" : "") + i + ":" + (s < 10 ? "0" : "") + s;
-    }
     function _get_env(name: string, defVal: any){
         // as default, load from proces.env.
         const env =  options.env || (process && process.env) || {};
@@ -59,28 +105,28 @@ export default function ($root?: any, options?: EngineOption) {
         return val === undefined ? defVal : val;
     }
     //! common function for logging.
-    var $console = {thiz: console, log: console.log, error: console.error, auto_ts: TS, auto_color: LC};
-    var _log = function (...arg: any[]) {
+    var $console: EngineConsole = {thiz: console, log: console.log, error: console.error, auto_ts: TS, auto_color: LC};
+    var _log: EngineLogger = function (...arg: any[]) {
         let args = !Array.isArray(arguments) && Array.prototype.slice.call(arguments) || arguments;
-        if ($console.auto_color) args.unshift(RESET), $console.auto_ts && args.unshift(_ts(), 'L') || args.unshift('L'), args.unshift(BLUE);
-        else $console.auto_ts && args.unshift(_ts(), 'L');
+        if ($console.auto_color) args.unshift(RESET), $console.auto_ts && args.unshift(_ts(), LEVEL_LOG) || args.unshift(LEVEL_LOG), args.unshift(BLUE);
+        else $console.auto_ts && args.unshift(_ts(), LEVEL_LOG);
         return $console.log.apply($console.thiz, args)
     }
-    var _inf = function (...arg: any[]) {
+    var _inf: EngineLogger = function (...arg: any[]) {
         let args = !Array.isArray(arguments) && Array.prototype.slice.call(arguments) || arguments;
-        if ($console.auto_color) args.unshift(""), args.push(RESET), $console.auto_ts && args.unshift(_ts(), 'I') || args.unshift('I'), args.unshift(YELLOW);
-        else $console.auto_ts && args.unshift(_ts(), 'I');
+        if ($console.auto_color) args.unshift(""), args.push(RESET), $console.auto_ts && args.unshift(_ts(), LEVEL_INF) || args.unshift(LEVEL_INF), args.unshift(YELLOW);
+        else $console.auto_ts && args.unshift(_ts(), LEVEL_INF);
         return $console.log.apply($console.thiz, args)
     }
-    var _err = function (...arg: any[]) {
+    var _err: EngineLogger = function (...arg: any[]) {
         let args = !Array.isArray(arguments) && Array.prototype.slice.call(arguments) || arguments;
-        if ($console.auto_color) args.unshift(""), args.push(RESET), $console.auto_ts && args.unshift(_ts(), 'E') || args.unshift('E'), args.unshift(RED);
-        else $console.auto_ts && args.unshift(_ts(), 'E');
+        if ($console.auto_color) args.unshift(""), args.push(RESET), $console.auto_ts && args.unshift(_ts(), LEVEL_ERR) || args.unshift(LEVEL_ERR), args.unshift(RED);
+        else $console.auto_ts && args.unshift(_ts(), LEVEL_ERR);
         return $console.error.apply($console.thiz, args)
     }
     var _extend = function (opt: any, opts: any) {      // simple object extender.
-        for (var k in opts) {
-            var v = opts[k];
+        for (let k in opts) {
+            let v = opts[k];
             if (v === undefined) delete opt[k];
             else opt[k] = v;
         }
@@ -88,23 +134,22 @@ export default function ($root?: any, options?: EngineOption) {
     }
 
     //! root instance to manage global objects.
-    const _$: any = function (name: string, opts: any): any {                                // global identifier.
+    const _$: EngineInterface = scope._$ || function (name: string, service: EnginePluginService): EnginePluginService {                                // global identifier.
         if (!name) return;
-        const thiz = _$;                                              // 인스턴스 바꿔치기: _$('hello') == _$.hello
-        let opt = typeof thiz[name] !== 'undefined' ? thiz[name] : undefined;
-        if (opts === undefined) return opt;
+        const thiz = _$;
+        let opt = typeof thiz.$plugins[name] !== 'undefined' ? thiz.$plugins[name] : undefined;
+        if (!service) return opt;
         if (opt === undefined) {
             _log('INFO! service[' + name + '] registered');
-            thiz[name] = opts;
-            return opts;
+            thiz.$plugins[name] = service;
+            return service;
+        } else {
+            //! extends options.
+            _inf('WARN! service[' + name + '] exists! so extends ');
+            opt = _extend(opt, service);
+            thiz.$plugins[name] = opt;
+            return opt;
         }
-        //! extends options.
-        _err('WARN! service[' + name + '] exists! so extends ');
-        opt = opt || {};
-        opts = opts || {};
-        opt = _extend(opt, opts);
-        thiz[name] = opt;
-        return opt;
     };
 
     // register into _$(global instance manager).
@@ -115,91 +160,58 @@ export default function ($root?: any, options?: EngineOption) {
     _$.err = _err;
     _$.extend = _extend;
     _$.ts = _ts;
+    _$._ = _;
     _$.environ = _get_env;
     _$.$console = $console; // '$' means object. (change this in order to override log/error message handler)
+    _$.$plugins = {};
     _$.toString = () => ROOT_NAME || '$ROOT';
 
-    // register as global instances.
-    $root._log = _log;
-    $root._inf = _inf;
-    $root._err = _err;
-    $root._$ = _$;
-    $root[_$.id] = _$;
+    //! register as global instances as default.
+    scope._log = _log;
+    scope._inf = _inf;
+    scope._err = _err;
+    scope._$ = _$;
 
-    //! load underscore(or lodash) for global utility.
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const _ = require('lodash/core'); // underscore utilities.
-    _$('_', _); // register: underscore utility.
-
-    //! initialize in addition.
-    initialize.apply(_$, [$root, options]);
-
-    //! returns finally root (for scoping)
-    return $root;
-}
-
-/** ********************************************************************************************************************
- *  main application
- ** *******************************************************************************************************************/
-import UTIL from './lib/utilities';
-import buildEngine from './core/lemon-engine-model';
-import httpProxy from './lib/http-proxy';
-
-/**
- * initialize application.
- */
-function initialize($export: any) {
-    //! load main instance.
-    const thiz = this;            // it must be $root.
-    const _$ = thiz;
-
-    if (!$export) throw new Error('$export is required.');
-    if (!_$) throw new Error('_$ is required.');
-    if (typeof _$ !== 'function') throw new Error('_$ should be function.');
-
-    //! load common functions
-    const _log = _$.log;
-    const _inf = _$.inf;
-    const _err = _$.err;
-
-    //! load configuration.
-    const STAGE = _$.environ('STAGE', '');
+    // $root[_$.id] = _$;
     STAGE && _inf('#STAGE =', STAGE);
 
     //! load utilities.
-    const $U = UTIL(_$);
+    const $U = new util(_$);
+    _$.U = $U;
 
-    //! register to global instance manager.
-    _$('U', $U);                                                // register: Utilities.
+    // timestamp like 2016-12-08 13:30:44
+    function _ts() {
+        return $U.ts();
+    }
 
-    // //! load common libraries...
-    const createHttpProxy = function(_$: any, name: string, endpoint: string){
+    //! proxy maker.
+    _$.createHttpProxy = (name: string, endpoint: string) => {
         return httpProxy(_$, name, endpoint);
     }
-    _$('httpProxy', httpProxy);                                 // register as httpProxy (as factory function).
-    
-    // //! load common services....
-    require('./lib/mysql-proxy').default(_$, 'MS');             // load service, and register as 'MS'
-    require('./lib/dynamo-proxy').default(_$, 'DS');            // load service, and register as 'DS'
-    require('./lib/redis-proxy').default(_$, 'RS');             // load service, and register as 'RS'
-    require('./lib/elastic6-proxy').default(_$, 'ES6');         // load service, and register as 'ES6'
-    require('./lib/s3-proxy').default(_$, 'S3');                // load service, and register as 'S3'
-    require('./lib/sqs-proxy').default(_$, 'SS');               // load service, and register as 'SS'
-    require('./lib/sns-proxy').default(_$, 'SN');               // load service, and register as 'SN'
-    require('./lib/ses-proxy').default(_$, 'SE');               // load service, and register as 'SE'
-    require('./lib/web-proxy').default(_$, 'WS');               // load service, and register as 'WS'
-    require('./lib/cognito-proxy').default(_$, 'CS');           // load service, and register as 'CS'
-    require('./lib/lambda-proxy').default(_$, 'LS');            // load service, and register as 'LS'
-    require('./lib/protocol-proxy').default(_$,'PR');           // load service, and register as 'PR'
-    require('./lib/cron-proxy').default(_$,'CR');               // load service, and register as 'CR'
-    require('./lib/agw-proxy').default(_$,'AG');                // load service, and register as 'AG'
 
-    // //! load core services......
-    const createModel = function(_$: any, name: string, option: any){
+    //! engine builder.
+    _$.createModel = (name: string, option: any) => {
         return buildEngine(_$, name, option);
     }
-    _$('LEM', buildEngine);                                     // register: lemon-engine-model (as factory function).
 
-    //! export.
-    return Object.assign($export, {createModel, createHttpProxy});
+    //! load common services....
+    mysql(_$, 'MS');                        // load service, and register as 'MS'
+    dynamo(_$, 'DS');                       // load service, and register as 'DS'
+    redis(_$, 'RS');                        // load service, and register as 'RS'
+    elastic6(_$, 'ES6');                    // load service, and register as 'ES6'
+    s3(_$, 'S3');                           // load service, and register as 'S3'
+    sqs(_$, 'SS');                          // load service, and register as 'SS'
+    sns(_$, 'SN');                          // load service, and register as 'SN'
+    ses(_$, 'SE');                          // load service, and register as 'SE'
+    web(_$, 'WS');                          // load service, and register as 'WS'
+    cognito(_$, 'CS');                      // load service, and register as 'CS'
+    lambda(_$, 'LS');                       // load service, and register as 'LS'
+    protocol(_$, 'PR');                     // load service, and register as 'PR'
+    cron(_$, 'CR');                         // load service, and register as 'CR'
+    agw(_$, 'AG');                          // load service, and register as 'AG'
+
+    _inf('! engine-service-ready');
+
+    //! returns finally.
+    return _$;
 }

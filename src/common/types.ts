@@ -6,6 +6,7 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
+import utilities from '../core/utilities';
 
 //! General Interface
 interface Shape {
@@ -43,6 +44,31 @@ interface QueryInterface {
     each: Function;
     ajax: Function;
     // ...
+}
+
+export interface GeneralFuntion {
+    (...arg: any[]): any;
+}
+
+export interface EnginePluggable {
+    (options?: any): EnginePluggable;
+}
+export interface EnginePluginService extends EnginePluggable {
+    [key: string]: GeneralFuntion;
+}
+
+export interface EngineService {
+    (name: string, service?: EnginePluginService): EnginePluginService;
+    log: GeneralFuntion;
+    inf: GeneralFuntion;
+    err: GeneralFuntion;
+    U: utilities;
+    _: any; // = require('lodash/core')
+    environ: (name: string, defValue?: string | boolean | number | undefined) => string | boolean | number | undefined;
+}
+
+export interface EnginePluginMaker {
+    (_$: EngineService, name: string, options?: any): EnginePluginService;
 }
 
 /**
