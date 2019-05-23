@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable prettier/prettier */
 /**
  * Lemon Engine Model Of Node (LEMON)
@@ -187,13 +186,14 @@
  *
  *
  *
- *
- *
  * @author steve@lemoncloud.io
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
 import { EngineService, EnginePluginService, EnginePluginMaker, GeneralFuntion } from '../common/types';
+import notifier from '../plugins/notify-service';
+import DynamoDBValue from 'dynamodb-value'; // DynamoDB Data Converter.
+import * as crypto from 'crypto';
 
 interface LemonEngineModel extends EnginePluginService {
     // postToConnection: any;
@@ -363,9 +363,8 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
 
     //! DynamoDB Value Marshaller.
-    const DynamoDBValue     = require('dynamodb-value');            // DynamoDB Data Converter.
+    
     const $crypto           = function(passwd: string){
-        const crypto = require('crypto');
         const algorithm = 'aes-256-ctr';
         if (!crypto) throw new Error('crypto module is required!');
         const thiz: any = {crypto, algorithm, passwd};
@@ -396,7 +395,8 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
     /////////////////////////
     //! Notification Service.
-    const $NOT = require('./notify-service').default(_$, '!'+CONF_NS_NAME, {NS_NAME:CONF_NS_NAME});
+    const $NOT = notifier(_$, '!'+CONF_NS_NAME, {NS_NAME: CONF_NS_NAME});
+
     //! notify functions.
     thiz.do_notify          = $NOT.do_notify;                       // delegate to notify-service
     thiz.do_subscribe       = $NOT.do_subscribe;                    // delegate to notify-service
@@ -1975,9 +1975,9 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
                 return $record;
             }
     
-            const keyRecord = $record.dynamodb.Keys ? DynamoDBValue.toJavascript($record.dynamodb.Keys) : {};
-            const newRecord = $record.dynamodb.NewImage ? DynamoDBValue.toJavascript($record.dynamodb.NewImage) : null;
-            const oldRecord = $record.dynamodb.OldImage ? DynamoDBValue.toJavascript($record.dynamodb.OldImage) : null;
+            const keyRecord = $record.dynamodb.Keys ? DynamoDBValue.toJavascript($record.dynamodb.Keys, null) : {};
+            const newRecord = $record.dynamodb.NewImage ? DynamoDBValue.toJavascript($record.dynamodb.NewImage, null) : null;
+            const oldRecord = $record.dynamodb.OldImage ? DynamoDBValue.toJavascript($record.dynamodb.OldImage, null) : null;
     
             const ID = keyRecord[CONF_ID_NAME];
             // keyRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.keyRecord[${ID}]=`, $U.json(keyRecord));

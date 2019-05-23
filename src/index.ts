@@ -76,8 +76,18 @@ import protocol from './plugins/protocol-proxy';
 import cron from './plugins/cron-proxy';
 import agw from './plugins/agw-proxy';
 
-
-export default function initiate(scope: any = {}, options: EngineOption = {}) {
+/**
+ * initialize as EngineInterface
+ * 
+ * ```ts
+ * import engine from 'lemon-engine';
+ * const _$ = engine(global, { env: process.env });
+ * ```
+ * 
+ * @param scope         main scope like global, browser, ...
+ * @param options       configuration.
+ */
+export default function initiate(scope: any = null, options: EngineOption = {}): EngineInterface {
     scope = scope || {};
 
     //! load configuration.

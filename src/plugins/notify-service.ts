@@ -28,10 +28,14 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-export default function (_$: any, name?: string, options?: any) {
+import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
+import httpProxy from './http-proxy';
+
+const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+    name = name || 'NF';
+
     const $U = _$.U;                                // re-use global instance (utils).
     const $_ = _$._;                             	// re-use global instance (_ lodash).
-
     if (!$U) throw new Error('$U is required!');
     if (!$_) throw new Error('$_ is required!');
 
@@ -420,3 +424,5 @@ export default function (_$: any, name?: string, options?: any) {
     //! returns.
     return thiz;
 };
+
+export default maker;

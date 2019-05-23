@@ -103,6 +103,7 @@ const $LEM = _$.LEM(_$, '_'+name, {
 
 | Version   | Description
 |--         |--
+| 2.1.1     | refactoring to typescript.
 | 2.1.0     | refactoring to typescript.
 | 2.0.4     | add `agw-proxy` as `AG`. @190509.
 | 2.0.0     | rename to `lemon-engine`, and set to public.
