@@ -18,24 +18,24 @@ import { EngineService, EnginePluginService } from './common/types'
 import * as _ from "lodash";
 import utilities from './core/utilities';
 
-interface EngineOption {
+export interface EngineOption {
     name?: string;
     env?: {[key: string]: string};
 }
 
-interface EngineLogger {
+export interface EngineLogger {
     (...arg: any[]): any;
 }
 
-interface EngineFunction {
+export interface EngineFunction {
     (...arg: any[]): any;
 }
 
-interface ServiceMaker {
+export interface ServiceMaker {
     (name: string, options: any): any;
 }
 
-interface EngineConsole {
+export interface EngineConsole {
     thiz: any;
     log: EngineLogger;
     error: EngineLogger;
@@ -43,7 +43,7 @@ interface EngineConsole {
     auto_color: boolean;
 }
 
-interface EngineInterface extends EngineService {
+export interface EngineInterface extends EngineService {
     // (name: string, opts: any): any;
     STAGE: string;
     id: string;
@@ -81,7 +81,7 @@ import agw from './plugins/agw-proxy';
  * 
  * ```ts
  * import engine from 'lemon-engine';
- * const _$ = engine(global, { env: process.env });
+ * const $engine = engine(global, { env: process.env });
  * ```
  * 
  * @param scope         main scope like global, browser, ...
