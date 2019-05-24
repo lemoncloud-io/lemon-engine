@@ -60,17 +60,8 @@ $ npm install lemon-engine --save
 - Create internal Service, then build api.
 
 ```js
-//! define instance scope.
-const $scope = {
-    name : 'LEMON'                      // name of scope
-    ,env : process.env||{}              // environment settings for backbone service url.
-}
-
-//! load engine with environment scope.
-const engine = require('lemon-engine')($scope);
-
-//! instance manager in scope of $scope
-const _$ = engine._$;
+//! create engine in global scope.
+const _$ = engine(global, { env: process.env });
 
 // deefine properties.
 const FIELDS = [
@@ -79,12 +70,12 @@ const FIELDS = [
 const ES_FIELDS = FIELDS;
 
 //! config engines (as example)
-const $LEM = _$.LEM(_$, '_'+name, {
+const model = _$.createModel(_$, '_'+name, {
     ID_TYPE         : '#STRING',        // WARN! '#' means no auto-generated id.
-    ID_NEXT         : 1000,             // ID Starts
+    ID_NEXT         : 0,                // ID Starts
     FIELDS          : FIELDS,           // Properties
-    DYNA_TABLE      : 'Lemons',         // DynamoDB Table
-    REDIS_PKEY      : 'CMMS',           // REDIS PKEY
+    DYNA_TABLE      : 'LemonTable',     // DynamoDB Table
+    REDIS_PKEY      : '#TDQ',           // '#' means no use redis, but elastic as cache.
     ES_INDEX        : 'lemons-v1',      // ES Index Name
     ES_TYPE         : 'none',           // ES Type Name (deprecated since ES6)
     ES_FIELDS       : ES_FIELDS,        // ES Fields List.
@@ -96,7 +87,7 @@ const $LEM = _$.LEM(_$, '_'+name, {
     ES_TIMESERIES   : false,            // As time-Series data, useful when saving time-series.
     XECURE_KEY      : 'lemon',          // Encryption Key (use '*' prefix at property name: ver 0.3.22)
 });
-
+```
 
 ----------------
 # VERSION INFO #
