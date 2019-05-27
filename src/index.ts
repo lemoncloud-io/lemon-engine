@@ -54,6 +54,7 @@ export interface EngineInterface extends EngineService {
     $console: EngineConsole;
     createModel: ServiceMaker;
     createHttpProxy: ServiceMaker;
+    createWebProxy: ServiceMaker;
     $plugins: {[key: string]: EnginePluginService};
 }
 
@@ -69,7 +70,7 @@ import s3 from './plugins/s3-proxy';
 import sqs from './plugins/sqs-proxy';
 import sns from './plugins/sns-proxy';
 import ses from './plugins/ses-proxy';
-import web from './plugins/web-proxy';
+import webProxy from './plugins/web-proxy';
 import cognito from './plugins/cognito-proxy';
 import lambda from './plugins/lambda-proxy';
 import protocol from './plugins/protocol-proxy';
@@ -194,9 +195,14 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     const $U = new utilities(_$);
     _$.U = $U;
 
-    //! proxy maker.
-    _$.createHttpProxy = (name: string, endpoint: string) => {
+    //! make http-proxy.
+    _$.createHttpProxy = (name: string, endpoint: string | {endpoint: string; headers?: any}) => {
         return httpProxy(_$, name, endpoint);
+    }
+
+    //! make web-proxy
+    _$.createWebProxy = (name: string, options?: {headers: any}) => {
+        return webProxy(_$, name, options);
     }
 
     //! engine builder.
@@ -213,7 +219,7 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     sqs(_$, 'SS');                          // load service, and register as 'SS'
     sns(_$, 'SN');                          // load service, and register as 'SN'
     ses(_$, 'SE');                          // load service, and register as 'SE'
-    web(_$, 'WS');                          // load service, and register as 'WS'
+    webProxy(_$, 'WS');                     // load service, and register as 'WS'
     cognito(_$, 'CS');                      // load service, and register as 'CS'
     lambda(_$, 'LS');                       // load service, and register as 'LS'
     protocol(_$, 'PR');                     // load service, and register as 'PR'
