@@ -2,8 +2,10 @@
 /**
  * WEB Proxy Service Exports
  * - proxy call to web service.
+ * - must be matched with `web-api.js` in `lemon-backbone-api`.
  *
- *
+ * #History
+ * 2019.05.27 - support headers with relaying.
  *
  * @author steve@lemoncloud.io
  * @date   2019-05-23
@@ -44,11 +46,27 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
     const ENDPOINT = $U.env('WS_ENDPOINT');
+    const HEADERS = options && options.headers || null;   // headers to pass.
     const $proxy = function() {
         if (!ENDPOINT) throw new Error('env:WS_ENDPOINT is required!');
         const SVC = 'X' + name;
         const $SVC = _$(SVC);
-        return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT); // re-use proxy by name
+        const options: any = {
+            endpoint: ENDPOINT,
+        }
+        //! relay HEADERS to `WEB-API`
+        if (HEADERS){
+            const RELAY_KEY = 'x-lemon-';
+            options.headers = Object.keys(HEADERS).reduce((H: any, key: string, i: number)=>{
+                const val = HEADERS[key];
+                const name = RELAY_KEY + key;
+                const text = `${val}`;
+                H[name] = text;
+                return H;
+            }, {});
+        }
+        //! will register service as <SVC>, or override.
+        return $SVC ? $SVC : httpProxy(_$, SVC, options); // re-use proxy by name
     };
 
     /** ****************************************************************************************************************

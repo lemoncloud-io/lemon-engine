@@ -51,10 +51,10 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     if (!$_) throw new Error('$_ is required!');
 
     const NS = $U.NS(name, 'magenta'); // NAMESPACE TO BE PRINTED.
-    const ENDPOINT = options && (typeof options === 'string' ? options : options.endpoint||'') || '';
+    const ENDPOINT = options && (typeof options === 'string' ? options : options.endpoint||'') || ''; // service endpoint.
+    const HEADERS = options && options.headers || {}; // custom headers.
 
     if (!ENDPOINT) throw new Error('endpoint is required!');
-    if (!REQUEST) throw new Error('request is required!');
 
     //! prepare instance.
     const thiz = function(){} as HttpProxy;
@@ -81,6 +81,8 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     //! request in local server.
     const my_request_http = (METHOD: any, TYPE: any, ID: any, CMD: any, $param: any, $body: any) => {
         if (!METHOD) return Promise.reject(new Error(NS + ':METHOD is required!'));
+        if (!REQUEST) throw new Error('request is required!');
+
         //! prepare request parameters
         const query_string = $param ? queryString.stringify($param) : '';
         const url =
@@ -90,17 +92,21 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             (CMD === undefined ? '' : '/' + encodeURIComponent(CMD)) +
             (!query_string ? '' : '?' + query_string);
         const request = REQUEST;
-        const options = {
+        const options: any = {
             method: METHOD || 'GET',
             uri: url,
             body: $body,
             json: typeof $body === 'string' ? false : true,
         };
+        //! attache headers.
+        if (HEADERS && Object.keys(HEADERS).length > 0) options.headers = HEADERS;
         // _log(NS, ' url :=', options.method, url);
         _log(NS, '*', options.method, url);
+        options.headers && _log(NS, '> headers =', options.headers); 
 
         //! returns promise
         return new Promise((resolve, reject) => {
+            //! start request..
             request(options, function(error: any, response: any, body: any) {
                 error && _err(NS, '>>>>> requested! err=', error);
                 if (error) return reject(error);

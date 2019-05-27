@@ -115,11 +115,12 @@ export const handleRequest = (func: LemonStandardApi) => (req: MyRequest, res: R
  ** ********************************************************************************************************************/
 import helloRouter from './hello';
 import testRouter from './test';
-import { agent } from 'supertest';
+import webRouter from './web';
 
 const routes: Router = Router();
 
 routes.use('/hello', helloRouter);
 routes.use('/test', testRouter);
+routes.use('/web', webRouter);
 
 export default routes;

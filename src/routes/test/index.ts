@@ -12,24 +12,24 @@ const FIELDS = [
 ];
 
 //! create engine in global scope.
-const _$ = engine(global, { env: process.env });
+const $engine = engine(global, { env: process.env });
 const name = 'TST';
 
 //! reuse core module
-export const $U = _$.U;
+export const $U = $engine.U;
 if (!$U) throw new Error('$U(utilities) is required!');
 
 //! load common(log) functions
-const _log = _$.log;
-const _inf = _$.inf;
-const _err = _$.err;
+const _log = $engine.log;
+const _inf = $engine.inf;
+const _err = $engine.err;
 
 // NAMESPACE TO BE PRINTED.
 const NS = $U.NS(name);
 
 //! define model.
 /* eslint-disable prettier/prettier */
-const model = _$.createModel(`_${name}`, {
+const model = $engine.createModel(`_${name}`, {
     ID_TYPE: '#STRING',             // WARN! '#' means no auto-generated id.
     ID_NEXT: 0,                     // Next-ID Number (0 means no auto-sequence).
     FIELDS: FIELDS,                 // Properties.
@@ -56,8 +56,8 @@ router.get('/', async (_: Request, res: Response) => {
 router.get('/!diff', async (_: Request, res: Response) => {
     const A = {a:1, b:2};
     const B = {b:2, c:4};
-    const data: any = {diff: _$.U.diff(A, B)};
-    data.TS = _$.environ('TS');
+    const data: any = {diff: $engine.U.diff(A, B)};
+    data.TS = $engine.environ('TS');
     res.json(data);
 });
 
