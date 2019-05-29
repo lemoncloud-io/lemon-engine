@@ -102,9 +102,9 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         //! attache headers.
         if (HEADERS && Object.keys(HEADERS).length > 0) options.headers = HEADERS;
         // _log(NS, ' url :=', options.method, url);
-        _log(NS, '*', options.method, url);
-        _inf(NS, '> options =', options);
-        options.headers && _log(NS, '> headers =', options.headers); 
+        _log(NS, '*', options.method, url, options.json ? 'json' : 'plain');
+        // _inf(NS, '> options =', options);
+        // options.headers && _log(NS, '> headers =', options.headers); 
 
         //! returns promise
         return new Promise((resolve, reject) => {
