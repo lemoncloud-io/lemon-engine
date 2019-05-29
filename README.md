@@ -94,7 +94,7 @@ const model = _$.createModel(_$, '_'+name, {
 
 | Version   | Description
 |--         |--
-| 2.1.6     | support method `PATCH` in `web-proxy`.
+| 2.1.6     | support method `PATCH` in `web-proxy`. required `backbone#2.1.4`.
 | 2.1.5     | custom web-proxy by `_$.createWebProxy()`.
 | 2.1.4     | support relaying headers in `web-proxy`. required `backbone#2.1.3`.
 | 2.1.3     | fix ts() error.
