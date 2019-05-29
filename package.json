@@ -1,11 +1,12 @@
 {
   "name": "lemon-engine",
-  "version": "2.1.5",
+  "version": "2.1.6",
   "description": "Lemon Engine Module to Synchronize Node over DynamoDB + ElastiCache + Elasticsearch by [lemoncloud](https://lemoncloud.io)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "nodemon": "nodemon dist/local.js",
+    "!start": "-- for local development. npm start",
     "start": "npm run build && concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run nodemon\"",
     "build": "npm run build-ts",
     "build-ts": "tsc",

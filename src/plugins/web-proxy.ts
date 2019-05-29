@@ -35,8 +35,9 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
     //! item functions.
     thiz.do_get = do_get;
-    thiz.do_post = do_post;
     thiz.do_put = do_put;
+    thiz.do_post = do_post;
+    thiz.do_patch = do_patch;
     thiz.do_delete = do_delete;
 
     //! register service.
@@ -132,6 +133,20 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
         return $proxy()
             .do_post(host, path, undefined, $param, $body)
+            .then((_: any) => _.result);
+    }
+
+    /**
+     * PATCH HOST/PATH?$param
+     *
+     */
+    function do_patch(host: any, path: any, $opt: any, $param: any, $body: any) {
+        if (host === undefined) return Promise.reject(new Error(NS + ':host is required!'));
+        // if (path === undefined) return Promise.reject(new Error(NS + ':path is required!'));
+        // if ($opt === undefined) return Promise.reject(new Error(NS + ':$opt is required!'));
+
+        return $proxy()
+            .do_patch(host, path, undefined, $param, $body)
             .then((_: any) => _.result);
     }
 

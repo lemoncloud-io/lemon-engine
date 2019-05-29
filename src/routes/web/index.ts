@@ -31,14 +31,24 @@ const $svc = () => {
 };
 
 /**
- *
  * ```sh
  * $ http ':8080/web/
  */
 router.get('/', async (req: Request, res: Response) => {
     // https://uxzuebm6k7.execute-api.ap-northeast-2.amazonaws.com/prod/todaq/0/hello'
     _log(NS, `get().....`);
-    const data = await $svc().do_get('http://localhost:8231', '/todaq/0/hello');
+    const data = await $svc().do_get('http://localhost:8231', '/hello');
+    _log(NS, '> data=', data);
+    res.json(data);
+});
+
+/**
+ * ```sh
+ * $ http PATCH ':8080/web/
+ */
+router.patch('/', async (req: Request, res: Response) => {
+    _log(NS, `patch().....`);
+    const data = await $svc().do_patch('http://localhost:8231', '/hello');
     _log(NS, '> data=', data);
     res.json(data);
 });

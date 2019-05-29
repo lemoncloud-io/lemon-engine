@@ -70,6 +70,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     thiz.do_get = do_get;
     thiz.do_put = do_put;
     thiz.do_post = do_post;
+    thiz.do_patch = do_patch;
     thiz.do_delete = do_delete;
 
     //! register service.
@@ -95,13 +96,14 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         const options: any = {
             method: METHOD || 'GET',
             uri: url,
-            body: $body,
-            json: typeof $body === 'string' ? false : true,
+            body: $body === null ? undefined : $body,
+            json: (typeof $body === 'string') ? false : true,
         };
         //! attache headers.
         if (HEADERS && Object.keys(HEADERS).length > 0) options.headers = HEADERS;
         // _log(NS, ' url :=', options.method, url);
         _log(NS, '*', options.method, url);
+        _inf(NS, '> options =', options);
         options.headers && _log(NS, '> headers =', options.headers); 
 
         //! returns promise
@@ -172,6 +174,15 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
         // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
         return my_request_http('POST', TYPE, ID, CMD, $param, $body);
+    }
+    /**
+     * PATCH /:type/:id/:cmd?$param
+     */
+    function do_patch(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
+        if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
+        if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
+        // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
+        return my_request_http('PATCH', TYPE, ID, CMD, $param, $body);
     }
     /**
      * DELETE /:type/:id/:cmd?$param
