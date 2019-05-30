@@ -193,7 +193,8 @@
 import { EngineService, EnginePluginService, EnginePluginMaker, GeneralFuntion } from '../common/types';
 import notifier from '../plugins/notify-service';
 import DynamoDBValue from 'dynamodb-value'; // DynamoDB Data Converter.
-import * as crypto from 'crypto';
+// import * as crypto from 'crypto'; //WARN! will get Deprecated!
+import crypto from "crypto";    //! to avoid Deprecated warning.
 
 interface LemonEngineModel extends EnginePluginService {
     // postToConnection: any;
