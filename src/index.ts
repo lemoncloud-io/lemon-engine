@@ -5,12 +5,12 @@
 /**
  * main creation function of lemon instance pool (LIP)
  *
- *  
+ *
  * options : {
  *     name : string    - name of module.
  *     env : object     - environment settings.
  * }
- * 
+ *
  * @param scope         main scope like global, browser, ...
  * @param options       configuration.
  */
@@ -79,12 +79,12 @@ import agw from './plugins/agw-proxy';
 
 /**
  * initialize as EngineInterface
- * 
+ *
  * ```ts
  * import engine from 'lemon-engine';
  * const $engine = engine(global, { env: process.env });
  * ```
- * 
+ *
  * @param scope         main scope like global, browser, ...
  * @param options       configuration.
  */
@@ -93,28 +93,29 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
 
     //! load configuration.
     const ROOT_NAME = options.name || 'lemon';
-    const STAGE = _get_env('STAGE', '');
-    const TS = (_get_env('TS', '1') === '1');                                                   // PRINT TIME-STAMP.
-    const LC = (STAGE === 'local'||STAGE === 'express'||_get_env('LC', '')==='1');              // COLORIZE LOG.
+    const STAGE = _environ('STAGE', '');
+    const TS = (_environ('TS', '1') === '1');                                                   // PRINT TIME-STAMP.
+    const LC = (STAGE === 'local'||STAGE === 'express'||_environ('LC', '')==='1');              // COLORIZE LOG.
 
     const LEVEL_LOG = '-';
     const LEVEL_INF = 'I';
     const LEVEL_ERR = 'E';
-    
+
     const RED = "\x1b[31m";
     const BLUE = "\x1b[32m";
     const YELLOW = "\x1b[33m";
     const RESET = "\x1b[0m";
 
-    function _get_env(name: string, defVal: any){
+    function _environ(name: string, defVal: any){
         // as default, load from proces.env.
         const env =  options.env || (process && process.env) || {};
-        const val = env && env[name] || undefined;
+        const val = env[name];
         // throw Error if value is not set.
         if (defVal && defVal instanceof Error && val === undefined) throw defVal;
         // returns default.
         return val === undefined ? defVal : val;
     }
+
     // timestamp like 2016-12-08 13:30:44
     function _ts() {
         return utilities.timestamp();
@@ -177,7 +178,7 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     _$.extend = _extend;
     _$.ts = _ts;
     _$._ = _;
-    _$.environ = _get_env;
+    _$.environ = _environ;
     _$.$console = $console; // '$' means object. (change this in order to override log/error message handler)
     _$.$plugins = {};
     _$.toString = () => ROOT_NAME || '$ROOT';
