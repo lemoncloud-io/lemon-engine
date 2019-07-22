@@ -2,66 +2,26 @@
 
 레몬 코어 엔진으로, 노드 동기화 관련 핵심 모듈
 
-- 백엔드 서버에 `lemon-backend-api` 가 있어야 함.
-
 - npm 패키지로 `lemon-engine`를 배포시킴.
+- 백엔드 서버에 `lemon-backend-api` 별도 실행 필요!
+
+## Overview
+
+- NoSQL (DynamoDB) <-> ElastiSearch <-> Redis 데이터 동기화
+- DynamoDB 업데이트시 -> 업데이트 Stream 수신 -> 변경 데이터 추적 -> ES 와 동기화.
 
 
-# NPM 모듈 배포
+## Usage (사용법)
 
-배포하기 순서
+- install with npm `npm install lemon-engine --save`
 
-1. `package.json` 의 `version` 정보를 변경
-1. `$ npm run publish` 실행 (단, npm 로그인 필요!)
-1. [lemon-engine](https://www.npmjs.com/package/lemon-engine) 으로 배포됨.
-
-
-----------------
-# 개발 참고 
-
-Feature 추가 관련 도움말.
-
-## 암호화 필드 사용 (ver: 0.3.22)
-
-- 암호화는 지원을 위한 방법은 아래와 같음.
-- 그러면, DynamoDB에는 암호화된 값이 저장되며, api 에서는 자동으로 복호화된 값을 얻을 수 있음.
+- create internal Service with data model
 
 ```js
-// 필드명 앞에 '*'를 붙여준다.
-FIELDS = [..., '*passwd']
+import engine from 'lemon-engine';
 
-// LEM() 설정에서, 암호키를 설정함. 기본값은 아래와 같음.
-const $LEM = LEM(_$, '_'+name, {			// use '_' prefix for LEM instance. 
-    ...
-    XECURE_KEY  : ('LM~1212@'+name),		// Encryption Key (use '*' prefix at property name)
-    ...
-});
-
-//! do_read() 부분에, 아래와 같이 do_readX 를 이용함.
-thiz.do_read = (_id, $params) => {
-    ....
-    .then(0 ? $LEM.do_read : $LEM.do_readX)			// use do_readX for decryption.
-    ...
-}
-```
-
-----------------
-# Basic Use
-
-## Install by NPM
-
-```bash
-# install module
-$ npm install lemon-engine --save
-```
-
-## Usage
-
-- Create internal Service, then build api.
-
-```js
 //! create engine in global scope.
-const _$ = engine(global, { env: process.env });
+const $engine = engine(global, { env: process.env });
 
 // deefine properties.
 const FIELDS = [
@@ -70,7 +30,7 @@ const FIELDS = [
 const ES_FIELDS = FIELDS;
 
 //! config engines (as example)
-const model = _$.createModel(_$, '_'+name, {
+const $model = $engine.createModel(`${name}`, {
     ID_TYPE         : '#STRING',        // WARN! '#' means no auto-generated id.
     ID_NEXT         : 0,                // ID Starts
     FIELDS          : FIELDS,           // Properties
@@ -85,9 +45,37 @@ const model = _$.createModel(_$, '_'+name, {
     CLONEABLE       : true,             // Clonable with parent/cloned property.
     PARENT_IMUT     : false,            // Immutable of parent property (2018.03.15)
     ES_TIMESERIES   : false,            // As time-Series data, useful when saving time-series.
-    XECURE_KEY      : 'lemon',          // Encryption Key (use '*' prefix at property name: ver 0.3.22)
+    XECURE_KEY      : 'lemon',          // (optional) Encryption Key (use '*' prefix at property name: ver 0.3.22)
 });
 ```
+
+- build CRUD common service functions.
+
+```js
+//! search by param
+// ex) { id: 1234 } => search by `id == 1234`.
+const do_search = (id, param) => {
+    _log(NS, `do_search(${id})... param=`, $U.json(param));
+    return $model.do_search(id, param);
+};
+```
+
+
+## Installation (설치법)
+
+- `lemon-backend-api` 백본 서비스 구성
+- `npm run deploy` 로 AWS Cloud Lambda 에 자동 배포
+
+
+## NPM 모듈 배포
+
+배포하기 순서
+
+1. `package.json` 의 `version` 정보를 변경
+1. `$ npm run publish` 실행 (단, npm 로그인 필요!)
+1. [lemon-engine](https://www.npmjs.com/package/lemon-engine) 으로 배포됨.
+
+
 
 ----------------
 # VERSION INFO #

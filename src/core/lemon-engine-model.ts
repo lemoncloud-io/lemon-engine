@@ -11,7 +11,7 @@
  *  - ElasticSearch  : Search & Query Service instead of DynamoDB query.
  *  - SQS (Optional) : Queue task schedule (or buffering).
  *  - SNS (Optional) : Notification Service.
- *  - In Memory Cache: Internal Cache Memory for short time cache (@181002) 
+ *  - In Memory Cache: Internal Cache Memory for short time cache (@181002)
  *
  *
  * ---------------------------
@@ -82,7 +82,7 @@
  *  5. Stream 내용을 이용하여, 변경된 값을 추적하고 -> Notify 할 수 있을 수 있다.
  *      - Head: state, body: updated set.
  *
- * 
+ *
  * ---------------------------
  * ## In Memory Cache  @181002.
  * [Problem]
@@ -91,8 +91,8 @@
  *  1. Use internal short memory for node cache with cached_at time (prevent long-term cache, time-out 2 sec)
  *  2. Validate primitive types of node-attributes => do update only the updated fields.
  *
- * 
- * 
+ *
+ *
  * ---------------------------
  * ## Event (Records) 처리 방법.
  *  1. on_records() 를 통해서, Records[] 정보가 전달됨.. _.each(records, (record) => ...)
@@ -157,7 +157,7 @@
  *  - Version 은 노드 저장 엔진의 버전을 따라감.
  *
  * ---------------------------
- * ## HISTORY 
+ * ## HISTORY
  *  - 1.0.8 시계열데이터를 ES_TIMESERIES로 지원함 => save() 자동 timestamp 저장하고, DynamoTable 에는 마지막 상태만 저장.
  *
  * ---------------------------
@@ -199,6 +199,19 @@ import crypto from "crypto";    //! to avoid Deprecated warning.
 interface LemonEngineModel extends EnginePluginService {
     // postToConnection: any;
     hello: GeneralFuntion;
+    do_search: GeneralFuntion;
+    do_read: GeneralFuntion;
+    do_update: GeneralFuntion;
+    do_increment: GeneralFuntion;
+    do_delete: GeneralFuntion;
+    do_destroy: GeneralFuntion;
+
+    do_initialize: GeneralFuntion;
+    do_terminate: GeneralFuntion;
+
+    on_records: GeneralFuntion;
+    do_notify: GeneralFuntion;
+    do_subscribe: GeneralFuntion;
 }
 
 const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): LemonEngineModel {
@@ -263,7 +276,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
     //! additional helper functions.
     thiz.do_next_id     = ERR_NOT_IMPLEMENTED;          // get the next generated-id if applicable.
-    
+
     //! register as service.
     if (!name.startsWith('_')) _$(name, thiz);
 
@@ -287,7 +300,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const CONF_CLONED_ID    = CONF_GET_VAL('CLONED_ID', 'cloned');          // default ID Name. (for input parameter)
     const CONF_PARENT_ID    = CONF_GET_VAL('PARENT_ID', 'parent');          // default ID Name. (for input parameter)
     const CONF_PARENT_IMUT  = CONF_GET_VAL('PARENT_IMUT', true);            // parent-id is imutable?
-    
+
     //! CONF_ES : INDEX/TYPE required if to support search. master if FIELDS is null, or slave if FIELDS not empty.
     const CONF_ES_INDEX     = CONF_GET_VAL('ES_INDEX', 'test-v1');          // ElasticSearch Index Name. (optional)
     const CONF_ES_TIMESERIES= CONF_GET_VAL('ES_TIMESERIES', false);         // ES Timestamp for Time-Series Data (added @181120)
@@ -295,7 +308,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const CONF_ES_MASTER    = CONF_GET_VAL('ES_MASTER', CONF_ES_TIMESERIES ? 1 : 0);// ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
     const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);                // ES Version Number. (5 means backward compartible)
     _log(NS, '! CONF_ES_TIMESERIES=', CONF_ES_TIMESERIES);
-    
+
     //! Security Configurations.
     const CONF_XECURE_KEY    = CONF_GET_VAL('XECURE_KEY', null);                // Encryption/Decryption Key.
 
@@ -337,7 +350,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             }, []);
             CONF_XEC_FIELDS.length && _inf(NS, 'XECURED-FIELDS =', CONF_XEC_FIELDS);
         }
-        
+
         //! clear if CONF_FIELDS is empty.
         const isEmpty = !CONF_FIELDS || !CONF_FIELDS.length;
         if (isEmpty){
@@ -351,7 +364,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         return [CONF_FIELDS, CONF_ES_FIELDS, CONF_XEC_FIELDS];
     })();
     _log(NS, '! CONF_ES_FIELDS :=', CONF_ES_FIELDS && CONF_ES_FIELDS.join(', '));
-    
+
     //! VALIDATE CONFIGURATION.
     if (CONF_ES_TIMESERIES && CONF_REDIS_PKEY && !CONF_REDIS_PKEY.startsWith('#')) throw new Error('ES_TIMESERIES - Redis should be inactive. PKEY:'+CONF_REDIS_PKEY);
     if (CONF_ES_TIMESERIES && !CONF_ES_FIELDS.length) throw new Error('ES_TIMESERIES - CONF_ES_FIELDS should be valid!');
@@ -364,7 +377,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
 
     //! DynamoDB Value Marshaller.
-    
+
     const $crypto           = function(passwd: string){
         const algorithm = 'aes-256-ctr';
         if (!crypto) throw new Error('crypto module is required!');
@@ -462,7 +475,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         //     , {'_id':id});
         if (typeof id === 'object') {
             $node = !$node ? id : $U.extend(id, $node);         // override with 2nd parameter if applicable.
-            // _log(NS, '>> $node@2=', $node);            
+            // _log(NS, '>> $node@2=', $node);
         } else {
             //! initial $node.
             if ($node === undefined || $node === null){
@@ -766,7 +779,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         return my_read_node(that)
             .catch((e: any) => {
                 const msg = e && e.message || '';
-                if (msg.indexOf('404 NOT FOUND') < 0) throw e;        
+                if (msg.indexOf('404 NOT FOUND') < 0) throw e;
                 _inf(NS, 'WARN! NOT FOUND. msg=', msg);
                 return that;
             })
@@ -807,7 +820,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         const CURRENT_TIME = that._current_time;
         _log(NS, '> prepared-id =', ID, ', current-time =', CURRENT_TIME);
         // _log(NS, '> prepared-id =', id, ', current-time =', current_time, ', node =', $U.json(node));
-        
+
         //! read previous(old) node from dynamo.
         return my_read_node(that)
             .then((that: any) => {
@@ -1128,7 +1141,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
      * - Dynamo와 중간에서 메인 캐시 역활을 함.
      * - 상호 효과적인 동기화를 위해서, updated_at과 hash값을 활용함.
      * - PKEY = '#' 일 경우, $elasticsearch가 그 역활을 대신하도록 함.
-     * 
+     *
      * //TODO - Redis 에서 오브젝트 단위로 읽고 쓸 수 있도록 하기...
      */
     const $redis = {
@@ -1141,7 +1154,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             if (!ID) return Promise.reject(new Error('._id is required!'));
             //! Redis Key 가 없다면, read 실퍠로 넘겨줘야함.
             if (!CONF_REDIS_PKEY) return Promise.reject(that);
-            
+
             //NOTE - '#'으로 시작하면, elasticsearch로 대신함.
             if (CONF_REDIS_PKEY.startsWith('#')){
                 //! 다만, TIMESERIES이면, DYNAMO에서 직접 읽어 온다.    @181120.
@@ -1165,7 +1178,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
                         throw that;
                     })
             }
-            
+
             //! read via redis.
             _log(NS, `- redis: get-item(${ID})....`);
             return $RS.do_get_item(CONF_REDIS_PKEY, ID).then((node: any) => {
@@ -1196,7 +1209,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
             //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
             if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
-            
+
             const node = that._node;
             _log(NS, `- redis: create-item(${ID})....`);
             // _log(NS, `- redis:my_save_node(${CONF_REDIS_PKEY}:${ID}). node=`, node);
@@ -1224,7 +1237,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
             //NOTE - '#'으로 시작하면, elasticsearch로 대신함. (저장 부분은, ES에서 별도로 처리해 주므로, 그냥 무시함)
             if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
-            
+
             const node = that._node;
             _log(NS, `- redis: update-item(${ID})....`);
             let chain = $redis.do_set_cache_footprint(ID, node);
@@ -1251,7 +1264,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             // if (CONF_REDIS_PKEY.startsWith('#')) return Promise.resolve(that)
             const REDIS_PKEY = CONF_REDIS_PKEY.startsWith('#') ? CONF_REDIS_PKEY.substr(1) : CONF_REDIS_PKEY;
             if (!REDIS_PKEY) return Promise.resolve(that);
-            
+
             // _log(NS, `- redis: delete-item(${ID})....`);
             const my_local_delete_item = (pkey: any) => {
                 return $RS.do_delete_item(pkey, ID)
@@ -1331,7 +1344,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
      *  - Core/Meta/...  들이 1차원적으로 ES에 인덱싱되어져 있음.
      *  - Core (master 노드) 에서만 검색이 가능하게..... (대표로 해서...)
      *  - Parent/Child 관계에 있어서... (예: Atem/Item, Atem/Deal) 이걸 어떻게 풀어갈까???
-     * 
+     *
      */
     const $elasticsearch = {
         //! read
@@ -1391,13 +1404,13 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
                         .then((_: any) => {
                             _log(NS, `! elasticsearch: pushed-item(${ID})@1 res=`, $U.json(_));
                             return that;
-                        });        
+                        });
                 } else if (CONF_ES_MASTER){
                     return $ES.do_create_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                         .then((_: any) => {
                             _log(NS, `! elasticsearch: saved-item(${ID})@1 res=`, $U.json(_));
                             return that;
-                        });        
+                        });
                 } else {
                     return $ES.do_update_item(CONF_ES_INDEX, CONF_ES_TYPE, ID, node2)
                         .then((_: any) => {
@@ -1483,7 +1496,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             if (!CONF_ES_INDEX) return that;
             // const id = that._id;
             // _log(NS, `- elasticsearch:do_search_item()....`);
-            
+
             if (CONF_ES_FIELDS && !CONF_ES_MASTER) {
                 // _log(NS, `! elasticsearch:WARN! ignore search ()....`);
                 return that;
@@ -1507,7 +1520,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             //! add default-sort if no search query.
             if (CONF_ES_TIMESERIES) param.$O = param.$O || '!@timestamp';                            // 최신순으로 정렬.
             param.$O = param.$O || (CONF_ID_TYPE.startsWith('#') ? CONF_ID_NAME+'.keyword' : CONF_ID_NAME);            // 기본은 아이디 값으로.
-            
+
             //build query parameters.
             if (CONF_ES_FIELDS){
                 CONF_ES_FIELDS.forEach((field: any) => {
@@ -1515,7 +1528,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
                     if (that[field] !== undefined) param[field] = that[field];                        // EQUAL filter.
                     if (that['!'+field] !== undefined) param['!'+field] = that['!'+field];            // NOT filter.
                     if (that['#'+field] !== undefined) param['#'+field] = that['#'+field];            // PROJECTION filter.
-                })    
+                })
             }
 
             //! 검색 파라미터로 검색을 시작한다.
@@ -1531,7 +1544,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
                     const local_list_map = (_: any)=>{
                         const node = _._score ? $U.extend({'_score':_._score}, _._source) : _._source;
                         if (CONF_ES_TIMESERIES) node['@id'] = _._id;
-                        
+
                         if (_.highlight != undefined) {
                             Object.keys(_.highlight).forEach(key=>{
                                 node[key + "_highlight"] = _.highlight[key][0];
@@ -1620,7 +1633,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
                 if (Array.isArray(val)){
                     const vals = val;
                     vals.forEach((val2, j)=>{
-                        if (val2 && typeof val2 == 'object') 
+                        if (val2 && typeof val2 == 'object')
                             throw new Error('Invalid data-type (object) key:'+key+'@'+ID+':'+j);
                     })
                 } else {
@@ -1635,7 +1648,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const my_read_node = (that: any) => {
         const ID = that._id;
         if (!ID) return Promise.reject(new Error('._id is required!'));
-        
+
         //! read node via cache.
         if (local_cache_read(that)) return Promise.resolve(that);
 
@@ -1684,7 +1697,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         const ID = that._id;
         if (!ID) return Promise.reject(new Error('._id is required!'));
         if (!that._node) return Promise.reject(new Error('_node is required!'));
-        
+
         // _log(NS, `- my_save_node (${ID})....`);
         // _log(NS, '>> that =', that);
         return Promise.resolve(that)
@@ -1797,7 +1810,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             _log(NS, `! my_update_node() no need to update... fields_count=`+that._fields_count);
             return that;
         }
-        
+
         return Promise.resolve(that)
             .then(my_validate_properties)
             .then($dynamo.do_update_dynamo)
@@ -1969,22 +1982,22 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             //  - eventSourceARN: 'arn:aws:dynamodb:ap-northeast-2:820167020551:table/TestTable/stream/2017-08-12T09:51:57.928'
             const tableName = $record.table || ($record.eventSourceARN && $record.eventSourceARN.split('/')[1]) || '';
             _log(NS,`--- process-record(${tableName}) ... `);
-    
+
             //! ignore if target table is not matching.
             if (CONF_DYNA_TABLE !== tableName) {
                 _log(NS,`! ignore record-table: ${CONF_DYNA_TABLE} != ${tableName} `);
                 return $record;
             }
-    
+
             const keyRecord = $record.dynamodb.Keys ? DynamoDBValue.toJavascript($record.dynamodb.Keys, null) : {};
             const newRecord = $record.dynamodb.NewImage ? DynamoDBValue.toJavascript($record.dynamodb.NewImage, null) : null;
             const oldRecord = $record.dynamodb.OldImage ? DynamoDBValue.toJavascript($record.dynamodb.OldImage, null) : null;
-    
+
             const ID = keyRecord[CONF_ID_NAME];
             // keyRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.keyRecord[${ID}]=`, $U.json(keyRecord));
             // oldRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.oldRecord[${ID}]=`, $U.json(oldRecord));
             // newRecord && _log(NS,`> ${EVENT_NAME} - ${tableName}.newRecord[${ID}]=`, $U.json(newRecord));
-    
+
             //! 이제 변경된 데이터를 추적해서, 이후 처리 지원. (update 는 호출만되어도 이벤트가 발생하게 됨)
             const diff = EVENT_NAME === 'MODIFY' ? $U.diff(oldRecord, newRecord) : null;
             const updated_at = $U.N(newRecord && newRecord.updated_at || 0);
@@ -1992,9 +2005,9 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             const that = {_id:ID, _node:newRecord, _updated_at:updated_at, _diff:diff, _prev:prev};           // use updated_at for
             chain = Promise.resolve(that);
             diff && _log(NS,`>> ${tableName}.different[${ID}]=`, $U.json(diff));
-    
+
             // _log(NS,`>> Record(${tableName}) that=`, that);
-    
+
             //! decode event.
             switch(EVENT_NAME){
                 case "INSERT":          // only newRecord.
@@ -2056,7 +2069,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             // Signature: 'ZsyWm0Attrz+nWgZLu7j6pw/TWZFUYqX+uxeezD0hl2Ae0rLXCBzaZO8GarxgVmUcl3ongGRgNp9HIK5lBHNBKCsIqxM0sHnunbsO0MxJgZQsXCW2GggZD5nJ4yqlFErIa16cWDk3FJEJ0nsI1/On0j/ZKqx8IWCwcdfOH4g6QK8fV0kAXOMqeJbTE9r0RSoIwSwud34Um0GgwVFofWIQ30Ii6Tz8NvTJyySRWb+Ox5NEXS1j483XW1uejiOyTBigASWpMjGBXDctLJzb5t9Y8IWR8IRHrrW1z3aaSpWejz5i5lebU6yUKvwrTFNvDq+CooDgzGSYhtzYAQnMi1ZMg==',
             // SigningCertUrl: 'https://sns.ap-northeast-2.amazonaws.com/SimpleNotificationService-433026a4050d206028891664da859041.pem',
             // UnsubscribeUrl: 'https://sns.ap-northeast-2.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:ap-northeast-2:085403634746:item-pools-event:bd60b895-792c-4d03-9971-755b047de8d3',
-            // MessageAttributes: 
+            // MessageAttributes:
             //  { 'AWS.SNS.MOBILE.MPNS.Type': { Type: 'String', Value: 'token' },
             //    'AWS.SNS.MOBILE.MPNS.NotificationClass': { Type: 'String', Value: 'realtime' },
             //    'AWS.SNS.MOBILE.WNS.Type': { Type: 'String', Value: 'wns/badge' } } }
@@ -2345,14 +2358,14 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 
             //! ID가 문자열이면, 인덱스를 추가해 줌.
             if (CONF_ID_NAME && CONF_ID_TYPE.startsWith('#')){
-                ES_SETTINGS.mappings._default_.properties[CONF_ID_NAME] = { 
+                ES_SETTINGS.mappings._default_.properties[CONF_ID_NAME] = {
                     "type": CONF_ES_VERSION >= 6 ? "text" : "string",
                     "fields": {
                         "keyword": {type: "keyword", ignore_above: 256}
                     }
                 };
             }
-            
+
             //! timeseries 데이터로, 기본 timestamp 값을 넣어준다. (주위! save시 current-time 값 자동 저장)
             if (!!CONF_ES_TIMESERIES){
                 ES_SETTINGS.settings = {"index": { "refresh_interval": "5s"}};
@@ -2796,7 +2809,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     thiz.do_finish_chain = (that: any) => finish_chain(that);
 
     //! Basic Functions.
-    thiz.do_prepare = (id: any, $node: any) => 
+    thiz.do_prepare = (id: any, $node: any) =>
         prepare_chain(id, $node, 'prepare')
             .then(my_prepare_node_prepared)
             .then(my_save_node)
@@ -2856,7 +2869,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             .then($redis.do_delete_cache)
             .then(finish_chain)
     }
-    
+
     thiz.do_clone = (id: any, $node: any) =>
         prepare_chain(id, $node, 'clone')
             .then(my_prepare_node_cloned)
@@ -2871,7 +2884,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             .then((that: any) => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
             // .then(my_notify_node)
             .then(finish_chain)
-    
+
     thiz.do_readX = (id: any, $node: any) =>
         prepare_chain(id, $node, 'read')
             .then(_prepare_node)
