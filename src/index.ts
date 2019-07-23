@@ -58,6 +58,8 @@ export interface EngineInterface extends EngineService {
     $plugins: {[key: string]: EnginePluginService};
 }
 
+export { EngineService, EnginePluginService };
+
 //! load common services....
 import buildEngine from './core/lemon-engine-model';
 
@@ -94,6 +96,7 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     //! load configuration.
     const ROOT_NAME = options.name || 'lemon';
     const STAGE = _environ('STAGE', '');
+    const LS = (_environ('LS', '0') === '1'); // LOG SILENT (NO PRINT LOG)
     const TS = (_environ('TS', '1') === '1');                                                   // PRINT TIME-STAMP.
     const LC = (STAGE === 'local'||STAGE === 'express'||_environ('LC', '')==='1');              // COLORIZE LOG.
 
@@ -122,26 +125,33 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     }
 
     //! common function for logging.
-    var $console: EngineConsole = {thiz: console, log: console.log, error: console.error, auto_ts: TS, auto_color: LC};
-    var _log: EngineLogger = function (...arg: any[]) {
+    const silent = () => {};
+    const $console: EngineConsole = {
+        thiz: console,
+        log: LS ? silent : console.log,
+        error: LS ? silent : console.error,
+        auto_ts: TS,
+        auto_color: LC
+    };
+    const _log: EngineLogger = function (...arg: any[]) {
         let args = !Array.isArray(arguments) && Array.prototype.slice.call(arguments) || arguments;
         if ($console.auto_color) args.unshift(RESET), $console.auto_ts && args.unshift(_ts(), LEVEL_LOG) || args.unshift(LEVEL_LOG), args.unshift(BLUE);
         else $console.auto_ts && args.unshift(_ts(), LEVEL_LOG);
         return $console.log.apply($console.thiz, args)
     }
-    var _inf: EngineLogger = function (...arg: any[]) {
+    const _inf: EngineLogger = function (...arg: any[]) {
         let args = !Array.isArray(arguments) && Array.prototype.slice.call(arguments) || arguments;
         if ($console.auto_color) args.unshift(""), args.push(RESET), $console.auto_ts && args.unshift(_ts(), LEVEL_INF) || args.unshift(LEVEL_INF), args.unshift(YELLOW);
         else $console.auto_ts && args.unshift(_ts(), LEVEL_INF);
         return $console.log.apply($console.thiz, args)
     }
-    var _err: EngineLogger = function (...arg: any[]) {
+    const _err: EngineLogger = function (...arg: any[]) {
         let args = !Array.isArray(arguments) && Array.prototype.slice.call(arguments) || arguments;
         if ($console.auto_color) args.unshift(""), args.push(RESET), $console.auto_ts && args.unshift(_ts(), LEVEL_ERR) || args.unshift(LEVEL_ERR), args.unshift(RED);
         else $console.auto_ts && args.unshift(_ts(), LEVEL_ERR);
         return $console.error.apply($console.thiz, args)
     }
-    var _extend = function (opt: any, opts: any) {      // simple object extender.
+    const _extend = function (opt: any, opts: any) {      // simple object extender.
         for (let k in opts) {
             let v = opts[k];
             if (v === undefined) delete opt[k];
