@@ -76,6 +76,10 @@ const do_search = (id, param) => {
 1. [lemon-engine](https://www.npmjs.com/package/lemon-engine) 으로 배포됨.
 
 
+## TODO
+
+- [ ] 190725 no redis, but es. read description via dynamo directly. (`http ':8086/mail/93371/analyze'`)
+
 
 ----------------
 # VERSION INFO #
