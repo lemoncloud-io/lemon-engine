@@ -1,6 +1,6 @@
 {
   "name": "lemon-engine",
-  "version": "2.1.7",
+  "version": "2.1.8",
   "description": "Lemon Engine Module to Synchronize Node over DynamoDB + ElastiCache + Elasticsearch by [lemoncloud](https://lemoncloud.io)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -44,7 +44,6 @@
   "author": "Steve Jung (steve@lemoncloud.io)",
   "license": "MIT",
   "dependencies": {
-    "dynamodb-value": "^1.0.5",
     "lodash": "^4.17.11",
     "query-string": "^6.5.0",
     "request": "^2.88.0",

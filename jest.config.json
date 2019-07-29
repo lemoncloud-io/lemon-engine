@@ -9,7 +9,7 @@
     },
     "moduleFileExtensions": ["js", "jsx", "ts", "tsx"],
     "testEnvironment": "node",
-    "testMatch": ["**/src/**/*.spec.+(ts|tsx|js|jsx)", "**/tests/**/*.+(ts|tsx|js|jsx)"],
+    "testMatch": ["**/src/**/*.spec.+(ts|tsx|js|jsx)", "**/test/**/*.+(ts|tsx|js|jsx)"],
     "transform": {
         "^.+\\.(ts|tsx|js|jsx)$": "ts-jest"
     },

@@ -99,6 +99,7 @@ export default function initiate(scope: any = null, options: EngineOption = {}):
     const LS = (_environ('LS', '0') === '1'); // LOG SILENT (NO PRINT LOG)
     const TS = (_environ('TS', '1') === '1');                                                   // PRINT TIME-STAMP.
     const LC = (STAGE === 'local'||STAGE === 'express'||_environ('LC', '')==='1');              // COLORIZE LOG.
+    // console.log('!!!!!!! LS,TS,LC =', LS, TS, LC);
 
     const LEVEL_LOG = '-';
     const LEVEL_INF = 'I';

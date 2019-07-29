@@ -192,7 +192,7 @@
  */
 import { EngineService, EnginePluginService, EnginePluginMaker, GeneralFuntion } from '../common/types';
 import notifier from '../plugins/notify-service';
-import DynamoDBValue from 'dynamodb-value'; // DynamoDB Data Converter.
+import DynamoDBValue from './dynamodb-value'; // DynamoDB Data Converter.
 // import * as crypto from 'crypto'; //WARN! will get Deprecated!
 import crypto from "crypto";    //! to avoid Deprecated warning.
 
@@ -1674,6 +1674,28 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             .then(local_cache_save)
     };
 
+    //! Read Node in deep - read from dynamo.
+    const my_read_node_deep = (that: any) => {
+        const ID = that._id;
+        if (!ID) return Promise.reject(new Error('._id is required!'));
+
+        _log(NS, `- my_read_node_deep (${ID})...., that=`, $U.json(that));
+        return Promise.resolve(that)
+            //- Dynamo 에서 읽어 왔다면, Redis 에 없는 경우이므로, 이때는 Redis 에 저장해 준다.
+            .then((that: any) => {
+                //! try to read via dynamo
+                return $dynamo.do_read_dynamo(that)
+                    .then((that: any) => {
+                        const node = that._node||{};
+                        if (node[CONF_ID_NAME] === undefined) {
+                            return Promise.reject(new Error('404 NOT FOUND. '+CONF_DYNA_TABLE+'.id:'+(that._id||'')));
+                        }
+                        return that;
+                    })
+            })
+            .then(local_cache_save)
+    };
+
     //! decript the xecured field. ONLY IF on projetion. (NOT TO ORIGIN)
     const my_filter_read_decrypt = (node: any) => {
         if (!node) return node;
@@ -2882,6 +2904,14 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
             .then(_prepare_node)
             //! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
             .then((that: any) => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node(that))
+            // .then(my_notify_node)
+            .then(finish_chain)
+
+    thiz.do_read_deep = (id: any, $node: any) =>
+        prepare_chain(id, $node, 'read')
+            .then(_prepare_node)
+            //! FIELDS 에 지정된 필드만 추출하여 전달. 없을경우 아예 읽지를 말자.
+            .then((that: any) => that._params_count !== 0 && that._fields_count === 0 ? that : my_read_node_deep(that))
             // .then(my_notify_node)
             .then(finish_chain)
 
