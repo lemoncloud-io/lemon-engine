@@ -20,24 +20,23 @@ import * as _ from "lodash";
 export * from './common/types';
 
 //! load common services....
-import buildEngine from './core/lemon-engine-model';
+import buildModel from './core/lemon-engine-model';
 
-import httpProxy, { HttpProxy } from './plugins/http-proxy';
-import webProxy, { WebProxy } from './plugins/web-proxy';
-
-// import mysql from './plugins/mysql-proxy';
-// import dynamo from './plugins/dynamo-proxy';
-// import redis from './plugins/redis-proxy';
-// import elastic6 from './plugins/elastic6-proxy';
-// import s3 from './plugins/s3-proxy';
-// import sqs from './plugins/sqs-proxy';
-// import sns from './plugins/sns-proxy';
-// import ses from './plugins/ses-proxy';
-// import cognito from './plugins/cognito-proxy';
-// import lambda from './plugins/lambda-proxy';
-// import protocol from './plugins/protocol-proxy';
-// import cron from './plugins/cron-proxy';
-// import agw from './plugins/agw-proxy';
+import httpProxy from './plugins/http-proxy';
+import webProxy from './plugins/web-proxy';
+import mysql from './plugins/mysql-proxy';
+import dynamo from './plugins/dynamo-proxy';
+import redis from './plugins/redis-proxy';
+import elastic6 from './plugins/elastic6-proxy';
+import s3 from './plugins/s3-proxy';
+import sqs from './plugins/sqs-proxy';
+import sns from './plugins/sns-proxy';
+import ses from './plugins/ses-proxy';
+import cognito from './plugins/cognito-proxy';
+import lambda from './plugins/lambda-proxy';
+import protocol from './plugins/protocol-proxy';
+import cron from './plugins/cron-proxy';
+import agw from './plugins/agw-proxy';
 
 /**
  * initialize as EngineInterface
@@ -174,7 +173,7 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
 
         // //! model builder.
         // $engine.createModel = (name: string, option: any) => {
-        //     return buildEngine($engine, name, option);
+        //     return buildModel($engine, name, option);
         // }
 
         //! override type.
@@ -193,21 +192,21 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
     // $root[_$.id] = _$;
     STAGE && _inf('#STAGE =', STAGE);
 
-    // //! load common services....
-    // mysql($engine, 'MS');                        // load service, and register as 'MS'
-    // dynamo($engine, 'DS');                       // load service, and register as 'DS'
-    // redis($engine, 'RS');                        // load service, and register as 'RS'
-    // elastic6($engine, 'ES6');                    // load service, and register as 'ES6'
-    // s3($engine, 'S3');                           // load service, and register as 'S3'
-    // sqs($engine, 'SS');                          // load service, and register as 'SS'
-    // sns($engine, 'SN');                          // load service, and register as 'SN'
-    // ses($engine, 'SE');                          // load service, and register as 'SE'
-    // webProxy($engine, 'WS');                     // load service, and register as 'WS'
-    // cognito($engine, 'CS');                      // load service, and register as 'CS'
-    // lambda($engine, 'LS');                       // load service, and register as 'LS'
-    // protocol($engine, 'PR');                     // load service, and register as 'PR'
-    // cron($engine, 'CR');                         // load service, and register as 'CR'
-    // agw($engine, 'AG');                          // load service, and register as 'AG'
+    //! load common services....
+    mysql($engine, 'MS');                        // load service, and register as 'MS'
+    dynamo($engine, 'DS');                       // load service, and register as 'DS'
+    redis($engine, 'RS');                        // load service, and register as 'RS'
+    elastic6($engine, 'ES6');                    // load service, and register as 'ES6'
+    s3($engine, 'S3');                           // load service, and register as 'S3'
+    sqs($engine, 'SS');                          // load service, and register as 'SS'
+    sns($engine, 'SN');                          // load service, and register as 'SN'
+    ses($engine, 'SE');                          // load service, and register as 'SE'
+    webProxy($engine, 'WS');                     // load service, and register as 'WS'
+    cognito($engine, 'CS');                      // load service, and register as 'CS'
+    lambda($engine, 'LS');                       // load service, and register as 'LS'
+    protocol($engine, 'PR');                     // load service, and register as 'PR'
+    cron($engine, 'CR');                         // load service, and register as 'CR'
+    agw($engine, 'AG');                          // load service, and register as 'AG'
 
     _inf('! engine-service-ready');
 

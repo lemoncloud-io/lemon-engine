@@ -28,10 +28,16 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
-import httpProxy from './http-proxy';
+import { EnginePluggable, EnginePluginBuilder, GeneralOptions, GeneralFuntion } from '../common/types';
+import httpProxy, { HttpProxy } from './http-proxy';
 
-const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): EnginePluggable {
+export interface NotifyService extends EnginePluggable {
+    // [key: string]: GeneralFuntion;
+    do_notify: GeneralFuntion;
+    do_subscribe: GeneralFuntion;
+}
+
+const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
     name = name || 'NF';
 
     const $U = _$.U;                                // re-use global instance (utils).
@@ -50,9 +56,19 @@ const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, optio
 	 *  Public Common Interface Exported.
 	 ** ****************************************************************************************************************/
     //! prepare instance.
-    const thiz = options||{};
+    // const thiz: GeneralOptions = options||{};
+    const conf = typeof options == 'object' ? options : {};
+    const thiz = new class implements NotifyService {
+        public $notify: {[key: string]: any};
+        public name = () => `notify-proxy:${name}`;
+        public do_notify: GeneralFuntion;
+        public do_subscribe: GeneralFuntion;
+    }
+    // const thiz: NotifyService = dummy as NotifyService;
     const ERR_NOT_IMPLEMENTED = (id: any) => {throw new Error(`NOT_IMPLEMENTED - ${NS}:${JSON.stringify(id)}`)};
 
+    //! notify handler mapping
+    thiz.$notify = thiz.$notify || {};
     //! notify functions.
     thiz.do_notify      = ERR_NOT_IMPLEMENTED;           // trigger notify event.
     //! WARN! - DO NOT USE PROMISE BECAUSE IT MUST BE READY BEFORE FUNCTION CALL.
@@ -64,13 +80,11 @@ const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, optio
     /** ****************************************************************************************************************
 	 *  Main Implementation.
 	 ** ****************************************************************************************************************/
-    const CONF_GET_VAL = (name: string, defval?: any) => thiz[name] === undefined ? defval : thiz[name];
+    const CONF_GET_VAL = (name: string, defval?: any) => conf[name] === undefined ? defval : conf[name];
     const CONF_NS_NAME      = CONF_GET_VAL('NS_NAME'    , '');          // Target Notification Namespace. ('' means no service)
     const CONF_MASTER       = CONF_GET_VAL('MASTER'     , null);        // Master Child Notifier.
     const CONF_CHILDS       = CONF_GET_VAL('CHILDS'     , []);          // Slave Child Notifier.
-
-
-    const RECORD_MODES = ['create','update','delete'];                  // possible mode definition.
+    const RECORD_MODES      = ['create','update','delete'];                  // possible mode definition.
 
 
     /** ****************************************************************************************************************
@@ -85,9 +99,6 @@ const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, optio
 	 *      notifier        # notify trigger invoker.
 	 *  }
 	 ** ****************************************************************************************************************/
-    //! notify handler mapping
-    thiz.$notify = {};
-
     //! quick check if subscribers exist.
     const has_subscriber = (id: any) => {
         //! for each action.

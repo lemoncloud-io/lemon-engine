@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /**
  * SNS Proxy Service Exports
  * - proxy call to sns service.
@@ -9,10 +8,15 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
-import httpProxy from './http-proxy';
+import { EnginePluggable, EnginePluginBuilder } from '../common/types';
+import httpProxy, { HttpProxy } from './http-proxy';
 
-const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): EnginePluggable {
+export interface SNSProxy extends EnginePluggable {
+    do_publish: (snsId: any, subject: any, payload: any) => string;
+    do_test_self: (options: any) => any;
+}
+
+const maker: EnginePluginBuilder<SNSProxy> = (_$, name, options) => {
     name = name || 'SN';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -28,59 +32,51 @@ const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, optio
     const _inf = _$.inf;
     const _err = _$.err;
 
-    //! prepare instance.
-    const thiz = function(){} as EnginePluggable;
-
-    //! item functions.
-    thiz.do_publish = do_publish;
-
-    //! test function.
-    thiz.do_test_self = do_test_self;
-
-    //! register service.
-    _$(name, thiz);
-
     /** ****************************************************************************************************************
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
-    const ENDPOINT = $U.env('SN_ENDPOINT');
+    const ENDPOINT = $U.env('SN_ENDPOINT', typeof options == 'string' ? options : '');
     const $proxy = function() {
         if (!ENDPOINT) throw new Error('env:SN_ENDPOINT is required!');
         const SVC = 'X' + name;
-        const $SVC = _$(SVC);
+        const $SVC = _$(SVC, null as HttpProxy);
         return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT); // re-use proxy by name
     };
 
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    function do_publish(snsId: any, subject: any, payload: any) {
-        if (!snsId) return Promise.reject('snsId is required!');
-        if (!subject) return Promise.reject('subject is required!');
-        if (!payload) return Promise.reject('payload is required!');
+    const thiz = new (class implements SNSProxy {
+        public name = () => `sns-proxy:${name}`;
 
-        const options: any = null; // optional values.
-        const $param = Object.assign({}, options || {});
-        $param.subject = subject;
+        public do_publish(snsId: any, subject: any, payload: any) {
+            if (!snsId) return Promise.reject('snsId is required!');
+            if (!subject) return Promise.reject('subject is required!');
+            if (!payload) return Promise.reject('payload is required!');
 
-        return $proxy()
-            .do_post(snsId, '0', undefined, $param, payload)
-            .then((_: any) => _.result);
-    }
+            const options: any = null; // optional values.
+            const $param = Object.assign({}, options || {});
+            $param.subject = subject;
 
-    function do_test_self(options: any) {
-        options = options || {};
-        _log(NS, 'do_test_self()... param=', options);
+            return $proxy()
+                .do_post(snsId, '0', undefined, $param, payload)
+                .then((_: any) => _.result);
+        }
 
-        const $param = Object.assign({}, options || {});
+        public do_test_self(options: any) {
+            options = options || {};
+            _log(NS, 'do_test_self()... param=', options);
 
-        return $proxy()
-            .do_get('#', '0', 'test-self', $param)
-            .then((_: any) => _.result);
-    }
+            const $param = Object.assign({}, options || {});
 
-    //! returns.
-    return thiz;
-}
+            return $proxy()
+                .do_get('#', '0', 'test-self', $param)
+                .then((_: any) => _.result);
+        }
+    })();
+
+    //! create & register service.
+    return _$(name, thiz);
+};
 
 export default maker;

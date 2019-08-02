@@ -8,7 +8,8 @@
  */
 import { Utilities } from '../core/utilities';
 import { HttpProxy } from '../plugins/http-proxy';
-import { WebProxy } from 'src/plugins/web-proxy';
+import { WebProxy } from '../plugins/web-proxy';
+import { LemonEngineModel } from '../core/lemon-engine-model';
 
 //! Indexable.
 interface Indexable {
@@ -86,7 +87,7 @@ export interface LemonEngine extends EngineCore {
     extend: (a: any, b: any) => any;
     ts: (d?: Date | number) => string;
     $console: EngineConsole;
-    createModel: ServiceMaker;
+    createModel: EnginePluginBroker<LemonEngineModel>;
     createHttpProxy: EnginePluginBroker<HttpProxy>;
     createWebProxy: EnginePluginBroker<WebProxy>;
     $plugins: { [key: string]: EnginePluggable };

@@ -20,33 +20,33 @@ export interface HttpProxy extends EnginePluggable {
     /**
      * GET
      */
-    do_get: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_get: (type: string, id?: string, cmd?: string, $param?: any, $body?: any, $ctx?: any) => any;
 
     /**
      * PUT
      */
-    do_put: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_put: (type: string, id?: string, cmd?: string, $param?: any, $body?: any, $ctx?: any) => any;
 
     /**
      * POST
      */
-    do_post: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_post: (type: string, id?: string, cmd?: string, $param?: any, $body?: any, $ctx?: any) => any;
 
     /**
      * PATCH
      */
-    do_patch: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_patch: (type: string, id?: string, cmd?: string, $param?: any, $body?: any, $ctx?: any) => any;
 
     /**
      * DELETE
      */
-    do_delete: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_delete: (type: string, id?: string, cmd?: string, $param?: any, $body?: any, $ctx?: any) => any;
 }
 
 import REQUEST from 'request';
 import queryString from 'query-string';
 
-const maker: EnginePluginBuilder<HttpProxy> = (_$: EngineCore, name?: string, options?: any): HttpProxy => {
+const maker: EnginePluginBuilder<HttpProxy> = (_$, name, options) => {
     name = name || 'HS';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -57,7 +57,7 @@ const maker: EnginePluginBuilder<HttpProxy> = (_$: EngineCore, name?: string, op
 
     const NS = $U.NS(name, 'magenta'); // NAMESPACE TO BE PRINTED.
     const ENDPOINT: string = options && (typeof options === 'string' ? options : options.endpoint||'') || ''; // service endpoint.
-    const HEADERS = options && options.headers || {}; // custom headers.
+    const HEADERS = options && (typeof options === 'object' ? options.headers : {}) || {}; // custom headers.
     if (!ENDPOINT) throw new Error('endpoint is required!');
 
     //! load common functions

@@ -11,18 +11,18 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
+import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface WebProxy extends EnginePluggable {
-    do_get: (host: string, path: string, $opt: any, $param: any, $body: any) => any;
-    do_put: (host: string, path: string, $opt: any, $param: any, $body: any) => any;
-    do_patch: (host: string, path: string, $opt: any, $param: any, $body: any) => any;
-    do_post: (host: string, path: string, $opt: any, $param: any, $body: any) => any;
-    do_delete: (host: string, path: string, $opt: any, $param: any, $body: any) => any;
+    do_get: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
+    do_put: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
+    do_patch: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
+    do_post: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
+    do_delete: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
 }
 
-const maker: EnginePluginBuilder<WebProxy> = function(_$: EngineCore, name?: string, options?: any): WebProxy {
+const maker: EnginePluginBuilder<WebProxy> = (_$, name, options) => {
     name = name || 'WS';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -41,8 +41,8 @@ const maker: EnginePluginBuilder<WebProxy> = function(_$: EngineCore, name?: str
     /** ****************************************************************************************************************
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
-    const ENDPOINT = $U.env('WS_ENDPOINT');
-    const HEADERS = options && options.headers || null;   // headers to pass.
+    const ENDPOINT = $U.env('WS_ENDPOINT', typeof options == 'string' ? options : '');
+    const HEADERS = options && (typeof options === 'object' ? options.headers : null) || null;   // headers to pass.
     const $proxy = function(): HttpProxy {
         if (!ENDPOINT) throw new Error('env:WS_ENDPOINT is required!');
         //! re-use proxy by name
@@ -71,14 +71,8 @@ const maker: EnginePluginBuilder<WebProxy> = function(_$: EngineCore, name?: str
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    /**
-     * class: WebProxyBody
-     */
-    class WebProxyBody implements WebProxy {
-        // eslint-disable-next-line @typescript-eslint/no-parameter-properties
-        public constructor(private endpoint: string){
-        }
-        public name = () => `web-proxy:${this.endpoint}`;
+    const thiz = new (class implements WebProxy {
+        public name = () => `web-proxy:${name}`;
 
         /**
          * GET HOST/PATH?$param
@@ -156,10 +150,10 @@ const maker: EnginePluginBuilder<WebProxy> = function(_$: EngineCore, name?: str
                 .do_delete(host, path, undefined, $param, $body)
                 .then((_: any) => _.result);
         }
-    }
+    })();
 
     //! create & register service.
-    return _$(name, new WebProxyBody(ENDPOINT));
+    return _$(name, thiz);
 }
 
 export default maker;

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /**
  * Lambda Proxy Service Exports
  * - proxy call to lambda service.
@@ -9,10 +8,17 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
-import httpProxy from './http-proxy';
+import { EnginePluggable, EnginePluginBuilder } from '../common/types';
+import httpProxy, { HttpProxy } from './http-proxy';
 
-const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): EnginePluggable {
+export interface LambdaProxy extends EnginePluggable {
+    do_get: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
+    do_put: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
+    do_post: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
+    do_delete: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
+}
+
+const maker: EnginePluginBuilder<LambdaProxy> = (_$, name, options) => {
     'use strict';
     name = name || 'LS';
 
@@ -29,78 +35,70 @@ const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, optio
     const _inf = _$.inf;
     const _err = _$.err;
 
-    //! prepare instance.
-    const thiz = function(){} as EnginePluggable;
-
-    //! item functions.
-    thiz.do_get = do_get;
-    thiz.do_post = do_post;
-    thiz.do_put = do_put;
-    thiz.do_delete = do_delete;
-
-    //! register service.
-    _$(name, thiz);
-
     /** ****************************************************************************************************************
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
-    const ENDPOINT = $U.env('LS_ENDPOINT');
+    const ENDPOINT = $U.env('LS_ENDPOINT', typeof options == 'string' ? options : '');
     const $proxy = function() {
         if (!ENDPOINT) throw new Error('env:LS_ENDPOINT is required!');
         const SVC = 'X' + name;
-        const $SVC = _$(SVC);
+        const $SVC = _$(SVC, null as HttpProxy);
         return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT); // re-use proxy by name
     };
 
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    /**
-     * GET HOST/PATH?$param
-     */
-    function do_get(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
-        if (!TYPE) return Promise.reject(new Error('TYPE is required'));
-        if ($body) return Promise.reject(new Error(NS + ':$body is invalid!'));
-        return $proxy()
-            .do_get(TYPE, ID, CMD, $param, $body, $ctx)
-            .then((_: any) => _.result);
-    }
+    const thiz = new (class implements LambdaProxy {
+        public name = () => `lambda-proxy:${name}`;
 
-    /**
-     * PUT HOST/PATH?$param
-     *
-     */
-    function do_put(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
-        if (!TYPE) return Promise.reject(new Error('TYPE is required'));
-        return $proxy()
-            .do_put(TYPE, ID, CMD, $param, $body, $ctx)
-            .then((_: any) => _.result);
-    }
+        /**
+         * GET HOST/PATH?$param
+         */
+        public do_get(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
+            if (!TYPE) return Promise.reject(new Error('TYPE is required'));
+            if ($body) return Promise.reject(new Error(NS + ':$body is invalid!'));
+            return $proxy()
+                .do_get(TYPE, ID, CMD, $param, $body, $ctx)
+                .then((_: any) => _.result);
+        }
 
-    /**
-     * POST HOST/PATH?$param
-     *
-     */
-    function do_post(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
-        if (!TYPE) return Promise.reject(new Error('TYPE is required'));
-        return $proxy()
-            .do_post(TYPE, ID, CMD, $param, $body, $ctx)
-            .then((_: any) => _.result);
-    }
+        /**
+         * PUT HOST/PATH?$param
+         *
+         */
+        public do_put(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
+            if (!TYPE) return Promise.reject(new Error('TYPE is required'));
+            return $proxy()
+                .do_put(TYPE, ID, CMD, $param, $body, $ctx)
+                .then((_: any) => _.result);
+        }
 
-    /**
-     * DELETE HOST/PATH?$param
-     *
-     */
-    function do_delete(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
-        if (!TYPE) return Promise.reject(new Error('TYPE is required'));
-        return $proxy()
-            .do_delete(TYPE, ID, CMD, $param, $body, $ctx)
-            .then((_: any) => _.result);
-    }
+        /**
+         * POST HOST/PATH?$param
+         *
+         */
+        public do_post(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
+            if (!TYPE) return Promise.reject(new Error('TYPE is required'));
+            return $proxy()
+                .do_post(TYPE, ID, CMD, $param, $body, $ctx)
+                .then((_: any) => _.result);
+        }
 
-    //! returns.
-    return thiz;
-}
+        /**
+         * DELETE HOST/PATH?$param
+         *
+         */
+        public do_delete(TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) {
+            if (!TYPE) return Promise.reject(new Error('TYPE is required'));
+            return $proxy()
+                .do_delete(TYPE, ID, CMD, $param, $body, $ctx)
+                .then((_: any) => _.result);
+        }
+    })();
+
+    //! create & register service.
+    return _$(name, thiz);
+};
 
 export default maker;

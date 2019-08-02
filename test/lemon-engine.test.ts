@@ -1,12 +1,17 @@
 //! import core engine.
 import engine, { LemonEngine } from '../src/index';
+import { MysqlProxy } from '../src/plugins/mysql-proxy';
 
-//! build base engine to test.
+//! common config
 const scope = {};
+const LS = '1';
 const STAGE = 'test';
+const DUMMY = 'dummy';
+const BACKBONE = `http://localhost:8081`;
+//! build engine.
 const $engine: LemonEngine = engine(scope, {
     name: 'test-engine',
-    env: { LS: '1', DUMMY: 'dummy', STAGE },
+    env: { LS, STAGE, DUMMY, MS_ENDPOINT: `${BACKBONE}/mysql`, WS_ENDPOINT: `${BACKBONE}/web` },
 });
 
 describe(`test lemon-engine`, () => {
@@ -30,24 +35,35 @@ describe(`test lemon-engine`, () => {
     });
 
     //! http-proxy
-    test('test http-proxy', () => {
-        const $proxy = $engine.createHttpProxy('backbone-http', 'http://localhost:8081');
-        expect((done: any) =>
-            $proxy.do_get('').then((_: any) => {
-                expect(_).toEqual('lemon-backbone-api/2.1.4');
-                done();
-            }),
-        );
+    test('test http-proxy', (done: any) => {
+        const $http = $engine.createHttpProxy('backbone-http', BACKBONE);
+        expect($http.name().split(':')[0]).toEqual('http-proxy');
+        $http.do_get('').then((_: any) => {
+            expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
+            done();
+        });
     });
 
     //! web-proxy
-    test('test web-proxy', () => {
-        const $proxy = $engine.createWebProxy('backbone-web', 'http://localhost:8081');
-        expect((done: any) =>
-            $proxy.do_get('').then((_: any) => {
-                expect(_).toEqual('lemon-backbone-api/2.1.4');
+    test('test web-proxy', (done: any) => {
+        const $web = $engine.createWebProxy('backbone-web', BACKBONE);
+        expect($web.name().split(':')[0]).toEqual('web-proxy');
+        $web.do_get(BACKBONE, '/').then((_: any) => {
+            expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
+            done();
+        });
+    });
+
+    //! mysql-proxy
+    // NOTE! create table `CREATE TABLE test_seq (id int(10) unsigned NOT NULL AUTO_INCREMENT, PRIMARY KEY ('id'));`
+    test('test mysql-proxy', (done: any) => {
+        const $mysql = $engine('MS') as MysqlProxy;
+        expect($mysql.name().split(':')[0]).toEqual('mysql-proxy');
+        $mysql.do_get_next_id('test').then((a: number) => {
+            return $mysql.do_get_next_id('test').then((b: number) => {
+                expect(`${b - a}`).toEqual('1');
                 done();
-            }),
-        );
+            });
+        });
     });
 });
