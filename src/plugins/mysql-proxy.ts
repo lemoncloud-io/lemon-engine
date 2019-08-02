@@ -12,14 +12,22 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface MysqlProxy extends EnginePluggable {
+    // thiz.do_get_last_id = do_get_last_id;
+    // thiz.do_get_next_id = do_get_next_id;
+    // thiz.do_create_id_seq = do_create_id_seq;
+    // thiz.do_delete_id_seq = do_delete_id_seq;
+    // thiz.do_promise_query = do_promise_query;
+    // thiz.do_save_node = do_save_node_async;
+    // thiz.do_save_node_hist = do_save_node_hist_async;
+    // thiz.do_read_node = do_read_node_async;
     do_get_last_id: (type: any) => any;
     do_get_next_id: (type: any) => any;
     do_create_id_seq: (type: any, nextval: any) => any;
     do_delete_id_seq: (type: any) => any;
     do_promise_query: (query: any, values: any) => any;
-    do_save_node_async: (table_name: any, node: any, $insert_set: any) => any;
-    do_save_node_hist_async: (table_name: any, node: any, hist_cols: any) => any;
-    do_read_node_async: (table_name: any, node: any) => any;
+    do_save_node: (table_name: any, node: any, $insert_set: any) => any;
+    do_save_node_hist: (table_name: any, node: any, hist_cols: any) => any;
+    do_read_node: (table_name: any, node: any) => any;
     do_test_self: (that?: any) => any;
 }
 
@@ -134,7 +142,7 @@ const maker: EnginePluginBuilder<MysqlProxy> = (_$, name, options) => {
          * @param node
          * @param $insert_set (optional) only if insert case.
          */
-        public do_save_node_async(table_name: any, node: any, $insert_set: any) {
+        public do_save_node(table_name: any, node: any, $insert_set: any) {
             //TODO - IMPLEMENT.
             return Promise.reject(new Error('404 NOT FOUND - NOT IMPLEMENTED!'));
         }
@@ -147,7 +155,7 @@ const maker: EnginePluginBuilder<MysqlProxy> = (_$, name, options) => {
          * @param hist_cols
          * @returns {null}
          */
-        public do_save_node_hist_async(table_name: any, node: any, hist_cols: any) {
+        public do_save_node_hist(table_name: any, node: any, hist_cols: any) {
             //TODO - IMPLEMENT.
             return Promise.reject(new Error('404 NOT FOUND - NOT IMPLEMENTED!'));
         }
@@ -159,7 +167,7 @@ const maker: EnginePluginBuilder<MysqlProxy> = (_$, name, options) => {
          * @param node          {id,...}
          * @returns {*}
          */
-        public do_read_node_async(table_name: any, node: any) {
+        public do_read_node(table_name: any, node: any) {
             //TODO - IMPLEMENT.
             return Promise.reject(new Error('404 NOT FOUND - NOT IMPLEMENTED!'));
         }

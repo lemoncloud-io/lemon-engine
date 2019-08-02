@@ -14,7 +14,14 @@ const BACKBONE = `http://localhost:8081`;
 //! build engine.
 const $engine: LemonEngine = engine(scope, {
     name: 'test-engine',
-    env: { LS, STAGE, DUMMY, MS_ENDPOINT: `${BACKBONE}/mysql`, WS_ENDPOINT: `${BACKBONE}/web` },
+    env: {
+        LS,
+        STAGE,
+        DUMMY,
+        MS_ENDPOINT: `${BACKBONE}/mysql`,
+        WS_ENDPOINT: `${BACKBONE}/web`,
+        PROTOCOL_PROXY_API: `${BACKBONE}/protocol`,
+    },
 });
 
 describe(`test lemon-engine`, () => {
@@ -125,9 +132,14 @@ describe(`test lemon-engine`, () => {
     });
 
     //! protocol-proxy
-    test('test protocol-proxy', () => {
+    test('test protocol-proxy', (done: any) => {
         const $protocol = $engine('PR') as ProtocolProxy;
         expect($protocol.name().split(':')[0]).toEqual('protocol-proxy');
+        $protocol.do_execute('lemon://lemon-hello-api/hello').then((_: any) => {
+            expect(Array.isArray(_.list)).toEqual(true);
+            expect(_.name).toEqual('lemon');
+            done();
+        });
     });
 
     //! cron-proxy

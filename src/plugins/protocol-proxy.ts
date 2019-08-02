@@ -16,12 +16,18 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface ProtocolProxy extends EnginePluggable {
-    do_execute_protocol: (url: any) => any;
-    do_post_execute_protocol: (url: any, body: any) => any;
-    do_notify_protocol: (url: any, callback: any) => any;
-    do_post_notify_protocol: (url: any, body: any, callback: any) => any;
-    do_queue_protocol: (url: any) => any;
-    do_post_queue_protocol: (url: any, body: any) => any;
+    // thiz.do_execute = do_execute_protocol;
+    // thiz.do_post_execute = do_post_execute_protocol;
+    // thiz.do_notify = do_notify_protocol;
+    // thiz.do_post_notify = do_post_notify_protocol;
+    // thiz.do_queue = do_queue_protocol;
+    // thiz.do_post_queue = do_post_queue_protocol;
+    do_execute: (url: any) => any;
+    do_post_execute: (url: any, body: any) => any;
+    do_notify: (url: any, callback: any) => any;
+    do_post_notify: (url: any, body: any, callback: any) => any;
+    do_queue: (url: any) => any;
+    do_post_queue: (url: any, body: any) => any;
     build_url: ($url: any) => any;
 }
 
@@ -117,8 +123,8 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
          *
          * @param {string|object} url
          */
-        public do_execute_protocol(url: any) {
-            _log(NS, `do_execute_protocol()....`);
+        public do_execute(url: any) {
+            _log(NS, `do_execute()....`);
             if (!url) return Promise.reject(new Error('url is required!'));
             // // validate url
             // if (!chain_validate_url(url)) return Promise.reject(url);
@@ -142,8 +148,8 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
          * @param {string|object} body
          * @returns {Promised}
          */
-        public do_post_execute_protocol(url: any, body: any) {
-            _log(NS, `do_post_execute_protocol()....`);
+        public do_post_execute(url: any, body: any) {
+            _log(NS, `do_post_execute()....`);
             if (!url) return Promise.reject(new Error('url is required!'));
 
             // // validate url
@@ -169,8 +175,8 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
          * @param {string|object} callback		SNS Notification 실행후, 결과 처리를 받기 위해서 추가됨 @181125
          * @returns {Promised}
          */
-        public do_notify_protocol(url: any, callback: any) {
-            _log(NS, `do_notify_protocol()....`);
+        public do_notify(url: any, callback: any) {
+            _log(NS, `do_notify()....`);
             if (!url) return Promise.reject(new Error('url is required!'));
 
             // // validate url
@@ -198,8 +204,8 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
          * @param {string|object} callback		SNS Notification 실행후, 결과 처리를 받기 위해서 추가됨 @181125
          * @returns {Promised}
          */
-        public do_post_notify_protocol(url: any, body: any, callback: any) {
-            _log(NS, `do_post_notify_protocol()....`);
+        public do_post_notify(url: any, body: any, callback: any) {
+            _log(NS, `do_post_notify()....`);
             if (!url) return Promise.reject(new Error('url is required!'));
 
             // // validate url
@@ -227,8 +233,8 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
          * @param {string|object} url
          * @returns {Promised}
          */
-        public do_queue_protocol(url: any) {
-            _log(NS, `do_queue_protocol()....`);
+        public do_queue(url: any) {
+            _log(NS, `do_queue()....`);
             if (!url) return Promise.reject(new Error('url is required!'));
 
             // // validate url
@@ -254,8 +260,8 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
          * @param {string|object} body
          * @returns {Promised}
          */
-        public do_post_queue_protocol(url: any, body: any) {
-            _log(NS, `do_post_queue_protocol()....`);
+        public do_post_queue(url: any, body: any) {
+            _log(NS, `do_post_queue()....`);
             if (!url) return Promise.reject(new Error('url is required!'));
 
             // // validate url
