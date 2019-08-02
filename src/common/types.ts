@@ -8,6 +8,7 @@
  */
 import { Utilities } from '../core/utilities';
 import { HttpProxy } from '../plugins/http-proxy';
+import { WebProxy } from 'src/plugins/web-proxy';
 
 //! Indexable.
 interface Indexable {
@@ -29,25 +30,56 @@ interface AnimalConstructor {
 export interface GeneralFuntion {
     (...arg: any[]): any;
 }
+export interface GeneralOptions {
+    [key: string]: any;
+}
 
 export interface EnginePluggable {
-    (options?: any): EnginePluggable;
+    name(): string;
 }
-export interface EnginePluginService extends EnginePluggable {
-    [key: string]: GeneralFuntion;
+export type EnginePlugginOptions = string | GeneralOptions;
+
+//! each plugin should implement this.
+export interface EnginePluginBuilder<T extends EnginePluggable> {
+    ($engine: EngineCore, name: string, options?: EnginePlugginOptions): T;
 }
 
-export interface EngineService {
-    (name: string, service?: EnginePluginService): EnginePluginService;
+export interface EnginePluginBroker<T extends EnginePluggable> {
+    (name: string, options?: EnginePlugginOptions): T;
+}
+
+export interface EngineCore {
+    /**
+     * get/set plugin by name.
+     */
+    <T extends EnginePluggable>(name: string, service?: T): T;
+    /**
+     * print debug log
+     */
     log: GeneralFuntion;
+    /**
+     * print info log
+     */
     inf: GeneralFuntion;
+    /**
+     * print error log
+     */
     err: GeneralFuntion;
+    /**
+     * helper utilities
+     */
     U: Utilities;
+    /**
+     * lodash library
+     */
     _: any; // = require('lodash/core')
+    /**
+     * get environment value.
+     */
     environ: (name: string, defValue?: string | boolean | number | undefined) => string | boolean | number | undefined;
 }
 
-export interface EngineInterface extends EngineService {
+export interface LemonEngine extends EngineCore {
     // (name: string, opts: any): any;
     STAGE: string;
     id: string;
@@ -55,17 +87,9 @@ export interface EngineInterface extends EngineService {
     ts: (d?: Date | number) => string;
     $console: EngineConsole;
     createModel: ServiceMaker;
-    createHttpProxy: HttpProxyBuilder;
-    createWebProxy: ServiceMaker;
-    $plugins: { [key: string]: EnginePluginService };
-}
-
-export interface EnginePluginMaker {
-    ($engine: EngineService, name: string, options?: any): EnginePluginService;
-}
-
-export interface HttpProxyBuilder {
-    (name: string, endpoint: string | { endpoint: string; headers?: any }): HttpProxy;
+    createHttpProxy: EnginePluginBroker<HttpProxy>;
+    createWebProxy: EnginePluginBroker<WebProxy>;
+    $plugins: { [key: string]: EnginePluggable };
 }
 
 export interface EngineOption {

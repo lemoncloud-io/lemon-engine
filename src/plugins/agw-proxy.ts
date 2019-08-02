@@ -9,14 +9,14 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
+import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy from './http-proxy';
 
-interface AGWProxy extends EnginePluginService {
+interface AGWProxy extends EnginePluggable {
     postToConnection: any;
 }
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string): AGWProxy {
+const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string): AGWProxy {
     name = name || 'AG';
 
     const $U = _$.U; // re-use global instance (utils).

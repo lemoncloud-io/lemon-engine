@@ -9,10 +9,10 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
+import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy from './http-proxy';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): EnginePluggable {
     'use strict';
     name = name || 'LS';
 
@@ -30,7 +30,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const _err = _$.err;
 
     //! prepare instance.
-    const thiz = function(){} as EnginePluginService;
+    const thiz = function(){} as EnginePluggable;
 
     //! item functions.
     thiz.do_get = do_get;

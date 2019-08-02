@@ -9,14 +9,14 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
+import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
 
 /**
  * Define Interface
  *
  * @see http://www.albertgao.xyz/2016/08/11/how-to-declare-a-function-type-variable-in-typescript/
  */
-export interface HttpProxy extends EnginePluginService {
+export interface HttpProxy extends EnginePluggable {
     /**
      * GET
      */
@@ -33,6 +33,11 @@ export interface HttpProxy extends EnginePluginService {
     do_post: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
 
     /**
+     * PATCH
+     */
+    do_patch: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+
+    /**
      * DELETE
      */
     do_delete: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
@@ -41,7 +46,7 @@ export interface HttpProxy extends EnginePluginService {
 import REQUEST from 'request';
 import queryString from 'query-string';
 
-const maker: EnginePluginMaker = (_$: EngineService, name?: string, options?: any): HttpProxy => {
+const maker: EnginePluginBuilder<HttpProxy> = (_$: EngineCore, name?: string, options?: any): HttpProxy => {
     name = name || 'HS';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -51,30 +56,14 @@ const maker: EnginePluginMaker = (_$: EngineService, name?: string, options?: an
     if (!$_) throw new Error('$_ is required!');
 
     const NS = $U.NS(name, 'magenta'); // NAMESPACE TO BE PRINTED.
-    const ENDPOINT = options && (typeof options === 'string' ? options : options.endpoint||'') || ''; // service endpoint.
+    const ENDPOINT: string = options && (typeof options === 'string' ? options : options.endpoint||'') || ''; // service endpoint.
     const HEADERS = options && options.headers || {}; // custom headers.
-
     if (!ENDPOINT) throw new Error('endpoint is required!');
-
-    //! prepare instance.
-    const thiz = function(){} as HttpProxy;
-    // const thiz: any = { endpoint };
-    thiz.endpoint = () => ENDPOINT;
 
     //! load common functions
     const _log = _$.log;
     const _inf = _$.inf;
     const _err = _$.err;
-
-    //! item functions.
-    thiz.do_get = do_get;
-    thiz.do_put = do_put;
-    thiz.do_post = do_post;
-    thiz.do_patch = do_patch;
-    thiz.do_delete = do_delete;
-
-    //! register service.
-    _$(name, thiz);
 
     /** ****************************************************************************************************************
      *  Main Implementation.
@@ -148,54 +137,69 @@ const maker: EnginePluginMaker = (_$: EngineService, name?: string, options?: an
     };
 
     /**
-     * GET /:type/:id/:cmd?$param
+     * class: HttpProxyBody
      */
-    function do_get(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
-        if ($body) return Promise.reject(new Error(NS + ':$body is invalid!'));
-        if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
-        // if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
-        // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
-        return my_request_http('GET', TYPE, ID, CMD, $param, $body);
-    }
-    /**
-     * PUT /:type/:id/:cmd?$param
-     */
-    function do_put(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
-        if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
-        if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
-        // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
-        return my_request_http('PUT', TYPE, ID, CMD, $param, $body);
-    }
-    /**
-     * POST /:type/:id/:cmd?$param
-     */
-    function do_post(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
-        if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
-        if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
-        // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
-        return my_request_http('POST', TYPE, ID, CMD, $param, $body);
-    }
-    /**
-     * PATCH /:type/:id/:cmd?$param
-     */
-    function do_patch(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
-        if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
-        if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
-        // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
-        return my_request_http('PATCH', TYPE, ID, CMD, $param, $body);
-    }
-    /**
-     * DELETE /:type/:id/:cmd?$param
-     */
-    function do_delete(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
-        if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
-        if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
-        // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
-        return my_request_http('DELETE', TYPE, ID, CMD, $param, $body);
+    class HttpProxyBody implements HttpProxy {
+        private endpoint: string;
+        public constructor(endpoint: string){
+            this.endpoint = endpoint;
+        }
+        public name = () => `http-proxy:${this.endpoint}`;
+
+        /**
+        * GET /:type/:id/:cmd?$param
+        */
+        public do_get(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
+            if ($body) return Promise.reject(new Error(NS + ':$body is invalid!'));
+            if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
+            // if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
+            // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
+            return my_request_http('GET', TYPE, ID, CMD, $param, $body);
+        }
+
+        /**
+        * PUT /:type/:id/:cmd?$param
+        */
+        public do_put(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
+            if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
+            if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
+            // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
+            return my_request_http('PUT', TYPE, ID, CMD, $param, $body);
+        }
+
+        /**
+        * POST /:type/:id/:cmd?$param
+        */
+        public do_post(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
+            if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
+            if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
+            // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
+            return my_request_http('POST', TYPE, ID, CMD, $param, $body);
+        }
+
+        /**
+        * PATCH /:type/:id/:cmd?$param
+        */
+        public do_patch(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
+            if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
+            if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
+            // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
+            return my_request_http('PATCH', TYPE, ID, CMD, $param, $body);
+        }
+
+        /**
+        * DELETE /:type/:id/:cmd?$param
+        */
+        public do_delete(TYPE: any, ID: any, CMD: any, $param: any, $body: any) {
+            if (TYPE === undefined) return Promise.reject(new Error(NS + ':TYPE is required!'));
+            if (ID === undefined) return Promise.reject(new Error(NS + ':ID is required!'));
+            // if (CMD === undefined) return Promise.reject(new Error(NS + ':CMD is required!'));
+            return my_request_http('DELETE', TYPE, ID, CMD, $param, $body);
+        }
     }
 
-    //! returns.
-    return thiz;
+    //! create & register service.
+    return _$(name, new HttpProxyBody(ENDPOINT));
 }
 
 export default maker;

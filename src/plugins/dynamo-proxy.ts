@@ -9,10 +9,10 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
+import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy from './http-proxy';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): EnginePluggable {
     name = name || 'DS';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -32,7 +32,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     // var _log = 0 ? _$.log : (()=>{});
 
     //! prepare instance.
-    const thiz = function(){} as EnginePluginService;
+    const thiz = function(){} as EnginePluggable;
 
     //! table functions.
     thiz.do_create_table = do_create_table;

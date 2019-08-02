@@ -190,13 +190,13 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker, GeneralFuntion } from '../common/types';
+import { EngineCore, EnginePluggable, EnginePluginBuilder, GeneralFuntion } from '../common/types';
 import notifier from '../plugins/notify-service';
 import DynamoDBValue from './dynamodb-value'; // DynamoDB Data Converter.
 // import * as crypto from 'crypto'; //WARN! will get Deprecated!
 import crypto from "crypto";    //! to avoid Deprecated warning.
 
-interface LemonEngineModel extends EnginePluginService {
+interface LemonEngineModel extends EnginePluggable {
     // postToConnection: any;
     hello: GeneralFuntion;
     do_search: GeneralFuntion;
@@ -214,7 +214,7 @@ interface LemonEngineModel extends EnginePluginService {
     do_subscribe: GeneralFuntion;
 }
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): LemonEngineModel {
+const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): LemonEngineModel {
     const NS_NAME = name || 'LEM';
 
     const $U = _$.U;                                // re-use global instance (utils).

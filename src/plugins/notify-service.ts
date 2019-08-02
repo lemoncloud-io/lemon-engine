@@ -28,10 +28,10 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
+import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy from './http-proxy';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+const maker: EnginePluginBuilder = function(_$: EngineCore, name?: string, options?: any): EnginePluggable {
     name = name || 'NF';
 
     const $U = _$.U;                                // re-use global instance (utils).
@@ -43,7 +43,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const _log = _$.log;
     const _inf = _$.inf;
     const _err = _$.err;
-	
+
     const NS = $U.NS(name, "magenta");		        // NAMESPACE TO BE PRINTED.
 
     /** ****************************************************************************************************************
@@ -117,7 +117,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         // if (!that.params) return Promise.reject(new Error(NS + 'params is required!'));
         const id = ''+that._id;
         // _log(NS, `- my_notify_trigger(${id}).... that=`, $U.json(that));
-        _log(NS, `- my_notify_trigger(${id})....`); 
+        _log(NS, `- my_notify_trigger(${id})....`);
 
         if(!id.startsWith(CONF_NS_NAME+':')){
             _log(NS, '! WARN - ignored due to id='+id+' by NS='+CONF_NS_NAME);
@@ -235,7 +235,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 	 *
 	 * 꼭! 동기화 방식으로 지원해야함. 그래야 InBody 초기화 함수에서 초기화할때 문제가 없을듯...
 	 * 다만, 리턴값은 Promise()를 해도 문제가 없을 듯...
-	 * 
+	 *
 	 * @param id
 	 * @param $node
 	 * @returns {*}

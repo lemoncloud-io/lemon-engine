@@ -8,16 +8,16 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, GeneralFuntion } from '../common/types'
+import { EngineCore, GeneralFuntion } from '../common/types'
 const NS = 'util';
 
 export class Utilities {
-    private _$: EngineService;
+    private _$: EngineCore;
     private log: GeneralFuntion;
     private err: GeneralFuntion;
     private name: string;
 
-    public constructor (_$: EngineService){
+    public constructor (_$: EngineCore){
         this._$ = _$;
         this.log = _$.log;
         this.err = _$.err;

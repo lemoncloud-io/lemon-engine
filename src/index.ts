@@ -14,8 +14,7 @@
  * @param scope         main scope like global, browser, ...
  * @param options       configuration.
  */
-import { EnginePluginService, EngineOption, EngineLogger, EngineConsole, EngineInterface } from './common/types'
-import { HttpProxyBuilder } from './common/types'
+import { EnginePluggable, EngineOption, EngineLogger, EngineConsole, LemonEngine } from './common/types'
 import { Utilities } from './core/utilities';
 import * as _ from "lodash";
 export * from './common/types';
@@ -24,20 +23,21 @@ export * from './common/types';
 import buildEngine from './core/lemon-engine-model';
 
 import httpProxy, { HttpProxy } from './plugins/http-proxy';
-import mysql from './plugins/mysql-proxy';
-import dynamo from './plugins/dynamo-proxy';
-import redis from './plugins/redis-proxy';
-import elastic6 from './plugins/elastic6-proxy';
-import s3 from './plugins/s3-proxy';
-import sqs from './plugins/sqs-proxy';
-import sns from './plugins/sns-proxy';
-import ses from './plugins/ses-proxy';
-import webProxy from './plugins/web-proxy';
-import cognito from './plugins/cognito-proxy';
-import lambda from './plugins/lambda-proxy';
-import protocol from './plugins/protocol-proxy';
-import cron from './plugins/cron-proxy';
-import agw from './plugins/agw-proxy';
+import webProxy, { WebProxy } from './plugins/web-proxy';
+
+// import mysql from './plugins/mysql-proxy';
+// import dynamo from './plugins/dynamo-proxy';
+// import redis from './plugins/redis-proxy';
+// import elastic6 from './plugins/elastic6-proxy';
+// import s3 from './plugins/s3-proxy';
+// import sqs from './plugins/sqs-proxy';
+// import sns from './plugins/sns-proxy';
+// import ses from './plugins/ses-proxy';
+// import cognito from './plugins/cognito-proxy';
+// import lambda from './plugins/lambda-proxy';
+// import protocol from './plugins/protocol-proxy';
+// import cron from './plugins/cron-proxy';
+// import agw from './plugins/agw-proxy';
 
 /**
  * initialize as EngineInterface
@@ -50,7 +50,7 @@ import agw from './plugins/agw-proxy';
  * @param scope         main scope like global, browser, ...
  * @param options       configuration.
  */
-export default function initiate(scope: {_$?: EngineInterface; [key: string]: any } = null, options: EngineOption = {}): EngineInterface {
+export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } = null, options: EngineOption = {}): LemonEngine {
     scope = scope || {};
 
     //! load configuration.
@@ -122,28 +122,28 @@ export default function initiate(scope: {_$?: EngineInterface; [key: string]: an
     }
 
     //! root instance to manage global objects.
-    const $engineBuilder = (): EngineInterface =>{
+    const $engineBuilder = (): LemonEngine =>{
         //! engine base function.
-        const $engineBase = function(name: string, service: EnginePluginService): EnginePluginService {                                // global identifier.
+        const $engineBase = function(name: string, service: EnginePluggable): EnginePluggable {                                // global identifier.
             if (!name) return;
             const thiz: any = $engine;
-            let opt = typeof thiz.$plugins[name] !== 'undefined' ? thiz.$plugins[name] : undefined;
-            if (!service) return opt;
-            if (opt === undefined) {
+            let org = typeof thiz.$plugins[name] !== 'undefined' ? thiz.$plugins[name] : undefined;
+            if (!service) return org;
+            if (org === undefined) {
                 _log('INFO! service[' + name + '] registered');
                 thiz.$plugins[name] = service;
                 return service;
             } else {
                 //! extends options.
-                _inf('WARN! service[' + name + '] exists! so extends ');
-                opt = _extend(opt, service);
-                thiz.$plugins[name] = opt;
-                return opt;
+                _inf('WARN! service[' + name + '] extended.');
+                org = _extend(org, service);
+                thiz.$plugins[name] = org;
+                return org;
             }
         };
 
         //! avoid type check error.
-        const $engine: EngineInterface = $engineBase as EngineInterface;
+        const $engine: LemonEngine = $engineBase as LemonEngine;
 
         //! register into _$(global instance manager).
         $engine.STAGE = STAGE;
@@ -164,7 +164,7 @@ export default function initiate(scope: {_$?: EngineInterface; [key: string]: an
 
         //! make http-proxy.
         $engine.createHttpProxy = (name, options) => {
-            return httpProxy($engine, name, options) as HttpProxy;
+            return httpProxy($engine, name, options);
         };
 
         //! make web-proxy
@@ -172,17 +172,17 @@ export default function initiate(scope: {_$?: EngineInterface; [key: string]: an
             return webProxy($engine, name, options);
         }
 
-        //! model builder.
-        $engine.createModel = (name: string, option: any) => {
-            return buildEngine($engine, name, option);
-        }
+        // //! model builder.
+        // $engine.createModel = (name: string, option: any) => {
+        //     return buildEngine($engine, name, option);
+        // }
 
         //! override type.
-        return $engine as EngineInterface;
+        return $engine as LemonEngine;
     }
 
     //! reuse via scope or build new.
-    const $engine: EngineInterface = scope._$ || $engineBuilder();
+    const $engine: LemonEngine = scope._$ || $engineBuilder();
 
     //! register as global instances as default.
     scope._log = _log;
@@ -193,21 +193,21 @@ export default function initiate(scope: {_$?: EngineInterface; [key: string]: an
     // $root[_$.id] = _$;
     STAGE && _inf('#STAGE =', STAGE);
 
-    //! load common services....
-    mysql($engine, 'MS');                        // load service, and register as 'MS'
-    dynamo($engine, 'DS');                       // load service, and register as 'DS'
-    redis($engine, 'RS');                        // load service, and register as 'RS'
-    elastic6($engine, 'ES6');                    // load service, and register as 'ES6'
-    s3($engine, 'S3');                           // load service, and register as 'S3'
-    sqs($engine, 'SS');                          // load service, and register as 'SS'
-    sns($engine, 'SN');                          // load service, and register as 'SN'
-    ses($engine, 'SE');                          // load service, and register as 'SE'
-    webProxy($engine, 'WS');                     // load service, and register as 'WS'
-    cognito($engine, 'CS');                      // load service, and register as 'CS'
-    lambda($engine, 'LS');                       // load service, and register as 'LS'
-    protocol($engine, 'PR');                     // load service, and register as 'PR'
-    cron($engine, 'CR');                         // load service, and register as 'CR'
-    agw($engine, 'AG');                          // load service, and register as 'AG'
+    // //! load common services....
+    // mysql($engine, 'MS');                        // load service, and register as 'MS'
+    // dynamo($engine, 'DS');                       // load service, and register as 'DS'
+    // redis($engine, 'RS');                        // load service, and register as 'RS'
+    // elastic6($engine, 'ES6');                    // load service, and register as 'ES6'
+    // s3($engine, 'S3');                           // load service, and register as 'S3'
+    // sqs($engine, 'SS');                          // load service, and register as 'SS'
+    // sns($engine, 'SN');                          // load service, and register as 'SN'
+    // ses($engine, 'SE');                          // load service, and register as 'SE'
+    // webProxy($engine, 'WS');                     // load service, and register as 'WS'
+    // cognito($engine, 'CS');                      // load service, and register as 'CS'
+    // lambda($engine, 'LS');                       // load service, and register as 'LS'
+    // protocol($engine, 'PR');                     // load service, and register as 'PR'
+    // cron($engine, 'CR');                         // load service, and register as 'CR'
+    // agw($engine, 'AG');                          // load service, and register as 'AG'
 
     _inf('! engine-service-ready');
 
