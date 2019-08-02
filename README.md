@@ -1,15 +1,15 @@
 # lemon-engine
 
-레몬 코어 엔진으로, 노드 동기화 관련 핵심 모듈
+Automatic Node Synchronizer between `DynamoDB` + `Redis` + `Elasticsearch` over `AWS` Cloud.
 
-- npm 패키지로 `lemon-engine`를 배포시킴.
-- 백엔드 서버에 `lemon-backend-api` 별도 실행 필요!
+- **NOTE** 백엔드 서버에 `lemon-backend-api` 별도 실행 필요!
 
 ## Overview
 
 - NoSQL (DynamoDB) <-> ElastiSearch <-> Redis 데이터 동기화
 - DynamoDB 업데이트시 -> 업데이트 Stream 수신 -> 변경 데이터 추적 -> ES 와 동기화.
 
+![engine](docs/lemon-arch.png)
 
 ## Usage (사용법)
 
@@ -64,21 +64,30 @@ const do_search = (id, param) => {
 ## Installation (설치법)
 
 - `lemon-backend-api` 백본 서비스 구성
-- `npm run deploy` 로 AWS Cloud Lambda 에 자동 배포
+- configure environment.
 
 
-## NPM 모듈 배포
+## 개발 (Development)
 
-배포하기 순서
+- **TODO** refer to [lemon-hello-api](https://github.com/lemoncloud-io/lemon-hello-api)
+
+
+## Deploy (NPM 모듈 배포)
 
 1. `package.json` 의 `version` 정보를 변경
 1. `$ npm run publish` 실행 (단, npm 로그인 필요!)
 1. [lemon-engine](https://www.npmjs.com/package/lemon-engine) 으로 배포됨.
 
 
-## TODO
+## Contribution
 
-- [x] 190725 no redis, but es. read description via dynamo directly. (`http ':8086/mail/93371/analyze'`)
+See [CODE_OF_CONDUCT](CODE_OF_CONDUCT)
+
+
+## License
+
+[MIT](http://opensource.org/licenses/MIT)
+
 
 
 ----------------
@@ -89,12 +98,8 @@ const do_search = (id, param) => {
 | 2.2.1     | hot-fix error of `$protocol().do_execute()`.
 | 2.2.0     | support enhanced type definitions.
 | 2.1.8     | support `do_read_deep` for direct reading via dynamodb.
-| 2.1.7     | cleanup logs.
 | 2.1.6     | support method `PATCH` in `web-proxy`. required `backbone#2.1.4`.
 | 2.1.5     | custom web-proxy by `_$.createWebProxy()`.
 | 2.1.4     | support relaying headers in `web-proxy`. required `backbone#2.1.3`.
-| 2.1.3     | fix ts() error.
-| 2.1.1     | improve type hint
 | 2.1.0     | refactoring to typescript.
-| 2.0.4     | add `agw-proxy` as `AG`. @190509.
 | 2.0.0     | rename to `lemon-engine`, and set to public.
