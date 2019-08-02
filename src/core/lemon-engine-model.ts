@@ -190,40 +190,76 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker, GeneralFuntion } from '../common/types';
-import notifier from '../plugins/notify-service';
+import { EnginePluggable, EnginePluginBuilder, GeneralFuntion } from '../common/types';
 import DynamoDBValue from './dynamodb-value'; // DynamoDB Data Converter.
-// import * as crypto from 'crypto'; //WARN! will get Deprecated!
 import crypto from "crypto";    //! to avoid Deprecated warning.
 
-interface LemonEngineModel extends EnginePluginService {
-    // postToConnection: any;
-    hello: GeneralFuntion;
-    do_search: GeneralFuntion;
-    do_read: GeneralFuntion;
-    do_update: GeneralFuntion;
-    do_increment: GeneralFuntion;
-    do_delete: GeneralFuntion;
-    do_destroy: GeneralFuntion;
+import notifier from '../plugins/notify-service';
+import { MysqlProxy } from '../plugins/mysql-proxy';
+import { DynamoProxy } from '../plugins/dynamo-proxy';
+import { RedisProxy } from '../plugins/redis-proxy';
+import { Elastic6Proxy } from '../plugins/elastic6-proxy';
 
+export interface LemonEngineModel extends EnginePluggable {
+    //! say hello()
+    hello: GeneralFuntion;
+
+    // search items by query.
+    do_search: GeneralFuntion;
+    // read-back $node by id.
+    do_read: GeneralFuntion;
+    // read-back $node by id (with decryption).
+    do_readX: GeneralFuntion;
+    // Read Node in deep - read direct from dynamo.
+    do_read_deep: GeneralFuntion;
+    // update $node by id. (updated_at := now)
+    do_update: GeneralFuntion;
+    // increment by count ex) stock = stock + 2.
+    do_increment: GeneralFuntion;
+    // mark deleted by id (deleted_at := now)
+    do_delete: GeneralFuntion;
+    // destroy $node by id (real deletion).
+    do_destroy: GeneralFuntion;
+    // get the next generated-id if applicable.
+    do_next_id: GeneralFuntion;
+
+    //! prepare dummy $node with new id. (created_at := 0, deleted_at=now)
+    do_prepare: GeneralFuntion;
+    //! create $node with given id (created_at := now, updated_at := now, deleted_at=0).
+    do_create: GeneralFuntion;
+    //! clone the current node. (parent, clones)
+    do_clone: GeneralFuntion;
+
+    // initialize environment based on configuration.
     do_initialize: GeneralFuntion;
+    // terminate environment based on configuration.
     do_terminate: GeneralFuntion;
 
+    // records events.
     on_records: GeneralFuntion;
+    // trigger notify event.
     do_notify: GeneralFuntion;
+    // subscribe notify event.
     do_subscribe: GeneralFuntion;
+
+    // test self
+    do_test_self: GeneralFuntion;
+    // save directly to elastic-search.
+    do_saveES: GeneralFuntion;
+    // manual clear redis.
+    do_cleanRedis: GeneralFuntion;
 }
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): LemonEngineModel {
+const buildModel: EnginePluginBuilder<LemonEngineModel> = (_$, name, options) => {
     const NS_NAME = name || 'LEM';
 
     const $U = _$.U;                                // re-use global instance (utils).
     const $_ = _$._;                                // re-use global instance (_ lodash).
-    const $MS = _$('MS');                           // re-use global instance (mysql-service).
-    const $DS = _$('DS');                           // re-use global instance (dynamo-service).
-    const $RS = _$('RS');                           // re-use global instance (redis-service).
-    const $ES5 = _$('ES');                          // re-use global instance (elasticsearch-service).
-    const $ES6 = _$('ES6');                         // re-use global instance (elastic6-service).
+    const $MS = _$('MS') as MysqlProxy;             // re-use global instance (mysql-service).
+    const $DS = _$('DS') as DynamoProxy;            // re-use global instance (dynamo-service).
+    const $RS = _$('RS') as RedisProxy;             // re-use global instance (redis-service).
+    const $ES5 = _$('ES') as Elastic6Proxy;         // re-use global instance (elasticsearch-service).
+    const $ES6 = _$('ES6') as Elastic6Proxy;        // re-use global instance (elastic6-service).
 
     if (!$U) throw new Error('$U(utilities) is required!');
     if (!$_) throw new Error('$_(underscore) is required!');
@@ -245,45 +281,40 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
      *  Public Common Interface Exported.
      ** ****************************************************************************************************************/
     //! prepare instance.
-    const thiz = function(){} as LemonEngineModel;
-    thiz.hello = () => `LEMON: ${NS_NAME}`;
-
     const ERR_NOT_IMPLEMENTED = (id: string) => {throw new Error(`NOT_IMPLEMENTED - ${NS}:${JSON.stringify(id)}`)};
-
-    //! public exported functions (INFO! bind final function at bottom of this)
-    thiz.do_prepare     = ERR_NOT_IMPLEMENTED;          // prepare dummy $node with new id. (created_at := 0, deleted_at=now)
-    thiz.do_create      = ERR_NOT_IMPLEMENTED;          // create $node with given id (created_at := now, updated_at := now, deleted_at=0).
-    thiz.do_clone       = ERR_NOT_IMPLEMENTED;          // clone the current node. (parent, clones)
-    thiz.do_update      = ERR_NOT_IMPLEMENTED;          // update $node by id. (updated_at := now)
-    thiz.do_increment   = ERR_NOT_IMPLEMENTED;          // increment by count ex) stock = stock + 2.
-    thiz.do_read        = ERR_NOT_IMPLEMENTED;          // read-back $node by id.
-    thiz.do_readX       = ERR_NOT_IMPLEMENTED;          // read-back $node by id (with decryption).
-    thiz.do_delete      = ERR_NOT_IMPLEMENTED;          // mark deleted by id (deleted_at := now)
-    thiz.do_destroy     = ERR_NOT_IMPLEMENTED;          // destroy $node by id (real deletion).
-    thiz.do_search      = ERR_NOT_IMPLEMENTED;          // search items by query.
-
-    //! critical functions.
-    thiz.do_initialize  = ERR_NOT_IMPLEMENTED;           // initialize environment based on configuration.
-    thiz.do_terminate   = ERR_NOT_IMPLEMENTED;           // terminate environment based on configuration.
-    thiz.do_test_self   = ERR_NOT_IMPLEMENTED;           // execute self test self-test..
-
-    //! events functions.
-    thiz.on_records     = ERR_NOT_IMPLEMENTED;          // records events.
-
-    //! notify functions.
-    thiz.do_notify      = ERR_NOT_IMPLEMENTED;           // trigger notify event.
-    thiz.do_subscribe   = ERR_NOT_IMPLEMENTED;           // subscribe notify event.
-
-    //! additional helper functions.
-    thiz.do_next_id     = ERR_NOT_IMPLEMENTED;          // get the next generated-id if applicable.
-
-    //! register as service.
+    const thiz = new class implements LemonEngineModel {
+        public name = ()=> `model:${name}`;
+        public hello: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_prepare: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_create: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_clone: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_search: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_read: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_readX: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_update: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_increment: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_delete: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_destroy: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_initialize: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_terminate: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public on_records: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_notify: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_subscribe: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_test_self: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_next_id: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_read_deep: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_saveES: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_cleanRedis: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_prepare_chain: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+        public do_finish_chain: GeneralFuntion = ERR_NOT_IMPLEMENTED;
+    }
+    //! register as service only if valid name.
     if (!name.startsWith('_')) _$(name, thiz);
 
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    const CONF_GET_VAL      = (name: string, defval: any) => options[name] === undefined ? defval : options[name];
+    const CONF_GET_VAL      = (name: string, defval: any) => typeof options === 'object' && options[name] !== undefined ? options[name] : defval;
     const CONF_VERSION      = CONF_GET_VAL('VERSION', 1);                   // initial version number(name 'V').
     const CONF_REVISION     = CONF_GET_VAL('REVISION', 1);                  // initial revision number(name 'R').
     const CONF_VERSION_NAME = CONF_GET_VAL('VERSION_NAME', 'V');            // version name (Default 'V')       // if null, then no version.
@@ -377,7 +408,6 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     if (!$ES) throw new Error('$ES is required! Ver:'+CONF_ES_VERSION);
 
     //! DynamoDB Value Marshaller.
-
     const $crypto           = function(passwd: string){
         const algorithm = 'aes-256-ctr';
         if (!crypto) throw new Error('crypto module is required!');
@@ -2998,4 +3028,4 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     return thiz;
 }
 
-export default maker;
+export default buildModel;

@@ -28,10 +28,16 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
-import httpProxy from './http-proxy';
+import { EnginePluggable, EnginePluginBuilder, GeneralOptions, GeneralFuntion } from '../common/types';
+import httpProxy, { HttpProxy } from './http-proxy';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+export interface NotifyService extends EnginePluggable {
+    // [key: string]: GeneralFuntion;
+    do_notify: GeneralFuntion;
+    do_subscribe: GeneralFuntion;
+}
+
+const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
     name = name || 'NF';
 
     const $U = _$.U;                                // re-use global instance (utils).
@@ -43,16 +49,26 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const _log = _$.log;
     const _inf = _$.inf;
     const _err = _$.err;
-	
+
     const NS = $U.NS(name, "magenta");		        // NAMESPACE TO BE PRINTED.
 
     /** ****************************************************************************************************************
 	 *  Public Common Interface Exported.
 	 ** ****************************************************************************************************************/
     //! prepare instance.
-    const thiz = options||{};
+    // const thiz: GeneralOptions = options||{};
+    const conf = typeof options == 'object' ? options : {};
+    const thiz = new class implements NotifyService {
+        public $notify: {[key: string]: any};
+        public name = () => `notify-proxy:${name}`;
+        public do_notify: GeneralFuntion;
+        public do_subscribe: GeneralFuntion;
+    }
+    // const thiz: NotifyService = dummy as NotifyService;
     const ERR_NOT_IMPLEMENTED = (id: any) => {throw new Error(`NOT_IMPLEMENTED - ${NS}:${JSON.stringify(id)}`)};
 
+    //! notify handler mapping
+    thiz.$notify = thiz.$notify || {};
     //! notify functions.
     thiz.do_notify      = ERR_NOT_IMPLEMENTED;           // trigger notify event.
     //! WARN! - DO NOT USE PROMISE BECAUSE IT MUST BE READY BEFORE FUNCTION CALL.
@@ -64,13 +80,11 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     /** ****************************************************************************************************************
 	 *  Main Implementation.
 	 ** ****************************************************************************************************************/
-    const CONF_GET_VAL = (name: string, defval?: any) => thiz[name] === undefined ? defval : thiz[name];
+    const CONF_GET_VAL = (name: string, defval?: any) => conf[name] === undefined ? defval : conf[name];
     const CONF_NS_NAME      = CONF_GET_VAL('NS_NAME'    , '');          // Target Notification Namespace. ('' means no service)
     const CONF_MASTER       = CONF_GET_VAL('MASTER'     , null);        // Master Child Notifier.
     const CONF_CHILDS       = CONF_GET_VAL('CHILDS'     , []);          // Slave Child Notifier.
-
-
-    const RECORD_MODES = ['create','update','delete'];                  // possible mode definition.
+    const RECORD_MODES      = ['create','update','delete'];                  // possible mode definition.
 
 
     /** ****************************************************************************************************************
@@ -85,9 +99,6 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 	 *      notifier        # notify trigger invoker.
 	 *  }
 	 ** ****************************************************************************************************************/
-    //! notify handler mapping
-    thiz.$notify = {};
-
     //! quick check if subscribers exist.
     const has_subscriber = (id: any) => {
         //! for each action.
@@ -117,7 +128,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         // if (!that.params) return Promise.reject(new Error(NS + 'params is required!'));
         const id = ''+that._id;
         // _log(NS, `- my_notify_trigger(${id}).... that=`, $U.json(that));
-        _log(NS, `- my_notify_trigger(${id})....`); 
+        _log(NS, `- my_notify_trigger(${id})....`);
 
         if(!id.startsWith(CONF_NS_NAME+':')){
             _log(NS, '! WARN - ignored due to id='+id+' by NS='+CONF_NS_NAME);
@@ -235,7 +246,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
 	 *
 	 * 꼭! 동기화 방식으로 지원해야함. 그래야 InBody 초기화 함수에서 초기화할때 문제가 없을듯...
 	 * 다만, 리턴값은 Promise()를 해도 문제가 없을 듯...
-	 * 
+	 *
 	 * @param id
 	 * @param $node
 	 * @returns {*}

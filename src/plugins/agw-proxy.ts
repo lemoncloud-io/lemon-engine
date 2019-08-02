@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /**
  * AGW(API Gateway) Proxy Service Exports
  * - proxy call to api gateway service.
@@ -9,14 +8,14 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
-import httpProxy from './http-proxy';
+import { EnginePluggable, EnginePluginBuilder } from '../common/types';
+import httpProxy, { HttpProxy } from './http-proxy';
 
-interface AGWProxy extends EnginePluginService {
-    postToConnection: any;
+export interface AGWProxy extends EnginePluggable {
+    postToConnection: (endpoint: any, connectionId: any, payload: any) => any;
 }
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string): AGWProxy {
+const maker: EnginePluginBuilder<AGWProxy> = (_$, name, options) => {
     name = name || 'AG';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -32,46 +31,40 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string): AGW
     const _inf = _$.inf;
     const _err = _$.err;
 
-    //! prepare instance.
-    const thiz = function(){} as AGWProxy;
-
-    //! item functions.
-    thiz.postToConnection = postToConnection;
-
-    //! register service.
-    _$(name, thiz);
-
     /** ****************************************************************************************************************
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
-    const ENDPOINT = $U.env('AG_ENDPOINT');
+    const ENDPOINT = $U.env('AG_ENDPOINT', typeof options == 'string' ? options : '');
     const $proxy = function() {
         if (!ENDPOINT) throw new Error('env:AG_ENDPOINT is required!');
         const SVC = 'X' + name;
-        const $SVC = _$(SVC);
+        const $SVC = _$(SVC, null as HttpProxy);
         return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT); // re-use proxy by name
     };
 
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    function postToConnection(endpoint: any, connectionId: any, payload: any) {
-        if (!endpoint) return Promise.reject(new Error('endpoint(url) is required!'));
-        if (!connectionId) return Promise.reject(new Error('connectionId is required!'));
-        if (!payload) return Promise.reject(new Error('payload is required!'));
+    const thiz = new (class implements AGWProxy {
+        public name = () => `agw-proxy:${name}`;
+        public postToConnection(endpoint: any, connectionId: any, payload: any) {
+            if (!endpoint) return Promise.reject(new Error('endpoint(url) is required!'));
+            if (!connectionId) return Promise.reject(new Error('connectionId is required!'));
+            if (!payload) return Promise.reject(new Error('payload is required!'));
 
-        const options: any = null; // optional values.
-        const $param = Object.assign({}, options || {});
-        $param.endpoint = endpoint;
-        $param.connectionId = connectionId;
+            const options: any = null; // optional values.
+            const $param = Object.assign({}, options || {});
+            $param.endpoint = endpoint;
+            $param.connectionId = connectionId;
 
-        return $proxy()
-            .do_post('execute-api', '0', undefined, $param, payload)
-            .then((_: any) => _.result);
-    }
+            return $proxy()
+                .do_post('execute-api', '0', undefined, $param, payload)
+                .then((_: any) => _.result);
+        }
+    })();
 
-    //! returns.
-    return thiz;
-}
+    //! create & register service.
+    return _$(name, thiz);
+};
 
 export default maker;

@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /**
  * SES Proxy Service Exports
  * - proxy call to ses service.
@@ -9,10 +8,14 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import { EngineService, EnginePluginService, EnginePluginMaker } from '../common/types';
-import httpProxy from './http-proxy';
+import { EnginePluggable, EnginePluginBuilder } from '../common/types';
+import httpProxy, { HttpProxy } from './http-proxy';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): EnginePluginService {
+export interface SESProxy extends EnginePluggable {
+    do_send_email: (payload: any) => string;
+}
+
+const maker: EnginePluginBuilder<SESProxy> = (_$, name, options) => {
     name = name || 'SE';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -28,41 +31,36 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
     const _inf = _$.inf;
     const _err = _$.err;
 
-    //! prepare instance.
-    const thiz = function(){} as EnginePluginService;
-
-    //! item functions.
-    thiz.do_send_email = do_send_email;
-
-    //! register service.
-    _$(name, thiz);
-
     /** ****************************************************************************************************************
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
-    const ENDPOINT = $U.env('SE_ENDPOINT');
+    const ENDPOINT = $U.env('SE_ENDPOINT', typeof options == 'string' ? options : '');
     const $proxy = function() {
         if (!ENDPOINT) throw new Error('env:SE_ENDPOINT is required!');
         const SVC = 'X' + name;
-        const $SVC = _$(SVC);
+        const $SVC = _$(SVC, null as HttpProxy);
         return $SVC ? $SVC : httpProxy(_$, SVC, ENDPOINT); // re-use proxy by name
     };
 
     /** ****************************************************************************************************************
      *  Main Implementation.
      ** ****************************************************************************************************************/
-    function do_send_email(payload: any) {
-        const TYPE = 'email';
-        if (!payload) return Promise.reject('payload is required!');
-        if (typeof payload != 'object') return Promise.reject('payload:object is required!');
+    const thiz = new (class implements SESProxy {
+        public name = () => `ses-proxy:${name}`;
 
-        return $proxy()
-            .do_post(TYPE, '0', 'send', undefined, payload)
-            .then((_: any) => _.result);
-    }
+        public do_send_email(payload: any) {
+            const TYPE = 'email';
+            if (!payload) return Promise.reject('payload is required!');
+            if (typeof payload != 'object') return Promise.reject('payload:object is required!');
 
-    //! returns.
-    return thiz;
-}
+            return $proxy()
+                .do_post(TYPE, '0', 'send', undefined, payload)
+                .then((_: any) => _.result);
+        }
+    })();
+
+    //! create & register service.
+    return _$(name, thiz);
+};
 
 export default maker;
