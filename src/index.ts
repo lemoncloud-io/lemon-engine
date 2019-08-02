@@ -160,7 +160,7 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
         $engine.environ = _environ;
         $engine.$console = $console; // '$' means object. (change this in order to override log/error message handler)
         $engine.$plugins = {};
-        $engine.toString = () => ROOT_NAME || '$ROOT';
+        $engine.toString = () => `${ROOT_NAME}`;
 
         const $U = new Utilities($engine);
         $engine.U = $U;
@@ -180,8 +180,8 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
             return buildModel($engine, name, option);
         }
 
-        //! override type.
-        return $engine as LemonEngine;
+        //! returns.
+        return $engine;
     }
 
     //! reuse via scope or build new.
@@ -212,7 +212,7 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
     cron($engine, 'CR');                         // load service, and register as 'CR'
     agw($engine, 'AG');                          // load service, and register as 'AG'
 
-    _inf('! engine-service-ready');
+    _inf(`! engine[${ROOT_NAME}] service ready !`);
 
     //! returns finally.
     return $engine;

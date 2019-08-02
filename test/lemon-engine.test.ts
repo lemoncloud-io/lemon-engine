@@ -1,13 +1,13 @@
 //! import core engine.
 import engine, { LemonEngine } from '../src/index';
-import { MysqlProxy } from '../src/index';
-import { DynamoProxy } from '../src/index';
-import { RedisProxy } from '../src/index';
-import { Elastic6Proxy } from '../src/index';
+
+import { LemonEngineModel, MysqlProxy, DynamoProxy, RedisProxy, Elastic6Proxy } from '../src/index';
+import { HttpProxy, WebProxy, S3Proxy, SQSProxy, SNSProxy, SESProxy } from '../src/index';
+import { CognitoProxy, LambdaProxy, ProtocolProxy, CronProxy, AGWProxy } from '../src/index';
 
 //! common config
 const scope = {};
-const LS = '1';
+const LS = 1 ? '1' : '0'; // log silence flag.
 const STAGE = 'test';
 const DUMMY = 'dummy';
 const BACKBONE = `http://localhost:8081`;
@@ -86,5 +86,59 @@ describe(`test lemon-engine`, () => {
     test('test elastic6-proxy', () => {
         const $redis = $engine('ES6') as Elastic6Proxy;
         expect($redis.name().split(':')[0]).toEqual('elastic6-proxy');
+    });
+
+    //! s3-proxy
+    test('test s3-proxy', () => {
+        const $s3 = $engine('S3') as S3Proxy;
+        expect($s3.name().split(':')[0]).toEqual('s3-proxy');
+    });
+
+    //! sqs-proxy
+    test('test sqs-proxy', () => {
+        const $sqs = $engine('SS') as SQSProxy;
+        expect($sqs.name().split(':')[0]).toEqual('sqs-proxy');
+    });
+
+    //! sns-proxy
+    test('test sns-proxy', () => {
+        const $sns = $engine('SN') as SNSProxy;
+        expect($sns.name().split(':')[0]).toEqual('sns-proxy');
+    });
+
+    //! ses-proxy
+    test('test ses-proxy', () => {
+        const $ses = $engine('SE') as SESProxy;
+        expect($ses.name().split(':')[0]).toEqual('ses-proxy');
+    });
+
+    //! cognito-proxy
+    test('test cognito-proxy', () => {
+        const $cognito = $engine('CS') as CognitoProxy;
+        expect($cognito.name().split(':')[0]).toEqual('cognito-proxy');
+    });
+
+    //! lambda-proxy
+    test('test lambda-proxy', () => {
+        const $lambda = $engine('LS') as LambdaProxy;
+        expect($lambda.name().split(':')[0]).toEqual('lambda-proxy');
+    });
+
+    //! protocol-proxy
+    test('test protocol-proxy', () => {
+        const $protocol = $engine('PR') as ProtocolProxy;
+        expect($protocol.name().split(':')[0]).toEqual('protocol-proxy');
+    });
+
+    //! cron-proxy
+    test('test cron-proxy', () => {
+        const $cron = $engine('CR') as CronProxy;
+        expect($cron.name().split(':')[0]).toEqual('cron-proxy');
+    });
+
+    //! agw-proxy
+    test('test agw-proxy', () => {
+        const $agw = $engine('AG') as AGWProxy;
+        expect($agw.name().split(':')[0]).toEqual('agw-proxy');
     });
 });
