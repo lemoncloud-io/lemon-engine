@@ -81,12 +81,12 @@ const do_search = (id, param) => {
 
 ## Contribution
 
-See [CODE_OF_CONDUCT](CODE_OF_CONDUCT)
+Plz, request PR. See [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
 
 
-## License
+## LICENSE
 
-[MIT](http://opensource.org/licenses/MIT)
+[MIT](LICENSE)
 
 
 
