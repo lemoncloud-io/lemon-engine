@@ -86,6 +86,7 @@ const do_search = (id, param) => {
 
 | Version   | Description
 |--         |--
+| 2.2.1     | hot-fix error of `$protocol().do_execute()`.
 | 2.2.0     | support enhanced type definitions.
 | 2.1.8     | support `do_read_deep` for direct reading via dynamodb.
 | 2.1.7     | cleanup logs.
