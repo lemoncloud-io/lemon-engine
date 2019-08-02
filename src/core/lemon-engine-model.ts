@@ -418,20 +418,29 @@ const buildModel: EnginePluginBuilder<LemonEngineModel> = (_$, name, options) =>
             val = val === undefined ? null : val;
             // msg = msg && typeof msg == 'object' ? JSON_TAG+JSON.stringify(msg) : msg;
             //! 어느 데이터 타입이든 저장하기 위해서, object로 만든다음, 암호화 시킨다.
-            var msg    = JSON.stringify({alg: algorithm, val: val});
-            var buffer = new Buffer(MAGIC+(msg||''), "utf8");
-            var passwd = this.passwd||'';
-            var cipher = crypto.createCipher(algorithm, passwd)
-            var crypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
+            const msg    = JSON.stringify({alg: algorithm, val: val});
+            const buffer = new Buffer(MAGIC + (msg||''), "utf8");
+            const passwd = this.passwd||'';
+            const cipher = crypto.createCipher(algorithm, passwd)
+            const crypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
             return crypted.toString(1 ? 'base64' : 'utf8');
         }
         thiz.decrypt = function(msg: string){
-            var buffer = new Buffer(msg||'', "base64");
-            var passwd = this.passwd||'';
-            var decipher = crypto.createDecipher(algorithm, passwd)
-            var dec  = Buffer.concat([decipher.update(buffer) , decipher.final()]).toString('utf8');
-            var $msg = JSON.parse(dec.substr(MAGIC.length))||{};
-            // _log(NS, '! decrypt['+msg+'] =', $msg.val);
+            const buffer = new Buffer(msg||'', "base64");
+            const passwd = this.passwd||'';
+            const decipher = crypto.createDecipher(algorithm, passwd)
+            const dec  = Buffer.concat([decipher.update(buffer) , decipher.final()]).toString('utf8');
+            if (!dec.startsWith(MAGIC)) {
+                _err(NS, '> decrypt =', dec);
+                throw new Error('invalid magic string. check passwd!');
+            }
+            const data = dec.substr(MAGIC.length);
+            if (data && !data.startsWith('{') && !data.endsWith('}')) {
+                _err(NS, '> data =', data);
+                throw new Error('invalid json string. check passwd!');
+            }
+            var $msg = JSON.parse(data)||{};
+            // _log(NS, '! decrypt['+msg+'] =', $msg);
             return $msg.val;
         }
         return thiz;
@@ -1733,7 +1742,7 @@ const buildModel: EnginePluginBuilder<LemonEngineModel> = (_$, name, options) =>
         const $xec = CONF_XECURE_KEY ? $crypto(CONF_XECURE_KEY) : null;
         if (!$xec) return node;
         // _log(NS, '> my_filter_read_decrypt: node =', $U.copy_node(node));
-        // _log(NS, '> CONF_XEC_FIELDS=', CONF_XEC_FIELDS);
+        _log(NS, '> CONF_XEC_FIELDS=', CONF_XEC_FIELDS);
         //! decrypt each fields.
         return CONF_XEC_FIELDS.reduce((N: any, key: any)=>{
             const val = N[key];
