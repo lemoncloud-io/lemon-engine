@@ -33,7 +33,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string): AGW
     const _err = _$.err;
 
     //! prepare instance.
-    const thiz = function(){} as AGWProxy;
+    const thiz: AGWProxy = function(){} as AGWProxy;
 
     //! item functions.
     thiz.postToConnection = postToConnection;

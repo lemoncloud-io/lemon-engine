@@ -6,17 +6,8 @@
  * @date   2019-05-23
  * @copyright (C) lemoncloud.io 2019 - All Rights Reserved.
  */
-import utilities from '../core/utilities';
-
-//! General Interface
-interface Shape {
-    getArea(): number;
-}
-
-//! Function Interface.
-interface NumberOperation {
-    (arg1: number, arg2: number): number;
-}
+import { Utilities } from '../core/utilities';
+import { HttpProxy } from '../plugins/http-proxy';
 
 //! Indexable.
 interface Indexable {
@@ -35,17 +26,6 @@ interface AnimalConstructor {
     new (name: string, age: number): Animal;
 }
 
-//! hybrid interface
-interface QueryElement {
-    (query: string): string;
-}
-interface QueryInterface {
-    (query: string): QueryElement;
-    each: Function;
-    ajax: Function;
-    // ...
-}
-
 export interface GeneralFuntion {
     (...arg: any[]): any;
 }
@@ -62,13 +42,51 @@ export interface EngineService {
     log: GeneralFuntion;
     inf: GeneralFuntion;
     err: GeneralFuntion;
-    U: utilities;
+    U: Utilities;
     _: any; // = require('lodash/core')
     environ: (name: string, defValue?: string | boolean | number | undefined) => string | boolean | number | undefined;
 }
 
+export interface EngineInterface extends EngineService {
+    // (name: string, opts: any): any;
+    STAGE: string;
+    id: string;
+    extend: (a: any, b: any) => any;
+    ts: (d?: Date | number) => string;
+    $console: EngineConsole;
+    createModel: ServiceMaker;
+    createHttpProxy: HttpProxyBuilder;
+    createWebProxy: ServiceMaker;
+    $plugins: { [key: string]: EnginePluginService };
+}
+
 export interface EnginePluginMaker {
-    (_$: EngineService, name: string, options?: any): EnginePluginService;
+    ($engine: EngineService, name: string, options?: any): EnginePluginService;
+}
+
+export interface HttpProxyBuilder {
+    (name: string, endpoint: string | { endpoint: string; headers?: any }): HttpProxy;
+}
+
+export interface EngineOption {
+    name?: string;
+    env?: { [key: string]: string };
+}
+
+export interface EngineLogger {
+    (...arg: any[]): void;
+}
+
+export interface ServiceMaker {
+    (name: string, options: any): any;
+}
+
+export interface EngineConsole {
+    thiz: any;
+    log: EngineLogger;
+    error: EngineLogger;
+    auto_ts: boolean;
+    auto_color: boolean;
 }
 
 /**

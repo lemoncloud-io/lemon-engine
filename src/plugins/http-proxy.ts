@@ -13,35 +13,35 @@ import { EngineService, EnginePluginService, EnginePluginMaker } from '../common
 
 /**
  * Define Interface
- * 
+ *
  * @see http://www.albertgao.xyz/2016/08/11/how-to-declare-a-function-type-variable-in-typescript/
  */
 export interface HttpProxy extends EnginePluginService {
     /**
      * GET
      */
-    do_get: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_get: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
 
     /**
      * PUT
      */
-    do_put: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_put: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
 
     /**
      * POST
      */
-    do_post: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_post: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
 
     /**
      * DELETE
      */
-    do_delete: (method: string, type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
+    do_delete: (type: string, id?: string, cmd?: string, $param?: any, $body?: any) => any;
 }
 
 import REQUEST from 'request';
 import queryString from 'query-string';
 
-const maker: EnginePluginMaker = function(_$: EngineService, name?: string, options?: any): HttpProxy {
+const maker: EnginePluginMaker = (_$: EngineService, name?: string, options?: any): HttpProxy => {
     name = name || 'HS';
 
     const $U = _$.U; // re-use global instance (utils).
@@ -104,7 +104,7 @@ const maker: EnginePluginMaker = function(_$: EngineService, name?: string, opti
         // _log(NS, ' url :=', options.method, url);
         _log(NS, '*', options.method, url, options.json ? 'json' : 'plain');
         // _inf(NS, '> options =', options);
-        // options.headers && _log(NS, '> headers =', options.headers); 
+        // options.headers && _log(NS, '> headers =', options.headers);
 
         //! returns promise
         return new Promise((resolve, reject) => {

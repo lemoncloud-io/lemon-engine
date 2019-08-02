@@ -11,7 +11,7 @@
 import { EngineService, GeneralFuntion } from '../common/types'
 const NS = 'util';
 
-class Utilities {
+export class Utilities {
     private _$: EngineService;
     private log: GeneralFuntion;
     private err: GeneralFuntion;
@@ -30,7 +30,7 @@ class Utilities {
         if (!$_) throw new Error('$_(lodash) is required!');
         return $_;
     }
-    
+
     //! some helper function.s
     public get_env(name: string, def_val?: string): any {
         if (typeof this._$.environ === 'function') return this._$.environ(name, def_val);
@@ -48,7 +48,7 @@ class Utilities {
         const env = this.get_env('ENV') || this.get_env('NODE_ENV') || this.get_env('STAGE');
         return env === 'production' || env === 'op' ? false : true;
     }
-    
+
     /**
      * Load CSV File in data folder.
      *
@@ -165,7 +165,7 @@ class Utilities {
     }
 
     // timestamp value.
-    public static timestamp(d?: any) {
+    public static timestamp(d?: any): string {
         var dt = d && typeof d === 'object' ? d : d ? new Date(d) : new Date();
         var y = dt.getFullYear();
         var m = dt.getMonth() + 1; //Months are zero based
