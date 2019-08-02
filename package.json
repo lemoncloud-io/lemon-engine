@@ -1,6 +1,6 @@
 {
   "name": "lemon-engine",
-  "version": "2.1.8",
+  "version": "2.2.0",
   "description": "Lemon Engine Module to Synchronize Node over DynamoDB + ElastiCache + Elasticsearch by [lemoncloud](https://lemoncloud.io)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
