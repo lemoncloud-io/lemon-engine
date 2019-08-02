@@ -56,7 +56,7 @@ const maker: EnginePluginBuilder<DynamoProxy> = (_$, name, options) => {
      *  Main Implementation.
      ** ****************************************************************************************************************/
     const thiz = new (class implements DynamoProxy {
-        public name = () => `mysql-proxy:${name}`;
+        public name = () => `dynamo-proxy:${name}`;
 
         /**
          * Create Table by table-name

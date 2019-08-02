@@ -20,23 +20,27 @@ import * as _ from "lodash";
 export * from './common/types';
 
 //! load common services....
-import buildModel from './core/lemon-engine-model';
+import buildModel, { LemonEngineModel } from './core/lemon-engine-model';
 
-import httpProxy from './plugins/http-proxy';
-import webProxy from './plugins/web-proxy';
-import mysql from './plugins/mysql-proxy';
-import dynamo from './plugins/dynamo-proxy';
-import redis from './plugins/redis-proxy';
-import elastic6 from './plugins/elastic6-proxy';
-import s3 from './plugins/s3-proxy';
-import sqs from './plugins/sqs-proxy';
-import sns from './plugins/sns-proxy';
-import ses from './plugins/ses-proxy';
-import cognito from './plugins/cognito-proxy';
-import lambda from './plugins/lambda-proxy';
-import protocol from './plugins/protocol-proxy';
-import cron from './plugins/cron-proxy';
-import agw from './plugins/agw-proxy';
+import httpProxy, { HttpProxy } from './plugins/http-proxy';
+import webProxy, { WebProxy } from './plugins/web-proxy';
+import mysql, { MysqlProxy } from './plugins/mysql-proxy';
+import dynamo, { DynamoProxy } from './plugins/dynamo-proxy';
+import redis, { RedisProxy } from './plugins/redis-proxy';
+import elastic6, { Elastic6Proxy } from './plugins/elastic6-proxy';
+import s3, { S3Proxy } from './plugins/s3-proxy';
+import sqs, { SQSProxy } from './plugins/sqs-proxy';
+import sns, { SNSProxy } from './plugins/sns-proxy';
+import ses, { SESProxy } from './plugins/ses-proxy';
+import cognito, { CognitoProxy } from './plugins/cognito-proxy';
+import lambda, { LambdaProxy } from './plugins/lambda-proxy';
+import protocol, { ProtocolProxy } from './plugins/protocol-proxy';
+import cron, { CronProxy } from './plugins/cron-proxy';
+import agw, { AGWProxy } from './plugins/agw-proxy';
+
+export { LemonEngineModel, MysqlProxy, DynamoProxy, RedisProxy, Elastic6Proxy }
+export { HttpProxy, WebProxy, S3Proxy, SQSProxy, SNSProxy, SESProxy }
+export { CognitoProxy, LambdaProxy, ProtocolProxy, CronProxy, AGWProxy }
 
 /**
  * initialize as EngineInterface
@@ -171,10 +175,10 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
             return webProxy($engine, name, options);
         }
 
-        // //! model builder.
-        // $engine.createModel = (name: string, option: any) => {
-        //     return buildModel($engine, name, option);
-        // }
+        //! model builder.
+        $engine.createModel = (name: string, option: any) => {
+            return buildModel($engine, name, option);
+        }
 
         //! override type.
         return $engine as LemonEngine;

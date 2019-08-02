@@ -1,6 +1,9 @@
 //! import core engine.
 import engine, { LemonEngine } from '../src/index';
-import { MysqlProxy } from '../src/plugins/mysql-proxy';
+import { MysqlProxy } from '../src/index';
+import { DynamoProxy } from '../src/index';
+import { RedisProxy } from '../src/index';
+import { Elastic6Proxy } from '../src/index';
 
 //! common config
 const scope = {};
@@ -65,5 +68,23 @@ describe(`test lemon-engine`, () => {
                 done();
             });
         });
+    });
+
+    //! dynamo-proxy
+    test('test dynamo-proxy', () => {
+        const $dynamo = $engine('DS') as DynamoProxy;
+        expect($dynamo.name().split(':')[0]).toEqual('dynamo-proxy');
+    });
+
+    //! redis-proxy
+    test('test redis-proxy', () => {
+        const $redis = $engine('RS') as RedisProxy;
+        expect($redis.name().split(':')[0]).toEqual('redis-proxy');
+    });
+
+    //! elastic6-proxy
+    test('test elastic6-proxy', () => {
+        const $redis = $engine('ES6') as Elastic6Proxy;
+        expect($redis.name().split(':')[0]).toEqual('elastic6-proxy');
     });
 });
