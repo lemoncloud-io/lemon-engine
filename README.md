@@ -1,3 +1,9 @@
+[![travis](https://travis-ci.org/lemoncloud-io/lemon-engine.svg?branch=master)](https://travis-ci.org/lemoncloud-io/lemon-engine)
+[![codecov](https://codecov.io/gh/lemoncloud-io/lemon-engine/branch/master/graph/badge.svg)](https://codecov.io/gh/lemoncloud-io/lemon-engine)
+[![npm version](https://badge.fury.io/js/lemon-engine.svg)](https://badge.fury.io/js/lemon-engine)
+[![GitHub version](https://badge.fury.io/gh/lemoncloud-io%2Flemon-engine.svg)](https://badge.fury.io/gh/lemoncloud-io%2Flemon-engine)
+
+
 # lemon-engine
 
 Automatic Node Synchronizer between `DynamoDB` + `Redis` + `Elasticsearch` over `AWS` Cloud.
