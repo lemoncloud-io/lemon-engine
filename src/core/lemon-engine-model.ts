@@ -2004,30 +2004,34 @@ const buildModel: EnginePluginBuilder<LemonEngineModel> = (_$, name, options) =>
     const my_event_records = (that: any) => {
         if (!that.records) return Promise.reject(new Error('records is required!'));
         const records = that.records.slice(0);          // copy array.
+        const context = that._ctx || {};                // origin context to relay.
 
         _log(NS, `- my_event_records().... records.len=`, records.length);
         if (!records.length) return that;
 
         //! array promised.
-        const fx_promise_array = (arr: any, fx: any) => {
-            let chain = $U.promise(arr.shift());
-            chain = arr.reduce((chain: any, item: any) => {
-                return chain.then(() => fx(item));
-            }, chain.then((item: any) => fx(item)));
+        const fx_promise_array = (records: any, fx: any, context: any) => {
+            let chain = $U.promise(records.shift());
+            chain = records.reduce((chain: any, record: any) => {
+                return chain.then(() => fx(record, context));
+            }, chain.then((record: any) => fx(record, context)));
             return chain;
         };
 
         //! execute processing records one by one.
-        return fx_promise_array(records, my_process_record)
-            .catch((e: any) => {
-                _err(NS, 'error ignored! =', e);
+        return fx_promise_array(records, my_process_record, context)
+            .then((last: any) => {
+                _log(NS, '! last =', $U.json(last));
                 return that;
             })
-            .then(() => that);
+            .catch((e: any) => {
+                _err(NS, '! error ignored =', e);
+                return that;
+            })
     };
 
     //! process record.
-    const my_process_record = ($record: any) => {
+    const my_process_record = ($record: any, context: any) => {
         if (!$record) return Promise.reject(new Error('record is required'));
         // if (!record.table) return Promise.reject(new Error('record.table is required'));
         if (!$record.dynamodb && !$record.Sns) return Promise.reject(new Error('record.dynamodb|Sns is required'));
@@ -2063,7 +2067,7 @@ const buildModel: EnginePluginBuilder<LemonEngineModel> = (_$, name, options) =>
             const diff = EVENT_NAME === 'MODIFY' ? $U.diff(oldRecord, newRecord) : null;
             const updated_at = $U.N(newRecord && newRecord.updated_at || 0);
             const prev = diff ? $_.reduce(diff, (node: any, key: any) => {node[key] = oldRecord[key]; return node}, {}) : null;
-            const that = {_id:ID, _node:newRecord, _updated_at:updated_at, _diff:diff, _prev:prev};           // use updated_at for
+            const that = {_id:ID, _node:newRecord, _updated_at:updated_at, _diff:diff, _prev:prev, _ctx: context}; // use updated_at for
             chain = Promise.resolve(that);
             diff && _log(NS,`>> ${tableName}.different[${ID}]=`, $U.json(diff));
 
