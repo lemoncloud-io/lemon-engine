@@ -1,12 +1,34 @@
 language: node_js
+sudo: false
 node_js:
-    - 8.10.0
+    - 8
+branches:
+  only:
+    - master
+    - develop
 install:
-    - npm install
+  - npm install
+cache:
+  bundler: true
+  directories:
+    - node_modules
 script:
-    - npm run test
+  - npm run test
 env:
-    # codecov token: see https://codecov.io/gh/lemoncloud-io/lemon-engine/settings
-    - CODECOV_TOKEN="...."
+  # codecov token: see https://codecov.io/gh/lemoncloud-io/lemon-engine
+  - CODECOV_TOKEN="e78e510c-06c6-4f8b-a9dd-5a487a9a86ec"
 after_success:
-    - ./node_modules/.bin/codecov
+  - "./node_modules/.bin/codecov"
+  - npm run build
+# deploy on master
+#! run `npm publish` only for `master` branch.
+deploy:
+  provider: npm
+  skip_cleanup: true
+  email: steve@lemoncloud.io
+  api_key:
+    #! use `$ travis encrypt <Npm Access Tokens> --add deploy.api_key`
+    secure: xnaFsfY9tVlZPpML2bHsXVF6ktkuU8LRZbWfT5dPPZ5LmS+vMW85Rjvq26C2yaSd+RmpyUrmnL7hhId2VliesmZI+dp9krIw9QKL2My0mcTpTKhpeJaTehga82eTaRwlvnAWbwQCpL6/5IqHHOZRElB6O5whRbnoTsMzoqh6K0TdDkHIQMH/9Dq1234Z6r7wsc5LhptF+X9n9uGVvGfTDOKXbkPBK3f9xbqRzaG4GZT8cx57s7WF2HiP+5tBRiANygruyR6fg6LL6/PzhIYNp9SCG8kbIWwCro7l4IkfOwCBPzH2FSg3qHjcWGUMYO54fbGAzbi02EJxtYzp7C6lH7BD+Rr8e3wCM5gYqeSAJNaNrGzXC/Wq/ndMV3tqCpFd5cOvu8mnG2QWqZL9i4Bx6yartMeUJqf68wjpYP7pOVPrOLVM102rqtm0d+mmvL3YoPW/rMsfOpP+HCVvM1GQqbdIXf/ZFEXxkzd/2VnQBXn3xKKWdi+tQ2mRGrvAcNvB1oFJX8FeV0L/FMmSGqB50N3g0po/HwnNpAtGHPnlVADJNT3EIJIZaWpkADwql5ZxvoGEH8YxQz8cjRiWGU2UkAxz+7LGYfXiOzASchooyXyTyYiLqdSqgz6DvmZjdi3jNgHs6ROiPEHCiNaKOgdmLGXdAPkVbO4sJHbBNC1KglI=
+  on:
+    branch: master
+    tags: true
