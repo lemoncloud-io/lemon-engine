@@ -67,7 +67,7 @@ describe(`test lemon-engine`, () => {
         expect($engine.ts().substr(0, 4)).toEqual(`${new Date().getFullYear()}`);
         expect($engine.ts(1564711704963, 0)).toEqual('2019-08-02 02:08:24');
         expect($engine.ts(1564711704963, TIME_ZONE)).toEqual('2019-08-02 11:08:24');
-        expect($engine.dt().getTime() / 1000).toEqual(new Date().getTime() / 1000);
+        expect(Math.round($engine.dt().getTime() / 1000)).toEqual(Math.round(new Date().getTime() / 1000));
         expect($engine.dt('2019-08-02 02:08:24', 0).getTime()).toEqual(1564711704000);
         expect($engine.dt('2019-08-02 11:08:24', TIME_ZONE).getTime()).toEqual(1564711704000);
     });
@@ -79,7 +79,7 @@ describe(`test lemon-engine`, () => {
         expect($U.ts().substr(0, 4)).toEqual(`${new Date().getFullYear()}`);
         expect($U.ts(1564711704963, 0)).toEqual('2019-08-02 02:08:24');
         expect($U.ts(1564711704963, TIME_ZONE)).toEqual('2019-08-02 11:08:24');
-        expect($U.dt().getTime() / 1000).toEqual(new Date().getTime() / 1000);
+        expect(Math.round($U.dt().getTime() / 1000)).toEqual(Math.round(new Date().getTime() / 1000));
         expect($U.dt('2019-08-02 02:08:24', 0).getTime()).toEqual(1564711704000);
         expect($U.dt('2019-08-02 11:08:24', TIME_ZONE).getTime()).toEqual(1564711704000);
     });
