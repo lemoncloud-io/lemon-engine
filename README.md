@@ -101,6 +101,7 @@ Plz, request PR. See [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
 
 | Version   | Description
 |--         |--
+| 2.2.2     | relay context as `that._ctx` in `on_record_update()`, and use common `BACKBONE_API` env.
 | 2.2.1     | hot-fix error of `$protocol().do_execute()`.
 | 2.2.0     | support enhanced type definitions.
 | 2.1.8     | support `do_read_deep` for direct reading via dynamodb.
