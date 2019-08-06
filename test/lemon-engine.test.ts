@@ -29,6 +29,25 @@ const $engine: LemonEngine = engine(scope, {
     env: $env,
 });
 
+// interface Model extends LemonEngineModel {
+//     id?: string;
+//     name?: string;
+// }
+const $model: LemonEngineModel = $engine.createModel('_test', {
+    ID_TYPE: '#NO_SEQ', // WARN! '#' means no auto-generated id.
+    ID_NEXT: 10000,
+    FIELDS: 'id,name'.split(','),
+    DYNA_TABLE: 'TestTable',
+    REDIS_PKEY: '#RKEY', // '#' means no cache.
+    ES_INDEX: 'test-v1', // ES Index Name. (//TODO - dev/prod index)
+    ES_TYPE: 'none', //TODO:0315 - ES 데이터를 같은 인덱스 내에서, type별로 나눠서 저장.
+    ES_FIELDS: 'id,name'.split(','),
+    NS_NAME: 'test', // Notify Service Name. (null means no notifications)
+    ES_MASTER: 1, // MASTER NODE.
+    ES_VERSION: 6, // User ES Version 6.
+    ES_TIMESERIES: true, // Prevent audo-update to elastic.
+});
+
 describe(`test lemon-engine`, () => {
     //! members
     test('test name', () => {
@@ -50,6 +69,48 @@ describe(`test lemon-engine`, () => {
         expect($engine.ts(1564711704963, TIME_ZONE)).toEqual('2019-08-02 11:08:24');
         expect($engine.dt('2019-08-02 02:08:24', 0).getTime()).toEqual(1564711704000);
         expect($engine.dt('2019-08-02 11:08:24', TIME_ZONE).getTime()).toEqual(1564711704000);
+    });
+
+    //! environ()
+    test('test model', (done: any) => {
+        const _log = console.log;
+        const NS = 'MODEL';
+        const record = {
+            eventName: 'MODIFY',
+            eventSourceARN:
+                'arn:aws:dynamodb:ap-northeast-2:820167020551:table/TestTable/stream/2017-08-12T09:51:57.928',
+            dynamodb: {
+                Keys: {
+                    id: { S: '1122' },
+                },
+                OldImage: {
+                    id: { S: '1122' },
+                    name: { S: 'old' },
+                },
+                NewImage: {
+                    id: { S: '1122' },
+                    name: { S: 'new' },
+                },
+            },
+        };
+        const context = {
+            name: 'test-context',
+        };
+        $model.do_subscribe(':record:update', (event: any) => {
+            const EID = event.id || event._id || 'N/A'; // EVENT-ID.
+            _log(NS, `on_record_update(${EID})....`);
+            const that = event.data || {};
+            const thiz = that._node || {};
+            const $ctx = that._ctx || {};
+            const ID = thiz.id || '';
+            const $diff = (event.data && event.data._diff) || [];
+            _log(NS, `> record-updated (${ID})... diff=`, $diff);
+            expect(ID).toEqual('1122');
+            expect($diff).toEqual(['name']); // expected diff.
+            expect($ctx.name).toEqual('test-context'); // context should be same.
+            done();
+        });
+        $model.on_records({ records: [record], _ctx: context });
     });
 
     //! http-proxy
