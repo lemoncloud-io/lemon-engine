@@ -1,34 +1,30 @@
 language: node_js
 sudo: false
 node_js:
-    - 8
+- 8
 branches:
   only:
-    - master
-    - develop
+  - master
+  - develop
 install:
-  - npm install
+- npm install
 cache:
   bundler: true
   directories:
-    - node_modules
+  - node_modules
 script:
-  - npm run test
+- npm run test
 env:
-  # codecov token: see https://codecov.io/gh/lemoncloud-io/lemon-engine
-  - CODECOV_TOKEN="e78e510c-06c6-4f8b-a9dd-5a487a9a86ec"
+- CODECOV_TOKEN="e78e510c-06c6-4f8b-a9dd-5a487a9a86ec"
 after_success:
-  - "./node_modules/.bin/codecov"
-  - npm run build
-# deploy on master
-#! run `npm publish` only for `master` branch.
+- "./node_modules/.bin/codecov"
+- npm run build
 deploy:
   provider: npm
   skip_cleanup: true
   email: steve@lemoncloud.io
   api_key:
     #! use `$ travis encrypt <Npm Access Tokens> --add deploy.api_key`
-    secure: xnaFsfY9tVlZPpML2bHsXVF6ktkuU8LRZbWfT5dPPZ5LmS+vMW85Rjvq26C2yaSd+RmpyUrmnL7hhId2VliesmZI+dp9krIw9QKL2My0mcTpTKhpeJaTehga82eTaRwlvnAWbwQCpL6/5IqHHOZRElB6O5whRbnoTsMzoqh6K0TdDkHIQMH/9Dq1234Z6r7wsc5LhptF+X9n9uGVvGfTDOKXbkPBK3f9xbqRzaG4GZT8cx57s7WF2HiP+5tBRiANygruyR6fg6LL6/PzhIYNp9SCG8kbIWwCro7l4IkfOwCBPzH2FSg3qHjcWGUMYO54fbGAzbi02EJxtYzp7C6lH7BD+Rr8e3wCM5gYqeSAJNaNrGzXC/Wq/ndMV3tqCpFd5cOvu8mnG2QWqZL9i4Bx6yartMeUJqf68wjpYP7pOVPrOLVM102rqtm0d+mmvL3YoPW/rMsfOpP+HCVvM1GQqbdIXf/ZFEXxkzd/2VnQBXn3xKKWdi+tQ2mRGrvAcNvB1oFJX8FeV0L/FMmSGqB50N3g0po/HwnNpAtGHPnlVADJNT3EIJIZaWpkADwql5ZxvoGEH8YxQz8cjRiWGU2UkAxz+7LGYfXiOzASchooyXyTyYiLqdSqgz6DvmZjdi3jNgHs6ROiPEHCiNaKOgdmLGXdAPkVbO4sJHbBNC1KglI=
+    secure: OqYhhC+WKMA7JeY0f80TdElCxA5h6hc2uzAkE2M8Z5wtTolN/azaXJ9hYp55HiS9biNnlM6+rV/UwkkaZXi8sPA8IR9NiXsvg+VF+Cl/ArPjccpElIjviQgi17fvI1PiHvqYjgaB3WESWLIxOWppiQIvtVinclqFCFF9OkDZs2R3vLmRguXzeZkoSxfPZ+OXQERR4bcEFYtQk569gSY+2qFsCFDy0IAAgatd+8BTU5P6HXtvJHNU0ZC9Yzedw4880iiyCmuyTTKUBROSW5IkJH0VcL4LdphTDBxrPXHMhDZArfU4g+DGUAu0SadroTM89VHCVjoz8PENhcaoUS4AsKLjnkbnsb2Klg4pBVKFQS7aNHRlJLHO7+jCcMClPbOUOU9b3OsbrK2YZg1KZ5yveTVz1bMGaxWv8WbMdx7PdxcwV0Cjn8u/6iJyMHQHEH92hko2YRtAvFS+mfrOZkNJ2qOX7QF42d/c9485M/YNpLgY6YfrZWjTvyoWe4dtLQ7G4SdDyvM8efcG4kLP4K35NPvf/yIIa87VibgOmsu99oYQ9k59NrioIhZGSIM+xZ7MjwvveyDCOJiw6sP+TqqJwlzORJ131DcPyNLXLFxjN5PPJt9vxv5eQWlG+3MQtK+mMnhnbX1P08qPiWYch1YDkM94w2ZGBfedurBbDcal6Ak=
   on:
     branch: master
-    #tags: true
