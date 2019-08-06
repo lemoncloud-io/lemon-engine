@@ -165,73 +165,105 @@ export class Utilities {
     }
 
     // timestamp value.
-    public static timestamp(d?: any): string {
-        var dt = d && typeof d === 'object' ? d : d ? new Date(d) : new Date();
-        var y = dt.getFullYear();
-        var m = dt.getMonth() + 1; //Months are zero based
-        var d = dt.getDate();
+    public static timestamp(date?: undefined | number | Date, timeZone?: number): string {
+        const dt = date && typeof date === 'object' ? date : date ? new Date(date) : new Date();
+        const now = new Date();
+        const tzo = now.getTimezoneOffset();    // Asia/Seoul => -540
+        const diff = timeZone * 60 + tzo;
+        if (diff) dt.setSeconds(dt.getSeconds() + 1 * diff * 60);
 
-        var h = dt.getHours();
-        var i = dt.getMinutes();
-        var s = dt.getSeconds();
+        const y = dt.getFullYear();
+        const m = dt.getMonth() + 1; //Months are zero based
+        const d = dt.getDate();
 
-        var ret =
-            (y < 10 ? '0' : '') +
-            y +
+        const h = dt.getHours();
+        const i = dt.getMinutes();
+        const s = dt.getSeconds();
+
+        const d2 = (x: number) => `${x < 10 ? '0' : ''}${x}`;
+
+        const ret =
+            d2(y) +
             '-' +
-            (m < 10 ? '0' : '') +
-            m +
+            d2(m) +
             '-' +
-            (d < 10 ? '0' : '') +
-            d +
+            d2(d) +
             ' ' +
-            (h < 10 ? '0' : '') +
-            h +
+            d2(h) +
             ':' +
-            (i < 10 ? '0' : '') +
-            i +
+            d2(i) +
             ':' +
-            (s < 10 ? '0' : '') +
-            s;
+            d2(s);
         return ret;
     }
 
-    public ts(d?: any) {
-        return Utilities.timestamp(d);
+    public static ts(d?: undefined | number | Date, timeZone?: number) {
+        return Utilities.timestamp(d, timeZone);
     }
 
     // parse timestamp to date.
-    public dt(ts?: any) {
-        ts = ts || this.ts();
-        var aa = ts.split(' ');
-        var dd = aa[0].split('-');
-        var hh = aa[1].split(':');
-        var y = parseInt(dd[0]),
-            m = parseInt(dd[1]) - 1,
-            d = parseInt(dd[2]);
-        var h = parseInt(hh[0]),
-            i = parseInt(hh[1]),
-            s = parseInt(hh[2]);
-        //NOTE - unable to add to prototype.
-        // //! addtional function: add_seconds()
-        // if (!Date.prototype.add_seconds) {
-        // 	Date.prototype.add_seconds = function (dx: number) {
-        // 		this.setSeconds(this.getSeconds() + dx);
-        // 		return this;
-        // 	}
-        // }
-        // //! format to time-stamp.
-        // if (!Date.prototype.ts) {
-        // 	Date.prototype.ts = function () {
-        // 		return _ts(this);
-        // 	}
-        // }
-        var dt = new Date(y, m, d, h, i, s, 0);
-        return dt;
+    public static dt(dt?: string | number | Date, timeZone?: number) {
+        let ret = null;
+        if (typeof dt == 'string') {
+            const now = new Date();
+            const tzo = now.getTimezoneOffset();
+            const diff = timeZone * 60 + tzo;
+            let tstr = '';
+            if (/^[12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(dt)) {
+                // like 1978-12-01
+                tstr = dt + ' 12:00:00';
+            } else if (/^[12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(dt)) {
+                // like 1978-12-01 12:34
+                tstr = dt + ':00';
+            } else if (
+                /^[12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]) ([01]?[0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]$/.test(dt)
+            ) {
+                // like 1978-12-01 12:34:20
+                tstr = dt + '';
+            } else if (/^[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/.test(dt)) {
+                // like 19781201
+                tstr = dt.substr(0, 4) + '-' + dt.substr(4, 2) + '-' + dt.substr(6, 2) + ' 12:00:00';
+            } else if (/^[12]\d{3}(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01]) ([01]?[0-9]|2[0-3])[0-5][0-9]$/.test(dt)) {
+                // like 19781201 1234
+                tstr =
+                    dt.substr(0, 4) +
+                    '-' +
+                    dt.substr(4, 2) +
+                    '-' +
+                    dt.substr(6, 2) +
+                    ' ' +
+                    dt.substr(9, 2) +
+                    ':' +
+                    dt.substr(11, 2) +
+                    ':00';
+            }
+            ret = ((ts: string)=>{
+                if (!ts) return null;
+                const aa = ts.split(' ');
+                const dd = aa[0].split('-');
+                const hh = aa[1].split(':');
+                const y = parseInt(dd[0]);
+                const m = parseInt(dd[1]) - 1;
+                const d = parseInt(dd[2]);
+                const h = parseInt(hh[0]);
+                const i = parseInt(hh[1]);
+                const s = parseInt(hh[2]);
+                return new Date(y, m, d, h, i, s, 0);
+            })(tstr)
+            if (ret && diff) ret.setSeconds(ret.getSeconds() + -1 * diff * 60);
+            return ret;
+        } else if (typeof dt == 'number') {
+            ret = new Date(dt);
+        } else if (typeof dt == 'object' && (dt as any) instanceof Date) {
+            ret = dt;
+        } else {
+            throw new Error('Invalid type of dt: ' + typeof dt);
+        }
+        return ret;
     }
 
     public now(){
-        return this.dt();
+        return Utilities.dt();
     }
 
     /**

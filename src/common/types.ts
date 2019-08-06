@@ -85,7 +85,8 @@ export interface LemonEngine extends EngineCore {
     STAGE: string;
     id: string;
     extend: (a: any, b: any) => any;
-    ts: (d?: Date | number) => string;
+    ts: (date?: undefined | number | Date, timeZone?: number) => string;
+    dt: (time?: string | number | Date, timeZone?: number) => Date;
     $console: EngineConsole;
     createModel: EnginePluginBroker<LemonEngineModel>;
     createHttpProxy: EnginePluginBroker<HttpProxy>;
