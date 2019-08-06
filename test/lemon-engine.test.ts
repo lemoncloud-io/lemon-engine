@@ -53,10 +53,16 @@ describe(`test lemon-engine`, () => {
         const $http = $engine.createHttpProxy('backbone-http', BACKBONE);
         expect($http.name().split(':')[0]).toEqual('http-proxy');
         expect($http.endpoint()).toEqual(`${BACKBONE}`);
-        $http.do_get('').then((_: any) => {
-            expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
-            done();
-        });
+        $http
+            .do_get('')
+            .then((_: any) => {
+                expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
+                done();
+            })
+            .catch((e: Error) => {
+                expect(e.message).toEqual('connect ECONNREFUSED 127.0.0.1:8081');
+                done();
+            });
     });
 
     //! web-proxy
@@ -64,10 +70,15 @@ describe(`test lemon-engine`, () => {
         const $web = $engine.createWebProxy('backbone-web', BACKBONE);
         expect($web.name().split(':')[0]).toEqual('web-proxy');
         expect($web.endpoint()).toEqual(`${BACKBONE}/web`);
-        $web.do_get(BACKBONE, '/').then((_: any) => {
-            expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
-            done();
-        });
+        $web.do_get(BACKBONE, '/')
+            .then((_: any) => {
+                expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
+                done();
+            })
+            .catch((e: Error) => {
+                expect(e.message).toEqual('connect ECONNREFUSED 127.0.0.1:8081');
+                done();
+            });
     });
 
     //! mysql-proxy
@@ -76,12 +87,18 @@ describe(`test lemon-engine`, () => {
         const $mysql = $engine('MS') as MysqlProxy;
         expect($mysql.name().split(':')[0]).toEqual('mysql-proxy');
         expect($mysql.endpoint()).toEqual(`${BACKBONE}/mysql`);
-        $mysql.do_get_next_id('test').then((a: number) => {
-            return $mysql.do_get_next_id('test').then((b: number) => {
-                expect(`${b - a}`).toEqual('1');
+        $mysql
+            .do_get_next_id('test')
+            .then((a: number) => {
+                return $mysql.do_get_next_id('test').then((b: number) => {
+                    expect(`${b - a}`).toEqual('1');
+                    done();
+                });
+            })
+            .catch((e: Error) => {
+                expect(e.message).toEqual('connect ECONNREFUSED 127.0.0.1:8081');
                 done();
             });
-        });
     });
 
     //! dynamo-proxy
@@ -95,13 +112,10 @@ describe(`test lemon-engine`, () => {
                 const tables = _.TableNames;
                 console.log('list-tables =', tables);
                 expect(tables.length).toBe(1);
+                done();
             })
             .catch((e: Error) => {
-                //! 환경 변수에 endpoint구성이 없으면 에러 발생!.
-                const msg = `${e.message || e}`;
-                expect(msg).toEqual(!$env.DS_ENDPOINT ? 'env:DS_ENDPOINT is required!' : '');
-            })
-            .then(() => {
+                expect(e.message).toEqual('connect ECONNREFUSED 127.0.0.1:8081');
                 done();
             });
     });
@@ -161,11 +175,17 @@ describe(`test lemon-engine`, () => {
         expect($lambda.name().split(':')[0]).toEqual('lambda-proxy');
         expect($lambda.endpoint()).toEqual(`${BACKBONE}/lambda`);
         //! invoke by labmda function name.
-        $lambda.do_get('lemon-hello-api-prod-hello', '').then((_: any) => {
-            expect(Array.isArray(_.list)).toEqual(true);
-            expect(_.name).toEqual('lemon');
-            done();
-        });
+        $lambda
+            .do_get('lemon-hello-api-prod-hello', '')
+            .then((_: any) => {
+                expect(Array.isArray(_.list)).toEqual(true);
+                expect(_.name).toEqual('lemon');
+                done();
+            })
+            .catch((e: Error) => {
+                expect(e.message).toEqual('connect ECONNREFUSED 127.0.0.1:8081');
+                done();
+            });
     });
 
     //! protocol-proxy
@@ -174,11 +194,17 @@ describe(`test lemon-engine`, () => {
         expect($protocol.name().split(':')[0]).toEqual('protocol-proxy');
         expect($protocol.endpoint()).toEqual(`${BACKBONE}/protocol`);
         //! invoke by protocol format.
-        $protocol.do_execute('lemon://lemon-hello-api/hello').then((_: any) => {
-            expect(Array.isArray(_.list)).toEqual(true);
-            expect(_.name).toEqual('lemon');
-            done();
-        });
+        $protocol
+            .do_execute('lemon://lemon-hello-api/hello')
+            .then((_: any) => {
+                expect(Array.isArray(_.list)).toEqual(true);
+                expect(_.name).toEqual('lemon');
+                done();
+            })
+            .catch((e: Error) => {
+                expect(e.message).toEqual('connect ECONNREFUSED 127.0.0.1:8081');
+                done();
+            });
     });
 
     //! cron-proxy
