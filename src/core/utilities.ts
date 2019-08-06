@@ -197,12 +197,8 @@ export class Utilities {
         return ret;
     }
 
-    public static ts(d?: undefined | number | Date, timeZone?: number) {
-        return Utilities.timestamp(d, timeZone);
-    }
-
     // parse timestamp to date.
-    public static dt(dt?: string | number | Date, timeZone?: number) {
+    public static datetime(dt?: string | number | Date, timeZone?: number) {
         let ret = null;
         if (typeof dt == 'string') {
             const now = new Date();
@@ -256,14 +252,23 @@ export class Utilities {
             ret = new Date(dt);
         } else if (typeof dt == 'object' && (dt as any) instanceof Date) {
             ret = dt;
+        } else if (dt === undefined){
+            ret = new Date();
         } else {
             throw new Error('Invalid type of dt: ' + typeof dt);
         }
         return ret;
     }
 
+    public ts(d?: undefined | number | Date, timeZone?: number) {
+        return Utilities.timestamp(d, timeZone);
+    }
+    public dt(dt?: string | number | Date, timeZone?: number) {
+        return Utilities.datetime(dt, timeZone);
+    }
+
     public now(){
-        return Utilities.dt();
+        return this.dt();
     }
 
     /**

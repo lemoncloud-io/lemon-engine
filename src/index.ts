@@ -156,7 +156,7 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
         $engine.err = _err;
         $engine.extend = _extend;
         $engine.ts = _ts;
-        $engine.dt = Utilities.dt;
+        $engine.dt = Utilities.datetime;
         $engine._ = _;
         $engine.environ = _environ;
         $engine.$console = $console; // '$' means object. (change this in order to override log/error message handler)
