@@ -15,6 +15,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface WebProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_get: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
     do_put: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
     do_patch: (host: string, path: string, $opt?: any, $param?: any, $body?: any) => any;
@@ -73,6 +78,7 @@ const maker: EnginePluginBuilder<WebProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements WebProxy {
         public name = () => `web-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * GET HOST/PATH?$param

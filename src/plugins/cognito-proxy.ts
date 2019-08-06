@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface CognitoProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_get_user: (userPoolId: any, userSub: any) => any;
     do_get_enable_user: (userPoolId: any, userSub: any) => any;
     do_get_disable_user: (userPoolId: any, userSub: any) => any;
@@ -56,6 +61,7 @@ const maker: EnginePluginBuilder<CognitoProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements CognitoProxy {
         public name = () => `cognito-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         public do_get_user(userPoolId: any, userSub: any) {
             if (!userPoolId) return Promise.reject(new Error('userPoolId is required!'));

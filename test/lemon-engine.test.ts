@@ -11,17 +11,21 @@ const LS = 1 ? '1' : '0'; // log silence flag.
 const STAGE = 'test';
 const DUMMY = 'dummy';
 const BACKBONE = `http://localhost:8081`;
+const $env: any = {
+    LS,
+    STAGE,
+    DUMMY,
+    BACKBONE_API: BACKBONE,
+    MS_ENDPOINT: `${BACKBONE}/mysql`,
+    DS_ENDPOINT: 1 ? undefined : `${BACKBONE}/dynamo`,
+    WS_ENDPOINT: `${BACKBONE}/web`,
+    PROTOCOL_PROXY_API: `${BACKBONE}/protocol`,
+};
+
 //! build engine.
 const $engine: LemonEngine = engine(scope, {
     name: 'test-engine',
-    env: {
-        LS,
-        STAGE,
-        DUMMY,
-        MS_ENDPOINT: `${BACKBONE}/mysql`,
-        WS_ENDPOINT: `${BACKBONE}/web`,
-        PROTOCOL_PROXY_API: `${BACKBONE}/protocol`,
-    },
+    env: $env,
 });
 
 describe(`test lemon-engine`, () => {
@@ -48,6 +52,7 @@ describe(`test lemon-engine`, () => {
     test('test http-proxy', (done: any) => {
         const $http = $engine.createHttpProxy('backbone-http', BACKBONE);
         expect($http.name().split(':')[0]).toEqual('http-proxy');
+        expect($http.endpoint()).toEqual(`${BACKBONE}`);
         $http.do_get('').then((_: any) => {
             expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
             done();
@@ -58,6 +63,7 @@ describe(`test lemon-engine`, () => {
     test('test web-proxy', (done: any) => {
         const $web = $engine.createWebProxy('backbone-web', BACKBONE);
         expect($web.name().split(':')[0]).toEqual('web-proxy');
+        expect($web.endpoint()).toEqual(`${BACKBONE}/web`);
         $web.do_get(BACKBONE, '/').then((_: any) => {
             expect(`${_}`.split('/')[0]).toEqual('lemon-backbone-api');
             done();
@@ -69,6 +75,7 @@ describe(`test lemon-engine`, () => {
     test('test mysql-proxy', (done: any) => {
         const $mysql = $engine('MS') as MysqlProxy;
         expect($mysql.name().split(':')[0]).toEqual('mysql-proxy');
+        expect($mysql.endpoint()).toEqual(`${BACKBONE}/mysql`);
         $mysql.do_get_next_id('test').then((a: number) => {
             return $mysql.do_get_next_id('test').then((b: number) => {
                 expect(`${b - a}`).toEqual('1');
@@ -78,63 +85,95 @@ describe(`test lemon-engine`, () => {
     });
 
     //! dynamo-proxy
-    test('test dynamo-proxy', () => {
+    test('test dynamo-proxy', (done: any) => {
         const $dynamo = $engine('DS') as DynamoProxy;
         expect($dynamo.name().split(':')[0]).toEqual('dynamo-proxy');
+        expect($dynamo.endpoint()).toEqual(`${BACKBONE}/dynamo`);
+        $dynamo
+            .do_list_tables('', 1)
+            .then(_ => {
+                const tables = _.TableNames;
+                console.log('list-tables =', tables);
+                expect(tables.length).toBe(1);
+            })
+            .catch((e: Error) => {
+                //! 환경 변수에 endpoint구성이 없으면 에러 발생!.
+                const msg = `${e.message || e}`;
+                expect(msg).toEqual(!$env.DS_ENDPOINT ? 'env:DS_ENDPOINT is required!' : '');
+            })
+            .then(() => {
+                done();
+            });
     });
 
     //! redis-proxy
     test('test redis-proxy', () => {
         const $redis = $engine('RS') as RedisProxy;
         expect($redis.name().split(':')[0]).toEqual('redis-proxy');
+        expect($redis.endpoint()).toEqual(`${BACKBONE}/redis`);
     });
 
     //! elastic6-proxy
     test('test elastic6-proxy', () => {
-        const $redis = $engine('ES6') as Elastic6Proxy;
-        expect($redis.name().split(':')[0]).toEqual('elastic6-proxy');
+        const $elastic6 = $engine('ES6') as Elastic6Proxy;
+        expect($elastic6.name().split(':')[0]).toEqual('elastic6-proxy');
+        expect($elastic6.endpoint()).toEqual(`${BACKBONE}/elastic6`);
     });
 
     //! s3-proxy
     test('test s3-proxy', () => {
         const $s3 = $engine('S3') as S3Proxy;
         expect($s3.name().split(':')[0]).toEqual('s3-proxy');
+        expect($s3.endpoint()).toEqual(`${BACKBONE}/s3`);
     });
 
     //! sqs-proxy
     test('test sqs-proxy', () => {
         const $sqs = $engine('SS') as SQSProxy;
         expect($sqs.name().split(':')[0]).toEqual('sqs-proxy');
+        expect($sqs.endpoint()).toEqual(`${BACKBONE}/sqs`);
     });
 
     //! sns-proxy
     test('test sns-proxy', () => {
         const $sns = $engine('SN') as SNSProxy;
         expect($sns.name().split(':')[0]).toEqual('sns-proxy');
+        expect($sns.endpoint()).toEqual(`${BACKBONE}/sns`);
     });
 
     //! ses-proxy
     test('test ses-proxy', () => {
         const $ses = $engine('SE') as SESProxy;
         expect($ses.name().split(':')[0]).toEqual('ses-proxy');
+        expect($ses.endpoint()).toEqual(`${BACKBONE}/ses`);
     });
 
     //! cognito-proxy
     test('test cognito-proxy', () => {
         const $cognito = $engine('CS') as CognitoProxy;
         expect($cognito.name().split(':')[0]).toEqual('cognito-proxy');
+        expect($cognito.endpoint()).toEqual(`${BACKBONE}/cognito`);
     });
 
     //! lambda-proxy
-    test('test lambda-proxy', () => {
+    test('test lambda-proxy', (done: any) => {
         const $lambda = $engine('LS') as LambdaProxy;
         expect($lambda.name().split(':')[0]).toEqual('lambda-proxy');
+        expect($lambda.endpoint()).toEqual(`${BACKBONE}/lambda`);
+        //! invoke by labmda function name.
+        $lambda.do_get('lemon-hello-api-prod-hello', '').then((_: any) => {
+            expect(Array.isArray(_.list)).toEqual(true);
+            expect(_.name).toEqual('lemon');
+            done();
+        });
     });
 
     //! protocol-proxy
     test('test protocol-proxy', (done: any) => {
         const $protocol = $engine('PR') as ProtocolProxy;
         expect($protocol.name().split(':')[0]).toEqual('protocol-proxy');
+        expect($protocol.endpoint()).toEqual(`${BACKBONE}/protocol`);
+        //! invoke by protocol format.
         $protocol.do_execute('lemon://lemon-hello-api/hello').then((_: any) => {
             expect(Array.isArray(_.list)).toEqual(true);
             expect(_.name).toEqual('lemon');
@@ -146,11 +185,13 @@ describe(`test lemon-engine`, () => {
     test('test cron-proxy', () => {
         const $cron = $engine('CR') as CronProxy;
         expect($cron.name().split(':')[0]).toEqual('cron-proxy');
+        expect($cron.endpoint()).toEqual(`${BACKBONE}/cron`);
     });
 
     //! agw-proxy
     test('test agw-proxy', () => {
         const $agw = $engine('AG') as AGWProxy;
         expect($agw.name().split(':')[0]).toEqual('agw-proxy');
+        expect($agw.endpoint()).toEqual(`${BACKBONE}/agw`);
     });
 });

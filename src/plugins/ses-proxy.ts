@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface SESProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_send_email: (payload: any) => string;
 }
 
@@ -47,6 +52,7 @@ const maker: EnginePluginBuilder<SESProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements SESProxy {
         public name = () => `ses-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         public do_send_email(payload: any) {
             const TYPE = 'email';

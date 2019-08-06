@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface Elastic6Proxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_create_index_type: (index: string, type: string, options?: any) => any;
     do_delete_index_type: (index: string, type: string, options?: any) => any;
     do_create_item: (index: string, type: string, id: any, data: any) => any;
@@ -55,6 +60,7 @@ const maker: EnginePluginBuilder<Elastic6Proxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements Elastic6Proxy {
         public name = () => `elastic6-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * Create index with document initialization.

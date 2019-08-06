@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface CronProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_list_rules: (limit: any, prefix: any, token: any) => any;
     do_describe_rule: (name: any) => any;
     do_enable_rule: (name: any, enabled: any) => any;
@@ -50,6 +55,7 @@ const maker: EnginePluginBuilder<CronProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements CronProxy {
         public name = () => `cron-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * List Rules

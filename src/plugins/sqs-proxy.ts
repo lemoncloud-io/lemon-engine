@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface SQSProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_receiveMessage: (TYPE: any, size: any) => any;
     do_sendMessage: (TYPE: any, $attr: any, $data: any) => any;
     do_deleteMessage: (TYPE: any, handle: any) => any;
@@ -51,6 +56,7 @@ const maker: EnginePluginBuilder<SQSProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements SQSProxy {
         public name = () => `sqs-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         public do_receiveMessage(TYPE: any, size: any) {
             size = $U.N(size, 1);

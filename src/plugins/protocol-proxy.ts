@@ -16,12 +16,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface ProtocolProxy extends EnginePluggable {
-    // thiz.do_execute = do_execute_protocol;
-    // thiz.do_post_execute = do_post_execute_protocol;
-    // thiz.do_notify = do_notify_protocol;
-    // thiz.do_post_notify = do_post_notify_protocol;
-    // thiz.do_queue = do_queue_protocol;
-    // thiz.do_post_queue = do_post_queue_protocol;
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_execute: (url: any) => any;
     do_post_execute: (url: any, body: any) => any;
     do_notify: (url: any, callback: any) => any;
@@ -51,13 +50,13 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
      *  Internal Proxy Function
      ** ****************************************************************************************************************/
     const PROXY = { type: '', host: '' };
+    const ENDPOINT = $U.env('PROTOCOL_PROXY_API', typeof options == 'string' ? options : '');
     const $proxy = function() {
         const NAME = 'X' + name; // service name.
         const $SVC = _$(NAME, null as HttpProxy);
         if ($SVC) return $SVC;
 
         //! make instance.
-        const ENDPOINT = $U.env('PROTOCOL_PROXY_API', typeof options == 'string' ? options : '');
         if (!ENDPOINT) throw new Error('env:PROTOCOL_PROXY_API is required!');
 
         const aa = ENDPOINT.split('/'); // split 'http://localhost:8092/protocol'
@@ -72,6 +71,7 @@ const maker: EnginePluginBuilder<ProtocolProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements ProtocolProxy {
         public name = () => `protocol-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * Prepare URL string.

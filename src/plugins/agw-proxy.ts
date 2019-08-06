@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface AGWProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     postToConnection: (endpoint: any, connectionId: any, payload: any) => any;
 }
 
@@ -47,6 +52,7 @@ const maker: EnginePluginBuilder<AGWProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements AGWProxy {
         public name = () => `agw-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
         public postToConnection(endpoint: any, connectionId: any, payload: any) {
             if (!endpoint) return Promise.reject(new Error('endpoint(url) is required!'));
             if (!connectionId) return Promise.reject(new Error('connectionId is required!'));

@@ -12,9 +12,19 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface DynamoProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+    /**
+     * should be `async do_list_tables()`.
+     */
+    do_list_tables: (
+        table?: string,
+        limit?: number,
+    ) => Promise<{ TableNames: string[]; LastEvaluatedTableName: string }>;
     do_create_table: (table: any, id_name: any, id_type: any) => any;
     do_delete_table: (table: any) => any;
-    do_list_tables: (table: any, limit: any) => any;
     do_read_stream: (param: any) => any;
     do_create_item: (table: any, id: any, data: any) => any;
     do_get_item: (table: any, id: any) => any;
@@ -45,7 +55,7 @@ const maker: EnginePluginBuilder<DynamoProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const ENDPOINT = $U.env('DS_ENDPOINT', typeof options == 'string' ? options : '');
     // const httpProxy = require('./http-proxy');
-    const $proxy = function() {
+    const $proxy = (): HttpProxy => {
         if (!ENDPOINT) throw new Error('env:DS_ENDPOINT is required!');
         const SVC = 'X' + name;
         const $SVC = _$(SVC, null as HttpProxy);
@@ -57,6 +67,11 @@ const maker: EnginePluginBuilder<DynamoProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements DynamoProxy {
         public name = () => `dynamo-proxy:${name}`;
+
+        /**
+         * get the current endpoint address.
+         */
+        public endpoint = () => ENDPOINT;
 
         /**
          * Create Table by table-name
@@ -96,7 +111,7 @@ const maker: EnginePluginBuilder<DynamoProxy> = (_$, name, options) => {
          * @param limit default 100
          * @returns {Promise.<*>}
          */
-        public do_list_tables(table: any, limit: any) {
+        public async do_list_tables(table?: any, limit?: any) {
             // if (!table) return Promise.reject(new Error(NS + 'parameter:table is required'));
             table = table || '#'; // prevent ''.
             const $param = { limit };

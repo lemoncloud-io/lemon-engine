@@ -12,14 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface MysqlProxy extends EnginePluggable {
-    // thiz.do_get_last_id = do_get_last_id;
-    // thiz.do_get_next_id = do_get_next_id;
-    // thiz.do_create_id_seq = do_create_id_seq;
-    // thiz.do_delete_id_seq = do_delete_id_seq;
-    // thiz.do_promise_query = do_promise_query;
-    // thiz.do_save_node = do_save_node_async;
-    // thiz.do_save_node_hist = do_save_node_hist_async;
-    // thiz.do_read_node = do_read_node_async;
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_get_last_id: (type: any) => any;
     do_get_next_id: (type: any) => any;
     do_create_id_seq: (type: any, nextval: any) => any;
@@ -61,6 +58,7 @@ const maker: EnginePluginBuilder<MysqlProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements MysqlProxy {
         public name = () => `mysql-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * Read last inserted id of type-name.

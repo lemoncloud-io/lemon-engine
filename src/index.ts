@@ -196,21 +196,26 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
     // $root[_$.id] = _$;
     STAGE && _inf('#STAGE =', STAGE);
 
+    //! use base BACKBONE endpoint.
+    const BACKBONE = $engine.environ('BACKBONE_API', $engine.environ('BACKBONE-API', ''));
+    BACKBONE && _inf('#BACKBONE =', BACKBONE);
+    const ep = (name: string)=> (BACKBONE && `${BACKBONE}/${name}`) || '';
+
     //! load common services....
-    mysql($engine, 'MS');                        // load service, and register as 'MS'
-    dynamo($engine, 'DS');                       // load service, and register as 'DS'
-    redis($engine, 'RS');                        // load service, and register as 'RS'
-    elastic6($engine, 'ES6');                    // load service, and register as 'ES6'
-    s3($engine, 'S3');                           // load service, and register as 'S3'
-    sqs($engine, 'SS');                          // load service, and register as 'SS'
-    sns($engine, 'SN');                          // load service, and register as 'SN'
-    ses($engine, 'SE');                          // load service, and register as 'SE'
-    webProxy($engine, 'WS');                     // load service, and register as 'WS'
-    cognito($engine, 'CS');                      // load service, and register as 'CS'
-    lambda($engine, 'LS');                       // load service, and register as 'LS'
-    protocol($engine, 'PR');                     // load service, and register as 'PR'
-    cron($engine, 'CR');                         // load service, and register as 'CR'
-    agw($engine, 'AG');                          // load service, and register as 'AG'
+    mysql($engine, 'MS', ep('mysql'));           // load service, and register as 'MS'
+    dynamo($engine, 'DS', ep('dynamo'));         // load service, and register as 'DS'
+    redis($engine, 'RS', ep('redis'));           // load service, and register as 'RS'
+    elastic6($engine, 'ES6', ep('elastic6'));    // load service, and register as 'ES6'
+    s3($engine, 'S3', ep('s3'));                 // load service, and register as 'S3'
+    sqs($engine, 'SS', ep('sqs'));               // load service, and register as 'SS'
+    sns($engine, 'SN', ep('sns'));               // load service, and register as 'SN'
+    ses($engine, 'SE', ep('ses'));               // load service, and register as 'SE'
+    webProxy($engine, 'WS', ep('web'));          // load service, and register as 'WS'
+    cognito($engine, 'CS', ep('cognito'));       // load service, and register as 'CS'
+    lambda($engine, 'LS', ep('lambda'));         // load service, and register as 'LS'
+    protocol($engine, 'PR', ep('protocol'));     // load service, and register as 'PR'
+    cron($engine, 'CR', ep('cron'));             // load service, and register as 'CR'
+    agw($engine, 'AG', ep('agw'));               // load service, and register as 'AG'
 
     _inf(`! engine[${ROOT_NAME}] service ready !`);
 
