@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface S3Proxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_upload: (bucketId: any, fileName: any, fileStream: any, contentType: any) => any;
     do_get_object: (bucketId: any, fileName: any) => any;
     do_save: (bucket: any, name: any, file: any, type: any, path: any, tags: any) => any;
@@ -50,6 +55,7 @@ const maker: EnginePluginBuilder<S3Proxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements S3Proxy {
         public name = () => `s3-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * Upload to S3.

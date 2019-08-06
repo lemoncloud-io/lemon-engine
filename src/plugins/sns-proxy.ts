@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface SNSProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_publish: (snsId: any, subject: any, payload: any) => string;
     do_test_self: (options: any) => any;
 }
@@ -48,6 +53,7 @@ const maker: EnginePluginBuilder<SNSProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements SNSProxy {
         public name = () => `sns-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         public do_publish(snsId: any, subject: any, payload: any) {
             if (!snsId) return Promise.reject('snsId is required!');

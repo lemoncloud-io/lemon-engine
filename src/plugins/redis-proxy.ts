@@ -12,6 +12,11 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface RedisProxy extends EnginePluggable {
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
     do_create_item: (PKEY: any, id: any, item: any, timeout?: any) => any;
     do_get_item: (PKEY: any, id: any) => any;
     do_update_item: (PKEY: any, id: any, item: any) => any;
@@ -51,6 +56,7 @@ const maker: EnginePluginBuilder<RedisProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements RedisProxy {
         public name = () => `redis-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         public do_create_item(PKEY: any, id: any, item: any, timeout: any) {
             if (!PKEY) return Promise.reject(new Error(NS + 'PKEY is required!'));

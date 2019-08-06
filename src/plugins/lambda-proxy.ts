@@ -12,10 +12,15 @@ import { EnginePluggable, EnginePluginBuilder } from '../common/types';
 import httpProxy, { HttpProxy } from './http-proxy';
 
 export interface LambdaProxy extends EnginePluggable {
-    do_get: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
-    do_put: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
-    do_post: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
-    do_delete: (TYPE: string, ID: any, CMD: string, $param: any, $body: any, $ctx: any) => any;
+    /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
+    do_get: (TYPE: string, ID: any, CMD?: string, $param?: any, $body?: any, $ctx?: any) => any;
+    do_put: (TYPE: string, ID: any, CMD?: string, $param?: any, $body?: any, $ctx?: any) => any;
+    do_post: (TYPE: string, ID: any, CMD?: string, $param?: any, $body?: any, $ctx?: any) => any;
+    do_delete: (TYPE: string, ID: any, CMD?: string, $param?: any, $body?: any, $ctx?: any) => any;
 }
 
 const maker: EnginePluginBuilder<LambdaProxy> = (_$, name, options) => {
@@ -51,6 +56,7 @@ const maker: EnginePluginBuilder<LambdaProxy> = (_$, name, options) => {
      ** ****************************************************************************************************************/
     const thiz = new (class implements LambdaProxy {
         public name = () => `lambda-proxy:${name}`;
+        public endpoint = () => ENDPOINT;
 
         /**
          * GET HOST/PATH?$param

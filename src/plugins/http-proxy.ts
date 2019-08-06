@@ -18,6 +18,11 @@ import { EngineCore, EnginePluggable, EnginePluginBuilder } from '../common/type
  */
 export interface HttpProxy extends EnginePluggable {
     /**
+     * get the current endpoint address.
+     */
+    endpoint: () => string;
+
+    /**
      * GET
      */
     do_get: (type: string, id?: string, cmd?: string, $param?: any, $body?: any, $ctx?: any) => any;
@@ -140,11 +145,12 @@ const maker: EnginePluginBuilder<HttpProxy> = (_$, name, options) => {
      * class: HttpProxyBody
      */
     class HttpProxyBody implements HttpProxy {
-        private endpoint: string;
+        private _endpoint: string;
         public constructor(endpoint: string){
-            this.endpoint = endpoint;
+            this._endpoint = endpoint;
         }
-        public name = () => `http-proxy:${this.endpoint}`;
+        public name = () => `http-proxy:${this._endpoint}`;
+        public endpoint = () => this._endpoint;
 
         /**
         * GET /:type/:id/:cmd?$param
