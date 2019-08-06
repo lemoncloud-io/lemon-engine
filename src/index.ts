@@ -84,8 +84,8 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
     }
 
     // timestamp like 2016-12-08 13:30:44
-    function _ts(d?: Date | number) {
-        return Utilities.timestamp(d);
+    function _ts(date?: undefined | number | Date, timeZone?: number) {
+        return Utilities.timestamp(date, timeZone);
     }
 
     //! common function for logging.
@@ -156,6 +156,7 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
         $engine.err = _err;
         $engine.extend = _extend;
         $engine.ts = _ts;
+        $engine.dt = Utilities.dt;
         $engine._ = _;
         $engine.environ = _environ;
         $engine.$console = $console; // '$' means object. (change this in order to override log/error message handler)
