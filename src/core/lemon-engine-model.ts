@@ -338,7 +338,7 @@ const buildModel: EnginePluginBuilder<LemonEngineModel> = (_$, name, options) =>
     const CONF_ES_TYPE      = CONF_GET_VAL('ES_TYPE', '');                  // ElasticSearch Type Name of this Table. (optional) #이게 ES6가면서 type이 의미 없어짐!.
     const CONF_ES_MASTER    = CONF_GET_VAL('ES_MASTER', CONF_ES_TIMESERIES ? 1 : 0);// ES is master role? (default true if CONF_ES_FIELDS is null). (요건 main 노드만 있고, 일부 필드만 ES에 넣을 경우)
     const CONF_ES_VERSION   = CONF_GET_VAL('ES_VERSION', 5);                // ES Version Number. (5 means backward compartible)
-    _log(NS, '! CONF_ES_TIMESERIES=', CONF_ES_TIMESERIES);
+    // _log(NS, '! CONF_ES_TIMESERIES=', CONF_ES_TIMESERIES);
 
     //! Security Configurations.
     const CONF_XECURE_KEY    = CONF_GET_VAL('XECURE_KEY', null);                // Encryption/Decryption Key.

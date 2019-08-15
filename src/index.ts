@@ -124,7 +124,7 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
         return opt;
     }
 
-    //! root instance to manage global objects.
+    //! create root instance to manage global objects.
     const $engineBuilder = (): LemonEngine =>{
         //! engine base function.
         const $engineBase = function(name: string, service: EnginePluggable): EnginePluggable {                                // global identifier.
@@ -133,12 +133,16 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
             let org = typeof thiz.$plugins[name] !== 'undefined' ? thiz.$plugins[name] : undefined;
             if (!service) return org;
             if (org === undefined) {
-                _log('INFO! service[' + name + '] registered');
+                _log(`INFO! service[${name}] registered`);
                 thiz.$plugins[name] = service;
                 return service;
+            } else if (true) {
+                //! ignore if duplicated >2.2.3
+                // _log(`WARN! service[${name}] duplicated!`);
+                return org;
             } else {
                 //! extends options.
-                _inf('WARN! service[' + name + '] extended.');
+                _inf(`WARN! service[${name}] extended.`);
                 org = _extend(org, service);
                 thiz.$plugins[name] = org;
                 return org;
@@ -181,6 +185,31 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
             return buildModel($engine, name, option);
         }
 
+        //! start initialization only if making $engine.
+        STAGE && _inf('#STAGE =', STAGE);
+
+        //! use base BACKBONE endpoint.
+        const BACKBONE = $engine.environ('BACKBONE_API', $engine.environ('BACKBONE-API', ''));
+        BACKBONE && _inf('#BACKBONE =', BACKBONE);
+        const ep = (name: string)=> (BACKBONE && `${BACKBONE}/${name}`) || '';
+
+        //! load common services....
+        mysql($engine, 'MS', ep('mysql'));           // load service, and register as 'MS'
+        dynamo($engine, 'DS', ep('dynamo'));         // load service, and register as 'DS'
+        redis($engine, 'RS', ep('redis'));           // load service, and register as 'RS'
+        elastic6($engine, 'ES6', ep('elastic6'));    // load service, and register as 'ES6'
+        s3($engine, 'S3', ep('s3'));                 // load service, and register as 'S3'
+        sqs($engine, 'SS', ep('sqs'));               // load service, and register as 'SS'
+        sns($engine, 'SN', ep('sns'));               // load service, and register as 'SN'
+        ses($engine, 'SE', ep('ses'));               // load service, and register as 'SE'
+        webProxy($engine, 'WS', ep('web'));          // load service, and register as 'WS'
+        cognito($engine, 'CS', ep('cognito'));       // load service, and register as 'CS'
+        lambda($engine, 'LS', ep('lambda'));         // load service, and register as 'LS'
+        protocol($engine, 'PR', ep('protocol'));     // load service, and register as 'PR'
+        cron($engine, 'CR', ep('cron'));             // load service, and register as 'CR'
+        agw($engine, 'AG', ep('agw'));               // load service, and register as 'AG'
+        _inf(`! engine[${ROOT_NAME}] service ready !`);
+
         //! returns.
         return $engine;
     }
@@ -188,37 +217,11 @@ export default function initiate(scope: {_$?: LemonEngine; [key: string]: any } 
     //! reuse via scope or build new.
     const $engine: LemonEngine = scope._$ || $engineBuilder();
 
-    //! register as global instances as default.
-    scope._log = _log;
-    scope._inf = _inf;
-    scope._err = _err;
+    //! register as global instances.
+    scope._log = scope._log || _log;
+    scope._inf = scope._inf || _inf;
+    scope._err = scope._err || _err;
     scope._$ = $engine;
-
-    // $root[_$.id] = _$;
-    STAGE && _inf('#STAGE =', STAGE);
-
-    //! use base BACKBONE endpoint.
-    const BACKBONE = $engine.environ('BACKBONE_API', $engine.environ('BACKBONE-API', ''));
-    BACKBONE && _inf('#BACKBONE =', BACKBONE);
-    const ep = (name: string)=> (BACKBONE && `${BACKBONE}/${name}`) || '';
-
-    //! load common services....
-    mysql($engine, 'MS', ep('mysql'));           // load service, and register as 'MS'
-    dynamo($engine, 'DS', ep('dynamo'));         // load service, and register as 'DS'
-    redis($engine, 'RS', ep('redis'));           // load service, and register as 'RS'
-    elastic6($engine, 'ES6', ep('elastic6'));    // load service, and register as 'ES6'
-    s3($engine, 'S3', ep('s3'));                 // load service, and register as 'S3'
-    sqs($engine, 'SS', ep('sqs'));               // load service, and register as 'SS'
-    sns($engine, 'SN', ep('sns'));               // load service, and register as 'SN'
-    ses($engine, 'SE', ep('ses'));               // load service, and register as 'SE'
-    webProxy($engine, 'WS', ep('web'));          // load service, and register as 'WS'
-    cognito($engine, 'CS', ep('cognito'));       // load service, and register as 'CS'
-    lambda($engine, 'LS', ep('lambda'));         // load service, and register as 'LS'
-    protocol($engine, 'PR', ep('protocol'));     // load service, and register as 'PR'
-    cron($engine, 'CR', ep('cron'));             // load service, and register as 'CR'
-    agw($engine, 'AG', ep('agw'));               // load service, and register as 'AG'
-
-    _inf(`! engine[${ROOT_NAME}] service ready !`);
 
     //! returns finally.
     return $engine;

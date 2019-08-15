@@ -198,7 +198,7 @@ const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
         }
 
         //! register subscription.
-        _log(NS, '> INFO! - register subscriber by id ='+id);
+        // _log(NS, '> INFO! - register subscriber by id ='+id);
 
         //! inline function.
         let handler: any = null;
@@ -225,16 +225,16 @@ const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
             if (!id.endsWith(':*')){
                 if (!thiz.$notify[id]) thiz.$notify[id] = [];
                 thiz.$notify[id].push(handler);
-                _log(NS, `! notify-subscribe(${id}) count=`, thiz.$notify[id].length);
+                // _log(NS, `! notify-subscribe(${id}) count=`, thiz.$notify[id].length);
             } else {
                 const id2 = id.substring(0, id.length-1);
                 RECORD_MODES.forEach(mode => {
                     let id = id2 + mode;
                     if (!thiz.$notify[id]) thiz.$notify[id] = [];
                     thiz.$notify[id].push(handler);
-                    _log(NS, `> notify-subscribe(${id}) count=`, thiz.$notify[id].length);
+                    // _log(NS, `> notify-subscribe(${id}) count=`, thiz.$notify[id].length);
                 })
-                _log(NS, `! notify-subscribe(${id}) ... modes=`, RECORD_MODES.join('/'));
+                // _log(NS, `! notify-subscribe(${id}) ... modes=`, RECORD_MODES.join('/'));
             }
         }
 
@@ -267,7 +267,7 @@ const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
         //! main body.
         let id = ''+that._id;
         let params = that.params;
-        _log(NS, `- my_notify_subscribe_sync(${id}).... params=`, typeof params);
+        // _log(NS, `- my_notify_subscribe_sync(${id}).... params=`, typeof params);
 
         //! If starts with ':', then auto-complete with self notify-id.
         if(id.startsWith(':'))  {
@@ -293,7 +293,7 @@ const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
         }
 
         //! register subscription.
-        _log(NS, '> INFO! - register subscriber by id ='+id);
+        // _log(NS, '> INFO! - register subscriber by id ='+id);
 
         //! inline function.
         let handler: any = {handle: null as any, promise: null as any};
@@ -328,21 +328,21 @@ const maker: EnginePluginBuilder<NotifyService> = (_$, name, options) => {
             if (!id.endsWith(':*')){
                 if (!thiz.$notify[id]) thiz.$notify[id] = [];
                 thiz.$notify[id].push(handler);
-                _log(NS, `! notify-subscribe(${id}) count=`, thiz.$notify[id].length);
+                // _log(NS, `! notify-subscribe(${id}) count=`, thiz.$notify[id].length);
             } else {
                 const id2 = id.substring(0, id.length-1);
                 RECORD_MODES.forEach(mode => {
                     let id = id2 + mode;
                     if (!thiz.$notify[id]) thiz.$notify[id] = [];
                     thiz.$notify[id].push(handler);
-                    _log(NS, `> notify-subscribe(${id}) count=`, thiz.$notify[id].length);
+                    // _log(NS, `> notify-subscribe(${id}) count=`, thiz.$notify[id].length);
                 })
-                _log(NS, `! notify-subscribe(${id}) ... modes=`, RECORD_MODES.join('/'));
+                // _log(NS, `! notify-subscribe(${id}) ... modes=`, RECORD_MODES.join('/'));
             }
         }
 
         //! 리턴은 Promised 된 것으로...
-        _log(NS, `! subscribed-notify(${id})... that=`, $U.json(that));
+        // _log(NS, `! subscribed-notify(${id})... that=`, $U.json(that));
         return Promise.resolve(that);
     };
 
