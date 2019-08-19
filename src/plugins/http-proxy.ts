@@ -83,8 +83,8 @@ const maker: EnginePluginBuilder<HttpProxy> = (_$, name, options) => {
         const url =
             ENDPOINT +
             (TYPE === undefined ? '' : '/' + encodeURIComponent(TYPE)) +
-            (ID === undefined ? '' : '/' + encodeURIComponent(ID)) +
-            (CMD === undefined ? '' : '/' + encodeURIComponent(CMD)) +
+            (TYPE === undefined || ID === undefined ? '' : '/' + encodeURIComponent(ID)) +
+            (TYPE === undefined || ID === undefined || CMD === undefined ? '' : '/' + encodeURI(CMD)) +   //NOTE - cmd could have additional '/' char.
             (!query_string ? '' : '?' + query_string);
         const request = REQUEST;
         const options: any = {
